@@ -33,7 +33,7 @@ public protocol InteractorScope: class {
     ///
     /// - note: Subscription to this stream always immediately returns the last event. This stream terminates after
     ///   the interactor is deallocated.
-    var isActiveStream: Observable<Bool> { get }
+    var isActiveStream: AnyPublisher<Bool, Never> { get }
 }
 
 /// The base protocol for all interactors.
@@ -68,16 +68,12 @@ open class Interactor: Interactable {
 
     /// Indicates if the interactor is active.
     public final var isActive: Bool {
-        do {
-            return try isActiveSubject.value()
-        } catch {
-            return false
-        }
+        return isActiveSubject.value
     }
 
     /// A stream notifying on the lifecycle of this interactor.
-    public final var isActiveStream: Observable<Bool> {
-        return isActiveSubject.asObservable().distinctUntilChanged()
+    public final var isActiveStream: AnyPublisher<Bool, Never> {
+        return isActiveSubject.removeDuplicates().eraseToAnyPublisher()
     }
 
     /// Initializer.
@@ -94,9 +90,7 @@ open class Interactor: Interactable {
             return
         }
 
-        activenessDisposable = CompositeDisposable()
-
-        isActiveSubject.onNext(true)
+        isActiveSubject.send(true)
 
         didBecomeActive()
     }
@@ -120,10 +114,7 @@ open class Interactor: Interactable {
 
         willResignActive()
 
-        activenessDisposable?.dispose()
-        activenessDisposable = nil
-
-        isActiveSubject.onNext(false)
+        isActiveSubject.send(false)
     }
 
     /// Callend when the `Interactor` will resign the active state.
@@ -136,72 +127,12 @@ open class Interactor: Interactable {
 
     // MARK: - Private
 
-    private let isActiveSubject = BehaviorSubject<Bool>(value: false)
-    fileprivate var activenessDisposable: CompositeDisposable?
+    private let isActiveSubject = CurrentValueSubject<Bool, Never>(false)
 
     deinit {
         if isActive {
             deactivate()
         }
-        isActiveSubject.onCompleted()
-    }
-}
-
-/// Interactor related `Observable` extensions.
-public extension ObservableType {
-
-    /// Confines the observable's subscription to the given interactor scope. The subscription is only triggered
-    /// after the interactor scope is active and before the interactor scope resigns active. This composition
-    /// delays the subscription but does not dispose the subscription, when the interactor scope becomes inactive.
-    ///
-    /// - note: This method should only be used for subscriptions outside of an `Interactor`, for cases where a
-    ///   piece of logic is only executed when the bound interactor scope is active.
-    ///
-    /// - note: Only the latest value from this observable is emitted. Values emitted when the interactor is not
-    ///   active, are ignored.
-    ///
-    /// - parameter interactorScope: The interactor scope whose activeness this observable is confined to.
-    /// - returns: The `Observable` confined to this interactor's activeness lifecycle.
-
-    public func confineTo(_ interactorScope: InteractorScope) -> Observable<E> {
-        return Observable
-            .combineLatest(interactorScope.isActiveStream, self) { isActive, value in
-                (isActive, value)
-            }
-            .filter { isActive, value in
-                isActive
-            }
-            .map { isActive, value in
-                value
-            }
-    }
-}
-
-/// Interactor related `Disposable` extensions.
-public extension Disposable {
-
-    /// Disposes the subscription based on the lifecycle of the given `Interactor`. The subscription is disposed
-    /// when the interactor is deactivated.
-    ///
-    /// - note: This is the preferred method when trying to confine a subscription to the lifecycle of an
-    ///   `Interactor`.
-    ///
-    /// When using this composition, the subscription closure may freely retain the interactor itself, since the
-    /// subscription closure is disposed once the interactor is deactivated, thus releasing the retain cycle before
-    /// the interactor needs to be deallocated.
-    ///
-    /// If the given interactor is inactive at the time this method is invoked, the subscription is immediately
-    /// terminated.
-    ///
-    /// - parameter interactor: The interactor to dispose the subscription based on.
-    @discardableResult
-    public func disposeOnDeactivate(interactor: Interactor) -> Disposable {
-        if let activenessDisposable = interactor.activenessDisposable {
-            _ = activenessDisposable.insert(self)
-        } else {
-            dispose()
-            print("Subscription immediately terminated, since \(interactor) is inactive.")
-        }
-        return self
+        isActiveSubject.send(completion: .finished)
     }
 }
