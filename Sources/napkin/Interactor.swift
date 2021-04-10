@@ -73,7 +73,7 @@ open class Interactor: Interactable {
 
     /// A stream notifying on the lifecycle of this interactor.
     public final var isActiveStream: AnyPublisher<Bool, Never> {
-        return isActiveSubject.removeDuplicates().eraseToAnyPublisher()
+        return isActiveSubject.eraseToAnyPublisher()
     }
 
     /// Initializer.
@@ -136,3 +136,4 @@ open class Interactor: Interactable {
         isActiveSubject.send(completion: .finished)
     }
 }
+

@@ -151,6 +151,7 @@ open class Router<InteractorType>: Routing {
 
     // MARK: - Internal
 
+
     func internalDidLoad() {
         bindSubtreeActiveState()
         lifecycleSubject.send(.didLoad)
@@ -159,21 +160,22 @@ open class Router<InteractorType>: Routing {
     // MARK: - Private
 
     private let lifecycleSubject = PassthroughSubject<RouterLifecycle, Never>()
+    private var cancellables = Set<AnyCancellable>()
     private var didLoadFlag: Bool = false
 
     private func bindSubtreeActiveState() {
 
-//        let disposable = interactable.isActiveStream
-//            // Do not retain self here to guarantee execution. Retaining self will cause the dispose bag
-//            // to never be disposed, thus self is never deallocated. Also cannot just store the disposable
-//            // and call dispose(), since we want to keep the subscription alive until deallocation, in
-//            // case the router is re-attached. Using weak does require the router to be retained until its
-//            // interactor is deactivated.
-//            .subscribe(onNext: { [weak self] (isActive: Bool) in
-//                // When interactor becomes active, we are attached to parent, otherwise we are detached.
-//                self?.setSubtreeActive(isActive)
-//            })
-//        _ = deinitDisposable.insert(disposable)
+        let cancellable = interactable.isActiveStream
+            // Do not retain self here to guarantee execution. Retaining self will cause the dispose bag
+            // to never be disposed, thus self is never deallocated. Also cannot just store the disposable
+            // and call dispose(), since we want to keep the subscription alive until deallocation, in
+            // case the router is re-attached. Using weak does require the router to be retained until its
+            // interactor is deactivated.
+            .sink { [weak self] (isActive: Bool) in
+                // When interactor becomes active, we are attached to parent, otherwise we are detached.
+                self?.setSubtreeActive(isActive)
+            }
+        cancellables.insert(cancellable)
     }
 
     private func setSubtreeActive(_ active: Bool) {
@@ -217,6 +219,6 @@ open class Router<InteractorType>: Routing {
 
         lifecycleSubject.send(completion: .finished)
 
-//        LeakDetector.instance.expectDeallocate(object: interactable)
+        LeakDetector.instance.expectDeallocate(object: interactable)
     }
 }
