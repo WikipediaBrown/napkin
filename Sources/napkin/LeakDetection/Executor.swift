@@ -40,7 +40,6 @@ public class Executor {
         _ = Timer
             .publish(every: period, on: .main, in: .common)
             .autoconnect()
-            .prefix(<#T##maxLength: Int##Int#>)
             .sink { _ in
                 let currentTime = Date().timeIntervalSinceReferenceDate
                 let trueElapsedTime = currentTime - lastRunLoopTime
