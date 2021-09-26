@@ -35,7 +35,6 @@ public class Executor {
         let period = TimeInterval(maxFrameDuration / 3)
         var lastRunLoopTime = Date().timeIntervalSinceReferenceDate
         var properFrameTime = 0.0
-        var didExecute = false
         
         _ = Timer
             .publish(every: period, on: .main, in: .common)
@@ -50,8 +49,6 @@ public class Executor {
                 let boundedElapsedTime = min(trueElapsedTime, Double(maxFrameDuration) / 1000)
                 properFrameTime += boundedElapsedTime
                 if properFrameTime > delay {
-                    didExecute = true
-
                     logic()
                 }
             }
