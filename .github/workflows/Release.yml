@@ -1,11 +1,11 @@
-name: CI
+name: Releasse
 on:
   push:
     branches:
     - master
 jobs:
   release:
-    name: Release SFSymbols
+    name: Release napkin
     runs-on: macOS-latest
     env:
       GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
