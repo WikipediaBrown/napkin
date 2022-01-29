@@ -5,20 +5,18 @@
 	<key>Kind</key>
 	<string>Xcode.IDEFoundation.TextSubstitutionFileTemplateKind</string>
 	<key>Summary</key>
-	<string>Component Extension</string>
+	<string>Service Manager</string>
 	<key>Description</key>
-	<string>Extend a component to provide dependencies for a child scope.</string>
+	<string>Create a manager to manager the state of a statless service.</string>
 	<key>SortOrder</key>
-	<string>4</string>
+	<string>3</string>
 	<key>AllowedTypes</key>
 	<dict>
 		<key>Item 0</key>
 		<string>public.swift-source</string>
 	</dict>
-	<key>DefaultCompletionName</key>
-	<string>ComponentExtension</string>
 	<key>MainTemplateFiles</key>
-	<string>___FILEBASENAME___Component+___VARIABLE_childName___.swift</string>
+	<string>___FILEBASENAME___Manager.swift</string>
 	<key>Platforms</key>
 	<array>
 		<string>com.apple.platform.iphoneos</string>
@@ -31,9 +29,9 @@
 			<key>Required</key>
 			<string>true</string>
 			<key>Name</key>
-			<string>Scope name:</string>
+			<string>Manager name:</string>
 			<key>Description</key>
-			<string>The name of the scope that needs to be extended.</string>
+			<string>The name of the manager that will manage a service.</string>
 			<key>Type</key>
 			<string>text</string>
 			<key>NotPersisted</key>
@@ -41,15 +39,17 @@
 		</dict>
 		<dict>
 			<key>Identifier</key>
-			<string>childName</string>
+			<string>withService</string>
 			<key>Required</key>
 			<string>true</string>
 			<key>Name</key>
-			<string>Child scope name:</string>
+			<string>Create accompanying static Service?</string>
 			<key>Description</key>
-			<string>The name of the child scope that needs to be provided.</string>
+			<string>Whether this manager needs a service created for it.</string>
 			<key>Type</key>
-			<string>text</string>
+			<string>checkbox</string>
+			<key>Default</key>
+			<string>false</string>
 			<key>NotPersisted</key>
 			<string>true</string>
 		</dict>

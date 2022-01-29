@@ -7,9 +7,9 @@
 	<key>Summary</key>
 	<string>napkin</string>
 	<key>Description</key>
-	<string>Generates pre-connected napkin classes.</string>
+	<string>Generates initial napkin and additional classes.</string>
 	<key>SortOrder</key>
-	<string>2</string>
+	<string>1</string>
 	<key>AllowedTypes</key>
 	<dict>
 		<key>Item 0</key>
