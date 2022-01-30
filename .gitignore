@@ -37,6 +37,7 @@ playground.xcworkspace
 # Packages/
 # Package.pins
 .build/
+*.xcodeproj
 
 # CocoaPods
 #
@@ -64,6 +65,7 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots
 fastlane/test_output
+fastlane/code_coverage
 
 # .DS_Store
 #

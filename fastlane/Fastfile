@@ -27,34 +27,7 @@ platform :ios do
 
   desc "Create Release for GitHub"
   lane :release_to_github do
-    new_version = create_next_version
-    day = Time.now.strftime("%A")
-    changelog = changelog_from_git_commits(
-      date_format: "short",
-      merge_commit_filtering: "exclude_merges",
-      pretty: "- (%ae) %s"
-    )
-    # github_release = set_github_release(
-    #   repository_name: ENV["REPOSITORY_NAME"],
-    #   api_bearer: ENV["GITHUB_TOKEN"],
-    #   name: "#{new_version} - This #{day}'s Version",
-    #   tag_name: version,
-    #   description: changelog
-    # )
-  end
-
-  desc "Create tag with version written in file"
-  lane :create_next_version do
-    new_version = increment_version
-    # add_git_tag(tag: new_version, message: "poop")
-    # push_to_git_remote(tags: true, remote_branch: "refs/tags/#{new_version}")
-    new_version
-  end
-
-  desc "Run Unit Tests"
-  lane :unit_test do
-    # FileUtils.remove_dir './CodeCoverage', true
-    # FileUtils.remove_dir './UnitTests', true
+    # Run Tests again before release.
     run_tests(
       package_path: ".",
       scheme: "#{project_name}",
@@ -65,20 +38,54 @@ platform :ios do
       clean: true,
       result_bundle: true
     )
-    danger(
-      danger_id: "unit-tests",
-      dangerfile: "DangerFile",
-      github_api_token:ENV["GITHUB_TOKEN"],
-      verbose: true
+
+    new_version = create_next_version
+    day = Time.now.strftime("%A")
+    changelog = changelog_from_git_commits(
+      date_format: "short",
+      merge_commit_filtering: "exclude_merges",
+      pretty: "- (%ae) %s"
     )
-    # xcov(
-    #   is_swift_package: true,
-    #   scheme: "#{project_name}-Package",
-    #   output_directory: './fastlane/CodeCoverage',
-      # include_targets: "#{project_name}.framework",
-    #   minimum_coverage_percentage: 50.0
-    # )
-    # FileUtils.remove_dir "./../#{project_name}.xcodeproj", true
+    github_release = set_github_release(
+      repository_name: ENV["REPOSITORY_NAME"],
+      api_bearer: ENV["GITHUB_TOKEN"],
+      name: "#{new_version} - This #{day}'s Version",
+      tag_name: version,
+      description: changelog
+    )
+  end
+
+  desc "Create tag with version written in file"
+  lane :create_next_version do
+    new_version = increment_version
+    add_git_tag(tag: new_version, message: "poop")
+    push_to_git_remote(tags: true, remote_branch: "refs/tags/#{new_version}")
+    new_version
+  end
+
+  desc "Run Unit Tests"
+  lane :unit_test do
+    spm(
+      command: 'generate-xcodeproj',
+      enable_code_coverage: true
+    )
+    run_tests(
+      project: "#{project_name}.xcodeproj",
+      scheme: "#{project_name}-Package",
+      device: 'iPhone 13',
+      code_coverage: true,
+      output_directory: './fastlane/test_output',
+      output_types: 'html',
+      clean: true,
+      result_bundle: true
+    )
+    xcov(
+      project: "#{project_name}.xcodeproj",
+      scheme: "#{project_name}",
+      output_directory: './fastlane/code_coverage',
+      include_targets: "#{project_name}.framework",
+      minimum_coverage_percentage: 0.0
+    )
   end
 
   # Increments and returns version of last tag.
@@ -97,6 +104,22 @@ platform :ios do
     end
 
     return [major, minor, patch].join('.')
+  end
+
+  before_all do
+    FileUtils.remove_dir './code_coverage', true
+    FileUtils.remove_dir './test_output', true
+    FileUtils.remove_dir './report.xml', true
+    FileUtils.remove_dir '.build', true
+    FileUtils.remove_dir "./../#{project_name}.xcodeproj", true
+  end
+
+  after_all do
+    FileUtils.remove_dir './code_coverage', true
+    FileUtils.remove_dir './test_output', true
+    FileUtils.remove_dir './report.xml', true
+    FileUtils.remove_dir '.build', true
+    FileUtils.remove_dir "./../#{project_name}.xcodeproj", true
   end
 
 end
