@@ -157,6 +157,7 @@ GEM
     multi_json (1.15.0)
     multipart-post (2.0.0)
     nanaimo (0.3.0)
+    naturally (2.2.1)
     optparse (0.1.1)
     os (1.1.4)
     plist (3.6.0)
