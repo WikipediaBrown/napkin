@@ -30,20 +30,21 @@ platform :ios do
     # Run Tests again before release.
     unit_test
 
-    # new_version = create_next_version
+    new_version = create_next_version
     day = Time.now.strftime("%A")
     changelog = changelog_from_git_commits(
       date_format: "short",
       merge_commit_filtering: "exclude_merges",
       pretty: "- (%ae) %s"
     )
-    # github_release = set_github_release(
-    #   repository_name: ENV["REPOSITORY_NAME"],
-    #   api_bearer: ENV["GITHUB_TOKEN"],
-    #   name: "#{new_version} - This #{day}'s Version",
-    #   tag_name: version,
-    #   description: changelog
-    # )
+    
+    github_release = set_github_release(
+      repository_name: ENV["REPOSITORY_NAME"],
+      api_bearer: ENV["GITHUB_TOKEN"],
+      name: "#{new_version} - This #{day}'s Version",
+      tag_name: version,
+      description: changelog
+    )
   end
 
   desc "Create tag with version written in file"
