@@ -51,7 +51,7 @@ platform :ios do
   lane :create_next_version do
     git_pull(only_tags: true)
     new_version = increment_version
-    add_git_tag(tag: new_version, message: "watch for the poop")
+    add_git_tag(tag: new_version, message: "This is version #{new_version}.")
     push_to_git_remote(tags: true, remote_branch: "refs/tags/#{new_version}")
     new_version
   end
