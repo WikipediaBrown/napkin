@@ -37,7 +37,7 @@ platform :ios do
       merge_commit_filtering: "exclude_merges",
       pretty: "- (%ae) %s"
     )
-
+    
     github_release = set_github_release(
       repository_name: ENV["REPOSITORY_NAME"],
       api_bearer: ENV["GITHUB_TOKEN"],
