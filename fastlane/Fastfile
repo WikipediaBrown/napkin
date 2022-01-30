@@ -28,16 +28,7 @@ platform :ios do
   desc "Create Release for GitHub"
   lane :release_to_github do
     # Run Tests again before release.
-    run_tests(
-      package_path: ".",
-      scheme: "#{project_name}",
-      device: 'iPhone 13',
-      code_coverage: true,
-      output_directory: './fastlane/UnitTests',
-      output_types: 'html',
-      clean: true,
-      result_bundle: true
-    )
+    unit_test
 
     new_version = create_next_version
     day = Time.now.strftime("%A")
@@ -107,14 +98,6 @@ platform :ios do
   end
 
   before_all do
-    FileUtils.remove_dir './code_coverage', true
-    FileUtils.remove_dir './test_output', true
-    FileUtils.remove_dir './report.xml', true
-    FileUtils.remove_dir '.build', true
-    FileUtils.remove_dir "./../#{project_name}.xcodeproj", true
-  end
-
-  after_all do
     FileUtils.remove_dir './code_coverage', true
     FileUtils.remove_dir './test_output', true
     FileUtils.remove_dir './report.xml', true
