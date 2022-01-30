@@ -81,7 +81,8 @@ platform :ios do
 
   # Increments and returns version of last tag.
   def increment_version(bump="")
-    major, minor, patch = last_git_tag.split('.').map(&:to_i)
+    tempVersion = last_git_tag ||= "0.0.0"
+    major, minor, patch = tempVersion.split('.').map(&:to_i)
 
     case bump.downcase
     when "major"
