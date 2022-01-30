@@ -42,7 +42,7 @@ platform :ios do
       repository_name: ENV["REPOSITORY_NAME"],
       api_bearer: ENV["GITHUB_TOKEN"],
       name: "#{new_version} - This #{day}'s Version",
-      tag_name: version,
+      tag_name: new_version,
       description: changelog
     )
   end
@@ -79,12 +79,11 @@ platform :ios do
       minimum_coverage_percentage: 0.0
     )
   end
+  
 
   # Increments and returns version of last tag.
   def increment_version(bump="")
-    puts last_git_tag
-    tempVersion = last_git_tag ||= "0.0.1"
-    major, minor, patch = tempVersion.split('.').map(&:to_i)
+    major, minor, patch = last_git_tag.split('.').map(&:to_i)
 
     case bump.downcase
     when "major"

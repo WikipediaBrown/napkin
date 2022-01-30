@@ -39,6 +39,14 @@ Create tag with version written in file
 
 Run Unit Tests
 
+### ios test
+
+```sh
+[bundle exec] fastlane ios test
+```
+
+
+
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.
