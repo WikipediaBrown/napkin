@@ -37,7 +37,7 @@ platform :ios do
       merge_commit_filtering: "exclude_merges",
       pretty: "- (%ae) %s"
     )
-    
+
     github_release = set_github_release(
       repository_name: ENV["REPOSITORY_NAME"],
       api_bearer: ENV["GITHUB_TOKEN"],
@@ -82,7 +82,7 @@ platform :ios do
 
   # Increments and returns version of last tag.
   def increment_version(bump="")
-    tempVersion = last_git_tag ||= "0.0.0"
+    tempVersion = last_git_tag ||= "0.0.1"
     major, minor, patch = tempVersion.split('.').map(&:to_i)
 
     case bump.downcase
