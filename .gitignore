@@ -69,8 +69,3 @@ fastlane/screenshots
 #
 # This file records the visual position of the images of the files in the finder window. You don't need this.
 .DS_Store
-
-# GoogleService-Info.plist
-#
-# This is your google service account file. Use your own or construct one from CI credentials and secrets.
-GoogleService-Info.plist
