@@ -34,7 +34,7 @@ The preferred way of installing **napkin** is via the [Swift Package Manager](ht
 ```bash napkin/Tools/InstallXcodeTemplates.sh```
 
 #### Check Xcode
-Open Xcode and 
+Open an Xcode project and create a new napkin. Let us know if it doesn't work by creating an issue
 
 
 ## Versioning
