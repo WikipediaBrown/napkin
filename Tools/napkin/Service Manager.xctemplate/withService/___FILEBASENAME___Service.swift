@@ -4,7 +4,7 @@ import napkin
 
 
 /// Struct that provides static methods for creating state objects.
-struct ___FILEBASENAME___Service: ___FILEBASENAME___Servicing {
+struct ___VARIABLE_productName___Service {
 
-    // TODO: Implement static methods that return objects managed by ___FILEBASENAME___Manager.
+    // TODO: Implement static methods that return objects managed by ___VARIABLE_productName___Manager.
 }
