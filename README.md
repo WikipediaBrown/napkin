@@ -1,4 +1,6 @@
 # napkin
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FWikipediaBrown%2Fnapkin%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/WikipediaBrown/napkin)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FWikipediaBrown%2Fnapkin%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/WikipediaBrown/napkin)
 
 napkin is a reimagining of Uber's [RIBs](https://github.com/uber/RIBs) with RXSwift replaced by Combine and the Leak Detector removed (you should use [Xcode Instruments](https://stackoverflow.com/a/51947107/5863650) instead). 
 
