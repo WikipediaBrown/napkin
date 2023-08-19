@@ -48,7 +48,11 @@ Open an Xcode project and create a new napkin. Let us know if it doesn't work by
 
 Send a pull request my dude.
 
+Must sign commits: 
+run 
+`git config commit.gpgsign true`
 
+from this repository
 ## Author
 
 Wikipedia Brown
