@@ -1,0 +1,16 @@
+name: Tests
+on:
+  pull_request:
+    branches:
+    - develop
+jobs:
+  tests:
+    name: Unit Tests
+    runs-on: macOS-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install Bundler
+        run: bundle install
+      - name: Unit Tests
+        run: bundle exec fastlane unit_test
