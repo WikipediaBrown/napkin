@@ -41,17 +41,33 @@
 		</dict>
 		<dict>
 			<key>Identifier</key>
+			<string>ownsSwiftUIView</string>
+			<key>Required</key>
+			<string>true</string>
+			<key>Name</key>
+			<string>Owns corresponding UIHostingViewController and SwiftUI View.</string>
+			<key>Description</key>
+			<string>Whether this napkin owns a corresponding UIHostingViewController and SwiftUI View.</string>
+			<key>Type</key>
+			<string>checkbox</string>
+			<key>Default</key>
+			<string>true</string>
+			<key>NotPersisted</key>
+			<string>true</string>
+		</dict>
+		<dict>
+			<key>Identifier</key>
 			<string>ownsView</string>
 			<key>Required</key>
 			<string>true</string>
 			<key>Name</key>
 			<string>Owns corresponding view</string>
 			<key>Description</key>
-			<string>Whether this napkin owns a corresponding view</string>
+			<string>Whether this napkin owns a corresponding UIHostingViewController and SwiftUI View.</string>
 			<key>Type</key>
 			<string>checkbox</string>
 			<key>Default</key>
-			<string>true</string>
+			<string>false</string>
 			<key>NotPersisted</key>
 			<string>true</string>
 		</dict>
