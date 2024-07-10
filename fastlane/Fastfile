@@ -139,7 +139,8 @@ platform :ios do
 
   # Increments and returns version of last tag. Pass the string `major
   # or `minor` to increment major or minor version. Otherwise a the
-  # patch is incremented.  def increment_version(bump="")
+  # patch is incremented.  
+  def increment_version(bump="")
     major, minor, patch = last_git_tag.split('.').map(&:to_i)
 
     case bump.downcase
