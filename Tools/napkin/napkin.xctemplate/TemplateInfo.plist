@@ -51,7 +51,7 @@
 			<key>Type</key>
 			<string>checkbox</string>
 			<key>Default</key>
-			<string>true</string>
+			<string>false</string>
 			<key>NotPersisted</key>
 			<string>true</string>
 			<key>RequiredOptions</key>
