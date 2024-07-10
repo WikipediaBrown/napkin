@@ -45,15 +45,20 @@
 			<key>Required</key>
 			<string>true</string>
 			<key>Name</key>
-			<string>Owns corresponding UIHostingViewController and SwiftUI View</string>
+			<string>Owns View (SwiftUI)</string>
 			<key>Description</key>
-			<string>Whether this napkin owns a corresponding UIHostingViewController and SwiftUI View</string>
+			<string>Whether this napkin owns a corresponding View (SwiftUI)</string>
 			<key>Type</key>
 			<string>checkbox</string>
 			<key>Default</key>
-			<string>true</string>
+			<string>false</string>
 			<key>NotPersisted</key>
 			<string>true</string>
+			<key>RequiredOptions</key>
+			<dict>
+				<key>ownsView</key>
+				<string>false</string>
+			</dict>
 		</dict>
 		<dict>
 			<key>Identifier</key>
@@ -61,15 +66,20 @@
 			<key>Required</key>
 			<string>true</string>
 			<key>Name</key>
-			<string>Owns corresponding view</string>
+			<string>Owns UIView (UIKit)</string>
 			<key>Description</key>
-			<string>Whether this napkin owns a corresponding view</string>
+			<string>Whether this napkin owns a corresponding UIView (UIKit)</string>
 			<key>Type</key>
 			<string>checkbox</string>
 			<key>Default</key>
 			<string>false</string>
 			<key>NotPersisted</key>
 			<string>true</string>
+			<key>RequiredOptions</key>
+			<dict>
+				<key>ownsSwiftUIView</key>
+				<string>false</string>
+			</dict>
 		</dict>
 		<dict>
 			<key>Identifier</key>
