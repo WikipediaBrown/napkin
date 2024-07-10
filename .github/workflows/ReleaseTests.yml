@@ -3,7 +3,7 @@ run-name: ${{ github.actor }} is creating a change to `master`.
 on:
   pull_request:
     branches:
-    - master
+    - main
 jobs:
   tests:
     name: Release Tests
