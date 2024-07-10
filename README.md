@@ -1,4 +1,6 @@
 # napkin
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FWikipediaBrown%2Fnapkin%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/WikipediaBrown/napkin)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FWikipediaBrown%2Fnapkin%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/WikipediaBrown/napkin)
 
 napkin is a reimagining of Uber's [RIBs](https://github.com/uber/RIBs) with RXSwift replaced by Combine and the Leak Detector removed (you should use [Xcode Instruments](https://stackoverflow.com/a/51947107/5863650) instead). 
 
@@ -34,7 +36,7 @@ The preferred way of installing **napkin** is via the [Swift Package Manager](ht
 ```bash napkin/Tools/InstallXcodeTemplates.sh```
 
 #### Check Xcode
-Open Xcode and 
+Open an Xcode project and create a new napkin. Let us know if it doesn't work by creating an issue
 
 
 ## Versioning
@@ -46,7 +48,11 @@ Open Xcode and
 
 Send a pull request my dude.
 
+Must sign commits: 
+run 
+`git config commit.gpgsign true`
 
+from this repository
 ## Author
 
 Wikipedia Brown

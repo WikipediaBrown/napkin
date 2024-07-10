@@ -1,12 +1,12 @@
-name: Pull Request Against Develop
-run-name: ${{ github.actor }} is creating a change to `develop`.
+name: Pull Request Against Master
+run-name: ${{ github.actor }} is creating a change to `master`.
 on:
   pull_request:
     branches:
-    - develop
+    - master
 jobs:
   tests:
-    name: Unit Tests
+    name: Release Tests
     runs-on: macOS-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

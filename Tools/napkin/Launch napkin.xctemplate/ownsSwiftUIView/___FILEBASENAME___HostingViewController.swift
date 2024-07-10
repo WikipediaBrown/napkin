@@ -10,7 +10,13 @@ protocol ___VARIABLE_productName___PresentableListener: AnyObject {
     // interactor class.
 }
 
-final class ___VARIABLE_productName___ViewController: UIViewController, ___VARIABLE_productName___Presentable, ___VARIABLE_productName___ViewControllable {
+final class ___VARIABLE_productName___ViewController: UIHostingController<___VARIABLE_productName___View>, ___VARIABLE_productName___Presentable {
 
     weak var listener: ___VARIABLE_productName___PresentableListener?
+
+    init() {
+        super.init(rootView: ___VARIABLE_productName___View())
+    }
 }
+
+extension ___VARIABLE_productName___ViewController: ___VARIABLE_productName___ViewControllable {}
