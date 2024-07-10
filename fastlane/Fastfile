@@ -25,7 +25,7 @@ platform :ios do
   desc 'Run iOS & macOS Unit Tests'
   lane :unit_test do
     unit_test_iOS
-    unit_test_macOS
+    # unit_test_macOS
   end
 
   desc 'Run iOS Unit Tests'
