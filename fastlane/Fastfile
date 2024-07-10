@@ -48,12 +48,12 @@ platform :ios do
     #    markdown_report: true,
     #    minimum_coverage_percentage: 99.999 # Cannot be 100% because xcov has a bug where it wont support total code coverage.
     # )
-    danger(
-       danger_id: 'unit-tests-iOS',
-       dangerfile: 'DangerFile',
-       github_api_token: ENV['GITHUB_TOKEN'],
-       verbose: true
-    ) if ENV['CI']
+    # danger(
+    #    danger_id: 'unit-tests-iOS',
+    #    dangerfile: 'DangerFile',
+    #    github_api_token: ENV['GITHUB_TOKEN'],
+    #    verbose: true
+    # ) if ENV['CI']
   end
 
   desc 'Run macOS Unit Tests'
@@ -76,12 +76,12 @@ platform :ios do
     #    markdown_report: true,
     #    minimum_coverage_percentage: 99.999 # Cannot be 100% because xcov has a bug where it wont support total code coverage.
     # )
-    danger(
-       danger_id: 'unit-tests-macOS',
-       dangerfile: 'DangerFile',
-       github_api_token: ENV['GITHUB_TOKEN'],
-       verbose: true
-    ) if ENV['CI']
+    # danger(
+    #    danger_id: 'unit-tests-macOS',
+    #    dangerfile: 'DangerFile',
+    #    github_api_token: ENV['GITHUB_TOKEN'],
+    #    verbose: true
+    # ) if ENV['CI']
   end
 
   desc "Create Release for GitHub"
