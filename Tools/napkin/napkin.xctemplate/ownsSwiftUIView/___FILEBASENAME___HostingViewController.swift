@@ -17,6 +17,10 @@ final class ___VARIABLE_productName___ViewController: UIHostingController<___VAR
     init() {
         super.init(rootView: ___VARIABLE_productName___View())
     }
+
+    @MainActor required dynamic init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }
 
 extension ___VARIABLE_productName___ViewController: ___VARIABLE_productName___ViewControllable {}
