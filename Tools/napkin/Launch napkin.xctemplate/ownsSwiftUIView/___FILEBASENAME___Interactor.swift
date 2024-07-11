@@ -3,7 +3,7 @@
 import napkin
 import Combine
 
-protocol ___VARIABLE_productName___Routing: ViewableRouting {
+protocol ___VARIABLE_productName___Routing: LaunchRouting {
     // TODO: Declare methods the interactor can invoke to manage sub-tree via the router.
 }
 
