@@ -27,7 +27,7 @@ protocol ___VARIABLE_productName___Buildable: Buildable {
 
 final class ___VARIABLE_productName___Builder: Builder<___VARIABLE_productName___Dependency>, ___VARIABLE_productName___Buildable {
 
-    override init(dependency: ___VARIABLE_productName___Dependency) {
+    nonisolated override init(dependency: ___VARIABLE_productName___Dependency) {
         super.init(dependency: dependency)
     }
 

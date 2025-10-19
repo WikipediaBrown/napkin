@@ -28,7 +28,7 @@ open class Builder<DependencyType>: Buildable {
     /// Initializer.
     ///
     /// - parameter dependency: The dependency used for this builder to build the RIB.
-    public init(dependency: DependencyType) {
+    nonisolated public init(dependency: DependencyType) {
         self.dependency = dependency
     }
 }

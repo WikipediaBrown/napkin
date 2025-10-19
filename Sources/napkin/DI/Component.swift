@@ -31,7 +31,7 @@ open class Component<DependencyType>: Dependency {
     /// Initializer.
     ///
     /// - parameter dependency: The dependency of this `Component`, usually provided by the parent `Component`.
-    public init(dependency: DependencyType) {
+    nonisolated public init(dependency: DependencyType) {
         self.dependency = dependency
     }
 
