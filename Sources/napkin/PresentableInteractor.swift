@@ -27,7 +27,7 @@ open class PresentableInteractor<PresenterType>: Interactor {
     /// - note: This holds a strong reference to the given `Presenter`.
     ///
     /// - parameter presenter: The presenter associated with this `Interactor`.
-    public init(presenter: PresenterType) {
+    nonisolated public init(presenter: PresenterType) {
         self.presenter = presenter
     }
 
