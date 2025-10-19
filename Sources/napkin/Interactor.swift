@@ -121,7 +121,7 @@ open class Interactor: Interactable {
     ///
     /// This method is driven by the detachment of this interactor's owner router. Subclasses should override this
     /// method to cleanup any resources and states of the `Interactor`. The default implementation does nothing.
-    open func willResignActive() {
+    nonisolated open func willResignActive() {
         // No-op
     }
 
