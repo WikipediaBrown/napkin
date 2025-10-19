@@ -19,14 +19,14 @@ final class ___VARIABLE_productName___Interactor: Interactor, ___VARIABLE_produc
 
     // TODO: Add additional dependencies to constructor. Do not perform any logic
     // in constructor.
-    override init() {}
+    nonisolated override init() {}
 
-    override func didBecomeActive() {
+    nonisolated override func didBecomeActive() {
         super.didBecomeActive()
         // TODO: Implement business logic here.
     }
 
-    override func willResignActive() {
+    nonisolated override func willResignActive() {
         super.willResignActive()
 
         router?.cleanupViews()

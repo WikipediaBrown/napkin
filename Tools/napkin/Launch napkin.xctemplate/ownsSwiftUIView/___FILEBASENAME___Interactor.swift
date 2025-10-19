@@ -28,12 +28,12 @@ final class ___VARIABLE_productName___Interactor: PresentableInteractor<___VARIA
         presenter.listener = self
     }
 
-    override func didBecomeActive() {
+    nonisolated override func didBecomeActive() {
         super.didBecomeActive()
         // TODO: Implement business logic here.
     }
 
-    override func willResignActive() {
+    nonisolated override func willResignActive() {
         super.willResignActive()
         // TODO: Pause any business logic.
     }
