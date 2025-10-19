@@ -99,7 +99,7 @@ open class Interactor: Interactable {
     ///
     /// - note: This method is driven by the attachment of this interactor's owner router. Subclasses should override
     ///   this method to setup subscriptions and initial states.
-    open func didBecomeActive() {
+    nonisolated open func didBecomeActive() {
         // No-op
     }
 

@@ -8,7 +8,7 @@ protocol ___VARIABLE_productName___Routing: LaunchRouting {
 }
 
 protocol ___VARIABLE_productName___Presentable: Presentable {
-    var listener: ___VARIABLE_productName___PresentableListener? { get set }
+    nonisolated var listener: ___VARIABLE_productName___PresentableListener? { get set }
     // TODO: Declare methods the interactor can invoke the presenter to present data.
 }
 
@@ -23,7 +23,7 @@ final class ___VARIABLE_productName___Interactor: PresentableInteractor<___VARIA
 
     // TODO: Add additional dependencies to constructor. Do not perform any logic
     // in constructor.
-    override init(presenter: ___VARIABLE_productName___Presentable) {
+    nonisolated override init(presenter: ___VARIABLE_productName___Presentable) {
         super.init(presenter: presenter)
         presenter.listener = self
     }

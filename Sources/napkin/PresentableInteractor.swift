@@ -20,7 +20,7 @@ import Foundation
 open class PresentableInteractor<PresenterType>: Interactor {
 
     /// The `Presenter` associated with this `Interactor`.
-    public let presenter: PresenterType
+    nonisolated public let presenter: PresenterType
 
     /// Initializer.
     ///
