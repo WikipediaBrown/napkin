@@ -87,7 +87,7 @@ open class ComponentizedBuilder<Component, Router, DynamicBuildDependency, Dynam
     /// - parameter dynamicBuildDependency: The given dynamic dependency.
     /// - returns: The router of the RIB.
     open func build(with component: Component, _ dynamicBuildDependency: DynamicBuildDependency) -> Router {
-        fatalError("This method should be oevrriden by the subclass.")
+        fatalError("This method should be overridden by the subclass.")
     }
 
     // MARK: - Private
@@ -133,7 +133,7 @@ open class SimpleComponentizedBuilder<Component, Router>: ComponentizedBuilder<C
     /// - parameter component: The corresponding DI component to use.
     /// - returns: The router of the RIB.
     open func build(with component: Component) -> Router {
-        fatalError("This method should be oevrriden by the subclass.")
+        fatalError("This method should be overridden by the subclass.")
     }
 
     /// Build a new instance of the RIB.
