@@ -59,15 +59,21 @@ The preferred way of installing **napkin** is via the [Swift Package Manager](ht
 napkin implements the RIB (Router-Interactor-Builder) architecture pattern, which structures your app as a tree of modular units called "napkins." Each napkin encapsulates a specific feature or screen and consists of:
 
 ```mermaid
-flowchart TB
-    subgraph napkin["napkin"]
-        Builder --> Router
-        Builder --> Interactor
-        Builder --> Presenter["Presenter (optional)"]
-        Router --> Interactor
-        Router --> Children["Child Routers"]
-        Presenter --> View["View (optional)"]
+flowchart LR
+    subgraph napkin[" "]
+        direction LR
+        B([Builder]):::builder --> R([Router]):::core
+        B --> I([Interactor]):::core
+        B -.-> P([Presenter]):::optional
+        R --> I
+        R --> C([Child Routers]):::children
+        P -.-> V([View]):::optional
     end
+
+    classDef core fill:#4a90d9,stroke:#2c5aa0,color:#fff
+    classDef builder fill:#50c878,stroke:#3a9a5c,color:#fff
+    classDef optional fill:#f5f5f5,stroke:#999,color:#666,stroke-dasharray: 5 5
+    classDef children fill:#ffb347,stroke:#cc8a2e,color:#fff
 ```
 
 **Key Principles:**
