@@ -19,15 +19,15 @@ import Foundation
 /// The base builder protocol that all builders should conform to.
 public protocol Buildable: AnyObject {}
 
-/// Utility that instantiates a RIB and sets up its internal wirings.
+/// Utility that instantiates a napkin and sets up its internal wirings.
 open class Builder<DependencyType>: Buildable {
 
-    /// The dependency used for this builder to build the RIB.
+    /// The dependency used for this builder to build the napkin.
     public let dependency: DependencyType
 
     /// Initializer.
     ///
-    /// - parameter dependency: The dependency used for this builder to build the RIB.
+    /// - parameter dependency: The dependency used for this builder to build the napkin.
     public init(dependency: DependencyType) {
         self.dependency = dependency
     }

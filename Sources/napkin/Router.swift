@@ -136,7 +136,7 @@ open class Router<InteractorType>: Routing {
         children.append(child)
 
         // Activate child first before loading. Router usually attaches immutable children in didLoad.
-        // We need to make sure the RIB is activated before letting it attach immutable children.
+        // We need to make sure the napkin is activated before letting it attach immutable children.
         child.interactable.activate()
         child.load()
     }

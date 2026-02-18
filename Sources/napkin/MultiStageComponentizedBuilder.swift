@@ -17,7 +17,7 @@
 import Foundation
 
 /// The base class of a builder that involves multiple stages of building
-/// a RIB. Witin the same pass, accesses to the component property shares
+/// a napkin. Within the same pass, accesses to the component property shares
 /// the same instance. Once `finalStageBuild` is invoked, a new instance
 /// is returned from the component property, representing a new pass of
 /// the multi-stage building process.
@@ -27,7 +27,7 @@ open class MultiStageComponentizedBuilder<Component, Router, DynamicBuildDepende
 
     // Builder should not directly retain an instance of the component.
     // That would make the component's lifecycle longer than the built
-    // RIB. Instead, whenever a new instance of the RIB is built, a new
+    // napkin. Instead, whenever a new instance of the napkin is built, a new
     // instance of the DI component should also be instantiated.
 
     /// The DI component used for the current iteration of the multi-
@@ -56,12 +56,12 @@ open class MultiStageComponentizedBuilder<Component, Router, DynamicBuildDepende
     /// Initializer.
     ///
     /// - parameter componentBuilder: The closure to instantiate a new
-    /// instance of the DI component that should be paired with this RIB.
+    /// instance of the DI component that should be paired with this napkin.
     public init(componentBuilder: @escaping () -> Component) {
         self.componentBuilder = componentBuilder
     }
 
-    /// Build a new instance of the RIB with the given dynamic dependency
+    /// Build a new instance of the napkin with the given dynamic dependency
     /// as the last stage of this mult-stage building process.
     ///
     /// - note: Subsequent access to the `component` property after this
@@ -69,7 +69,7 @@ open class MultiStageComponentizedBuilder<Component, Router, DynamicBuildDepende
     /// component, representing a new pass of the multi-stage building
     /// process.
     /// - parameter dynamicDependency: The dynamic dependency to use.
-    /// - returns: The router of the RIB.
+    /// - returns: The router of the napkin.
     public final func finalStageBuild(withDynamicDependency dynamicDependency: DynamicBuildDependency) -> Router {
         let router = finalStageBuild(with: componentForCurrentBuildPass, dynamicDependency)
         defer {
@@ -78,7 +78,7 @@ open class MultiStageComponentizedBuilder<Component, Router, DynamicBuildDepende
         return router
     }
 
-    /// Abstract method that must be overriden to implement the RIB building
+    /// Abstract method that must be overriden to implement the napkin building
     /// logic using the given component and dynamic dependency, as the last
     /// building stage.
     ///
@@ -86,9 +86,9 @@ open class MultiStageComponentizedBuilder<Component, Router, DynamicBuildDepende
     /// consumers of this builder should invoke `finalStageBuild(with dynamicDependency:)`.
     /// - parameter component: The corresponding DI component to use.
     /// - parameter dynamicDependency: The given dynamic dependency.
-    /// - returns: The router of the RIB.
+    /// - returns: The router of the napkin.
     open func finalStageBuild(with component: Component, _ dynamicDependency: DynamicBuildDependency) -> Router {
-        fatalError("This method should be oevrriden by the subclass.")
+        fatalError("This method should be overridden by the subclass.")
     }
 
     // MARK: - Private
@@ -110,7 +110,7 @@ open class SimpleMultiStageComponentizedBuilder<Component, Router>: MultiStageCo
     /// Initializer.
     ///
     /// - parameter componentBuilder: The closure to instantiate a new
-    /// instance of the DI component that should be paired with this RIB.
+    /// instance of the DI component that should be paired with this napkin.
     public override init(componentBuilder: @escaping () -> Component) {
         super.init(componentBuilder: componentBuilder)
     }
@@ -120,25 +120,25 @@ open class SimpleMultiStageComponentizedBuilder<Component, Router>: MultiStageCo
         return finalStageBuild(with: component)
     }
 
-    /// Abstract method that must be overriden to implement the RIB building
+    /// Abstract method that must be overriden to implement the napkin building
     /// logic using the given component.
     ///
     /// - note: This method should never be invoked directly. Instead
     /// consumers of this builder should invoke `finalStageBuild()`.
     /// - parameter component: The corresponding DI component to use.
-    /// - returns: The router of the RIB.
+    /// - returns: The router of the napkin.
     open func finalStageBuild(with component: Component) -> Router {
-        fatalError("This method should be oevrriden by the subclass.")
+        fatalError("This method should be overridden by the subclass.")
     }
 
-    /// Build a new instance of the RIB as the last stage of this mult-
+    /// Build a new instance of the napkin as the last stage of this mult-
     /// stage building process.
     ///
     /// - note: Subsequent access to the `component` property after this
     /// method is returned will result in a separate new instance of the
     /// component, representing a new pass of the multi-stage building
     /// process.
-    /// - returns: The router of the RIB.
+    /// - returns: The router of the napkin.
     public final func finalStageBuild() -> Router {
         return finalStageBuild(withDynamicDependency: ())
     }

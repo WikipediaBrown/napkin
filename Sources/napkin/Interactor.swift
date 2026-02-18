@@ -16,7 +16,6 @@
 
 import Foundation
 import Combine
-import UIKit
 
 /// Protocol defining the activeness of an interactor's scope.
 public protocol InteractorScope: AnyObject {
