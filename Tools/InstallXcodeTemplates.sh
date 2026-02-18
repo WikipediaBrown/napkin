@@ -5,7 +5,7 @@ XCODE_TEMPLATE_DIR=$HOME'/Library/Developer/Xcode/Templates/File Templates/napki
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_NAME="napkin"
 
-# Copy RIBs file templates into the local RIBs template directory
+# Copy napkin file templates into the local napkin template directory
 xcodeTemplate () {
   echo "==> Removing previous napkin Xcode file templates."
 

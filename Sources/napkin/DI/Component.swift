@@ -18,8 +18,8 @@ import Foundation
 
 /// The base class for all components.
 ///
-/// A component defines private properties a RIB provides to its internal `Router`, `Interactor`, `Presenter` and
-/// view units, as well as public properties to its child RIBs.
+/// A component defines private properties a napkin provides to its internal `Router`, `Interactor`, `Presenter` and
+/// view units, as well as public properties to its child napkins.
 ///
 /// A component subclass implementation should conform to child 'Dependency' protocols, defined by all of its immediate
 /// children.
