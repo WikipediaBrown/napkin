@@ -17,48 +17,219 @@
 import Combine
 import UIKit
 
-/// Leak detection status.
+/// The status of leak detection operations.
+///
+/// Use this enum to track whether leak detection is currently monitoring
+/// objects or has completed all pending checks.
+///
+/// ## Usage
+///
+/// Subscribe to ``LeakDetector/status`` to monitor detection progress:
+///
+/// ```swift
+/// LeakDetector.instance.status
+///     .sink { status in
+///         switch status {
+///         case .InProgress:
+///             print("Leak detection is running...")
+///         case .DidComplete:
+///             print("All leak checks completed")
+///         }
+///     }
+///     .store(in: &cancellables)
+/// ```
+///
+/// ## Topics
+///
+/// ### Status Values
+///
+/// - ``InProgress``
+/// - ``DidComplete``
 public enum LeakDetectionStatus {
 
-    /// Leak detection is in progress.
+    /// Leak detection is currently in progress.
+    ///
+    /// One or more objects are being monitored for deallocation.
     case InProgress
 
     /// Leak detection has completed.
+    ///
+    /// All pending leak detection expectations have been resolved.
     case DidComplete
 }
 
-/// The default time values used for leak detection expectations.
+/// Default time intervals for leak detection expectations.
+///
+/// These constants define the standard time windows within which objects
+/// are expected to be deallocated or views are expected to disappear.
+///
+/// ## Overview
+///
+/// When a napkin is detached, its components should deallocate within
+/// a reasonable timeframe. These defaults represent typical expectations:
+///
+/// - Objects should deallocate within 1 second
+/// - View controllers should disappear within 5 seconds
+///
+/// ## Customizing Timeouts
+///
+/// You can provide custom timeouts when setting expectations:
+///
+/// ```swift
+/// // Use a longer timeout for complex teardown
+/// LeakDetector.instance.expectDeallocate(
+///     object: complexObject,
+///     inTime: 3.0
+/// )
+/// ```
+///
+/// ## Topics
+///
+/// ### Time Constants
+///
+/// - ``deallocation``
+/// - ``viewDisappear``
 public struct LeakDefaultExpectationTime {
 
-    /// The object deallocation time.
+    /// The default time for object deallocation (1 second).
+    ///
+    /// Objects like interactors, routers, and components should typically
+    /// deallocate within this timeframe after being released.
     public static let deallocation = 1.0
 
-    /// The view disappear time.
+    /// The default time for view controller disappearance (5 seconds).
+    ///
+    /// View controllers may take longer to disappear due to animations
+    /// and UI lifecycle events.
     public static let viewDisappear = 5.0
 }
 
-/// The handle for a scheduled leak detection.
+/// A handle for managing a scheduled leak detection expectation.
+///
+/// Use this handle to cancel a leak detection check before it completes.
+/// This is useful when you know an object will be retained longer than
+/// expected for legitimate reasons.
+///
+/// ## Usage
+///
+/// ```swift
+/// let handle = LeakDetector.instance.expectDeallocate(object: myObject)
+///
+/// // Later, if the object is intentionally retained
+/// handle.cancel()
+/// ```
+///
+/// ## Topics
+///
+/// ### Cancellation
+///
+/// - ``cancel()``
 public protocol LeakDetectionHandle {
 
-    /// Cancel the scheduled detection.
+    /// Cancels the scheduled leak detection.
+    ///
+    /// Call this method when you determine that an object should not
+    /// be checked for deallocation. After cancellation, no assertion
+    /// will be triggered for this expectation.
     func cancel()
 }
 
-/// An expectation based leak detector, that allows an object's owner to set an expectation that an owned object to be
-/// deallocated within a time frame.
+/// An expectation-based memory leak detector for napkin architectures.
 ///
-/// A `Router` that owns an `Interactor` might for example expect its `Interactor` be deallocated when the `Router`
-/// itself is deallocated. If the interactor does not deallocate in time, a runtime assert is triggered, along with
-/// critical logging.
+/// `LeakDetector` helps identify memory leaks by setting expectations that
+/// objects will be deallocated within a specified timeframe. If an object
+/// fails to deallocate, a runtime assertion is triggered during development.
+///
+/// ## Overview
+///
+/// Memory leaks in napkin architectures typically occur when:
+/// - Retain cycles exist between interactors and listeners
+/// - Child routers aren't properly detached
+/// - Closures strongly capture napkin components
+/// - View controllers are retained after dismissal
+///
+/// The leak detector catches these issues during development by verifying
+/// that objects deallocate when expected.
+///
+/// ## Usage
+///
+/// The leak detector is automatically used by napkin's `Router` class.
+/// You can also use it manually for custom objects:
+///
+/// ```swift
+/// // In Router's detachChild implementation
+/// override func detachChild(_ child: Routing) {
+///     super.detachChild(child)
+///
+///     // Expect the child's interactor to deallocate
+///     LeakDetector.instance.expectDeallocate(
+///         object: child.interactable
+///     )
+/// }
+/// ```
+///
+/// ## Monitoring Status
+///
+/// Subscribe to the ``status`` publisher to know when all leak checks complete:
+///
+/// ```swift
+/// LeakDetector.instance.status
+///     .filter { $0 == .DidComplete }
+///     .sink { _ in
+///         print("All leak checks passed")
+///     }
+///     .store(in: &cancellables)
+/// ```
+///
+/// ## Disabling in Production
+///
+/// Leak detection is designed for development and is disabled in release builds.
+/// You can also disable it via environment variable:
+///
+/// ```bash
+/// DISABLE_LEAK_DETECTION=YES
+/// ```
+///
+/// ## Topics
+///
+/// ### Accessing the Detector
+///
+/// - ``instance``
+/// - ``status``
+///
+/// ### Setting Expectations
+///
+/// - ``expectDeallocate(object:inTime:)``
+/// - ``expectViewControllerDisappear(viewController:inTime:)``
+///
+/// - SeeAlso: ``LeakDetectionStatus``
+/// - SeeAlso: ``LeakDetectionHandle``
+/// - SeeAlso: ``LeakDefaultExpectationTime``
 public class LeakDetector {
 
-    /// The singleton instance.
+    /// The shared singleton instance of the leak detector.
+    ///
+    /// Use this instance to set leak detection expectations throughout
+    /// your application.
     public static let instance = LeakDetector()
 
-    /// The status of leak detection.
+    /// A publisher emitting the current leak detection status.
     ///
-    /// The status changes between InProgress and DidComplete as units register for new detections, cancel existing
-    /// detections, and existing detections complete.
+    /// The status transitions between ``LeakDetectionStatus/InProgress``
+    /// and ``LeakDetectionStatus/DidComplete`` as expectations are registered,
+    /// cancelled, or resolved.
+    ///
+    /// Use this to coordinate testing or cleanup activities:
+    ///
+    /// ```swift
+    /// // Wait for all leak checks to complete before proceeding
+    /// LeakDetector.instance.status
+    ///     .first { $0 == .DidComplete }
+    ///     .sink { _ in
+    ///         // Safe to continue
+    ///     }
+    ///     .store(in: &cancellables)
+    /// ```
     public var status: AnyPublisher<LeakDetectionStatus, Never> {
         return expectationCount
             .map { expectationCount in
@@ -67,11 +238,25 @@ public class LeakDetector {
             .eraseToAnyPublisher()
     }
 
-    /// Sets up an expectation for the given object to be deallocated within the given time.
+    /// Sets up an expectation that an object will be deallocated within a timeframe.
     ///
-    /// - parameter object: The object to track for deallocation.
-    /// - parameter inTime: The time the given object is expected to be deallocated within.
-    /// - returns: The handle that can be used to cancel the expectation.
+    /// Call this method when you expect an object to be deallocated soon,
+    /// such as after detaching a child router. If the object is not
+    /// deallocated within the specified time, an assertion failure occurs.
+    ///
+    /// ```swift
+    /// // Expect interactor to deallocate after router detachment
+    /// LeakDetector.instance.expectDeallocate(
+    ///     object: childRouter.interactable,
+    ///     inTime: 2.0
+    /// )
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - object: The object to track for deallocation.
+    ///   - time: The time window within which deallocation should occur.
+    ///           Defaults to ``LeakDefaultExpectationTime/deallocation``.
+    /// - Returns: A handle that can be used to cancel the expectation.
     @discardableResult
     public func expectDeallocate(object: AnyObject, inTime time: TimeInterval = LeakDefaultExpectationTime.deallocation) -> LeakDetectionHandle {
         expectationCount.send(expectationCount.value + 1)
@@ -107,11 +292,31 @@ public class LeakDetector {
         return handle
     }
 
-    /// Sets up an expectation for the given view controller to disappear within the given time.
+    /// Sets up an expectation that a view controller will disappear within a timeframe.
     ///
-    /// - parameter viewController: The `UIViewController` expected to disappear.
-    /// - parameter inTime: The time the given view controller is expected to disappear.
-    /// - returns: The handle that can be used to cancel the expectation.
+    /// Call this method when you expect a view controller to be removed
+    /// from the view hierarchy, such as after dismissing or popping it.
+    /// If the view controller remains visible after the specified time,
+    /// an assertion failure occurs.
+    ///
+    /// This catches common issues like:
+    /// - View controllers not being dismissed after router detachment
+    /// - View controllers being incorrectly reused without proper cleanup
+    /// - Missing dismissal calls in custom navigation flows
+    ///
+    /// ```swift
+    /// // Expect view controller to disappear after dismissal
+    /// LeakDetector.instance.expectViewControllerDisappear(
+    ///     viewController: childViewController,
+    ///     inTime: 3.0
+    /// )
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - viewController: The view controller expected to disappear.
+    ///   - time: The time window within which disappearance should occur.
+    ///           Defaults to ``LeakDefaultExpectationTime/viewDisappear``.
+    /// - Returns: A handle that can be used to cancel the expectation.
     @discardableResult
     public func expectViewControllerDisappear(viewController: UIViewController, inTime time: TimeInterval = LeakDefaultExpectationTime.viewDisappear) -> LeakDetectionHandle {
         expectationCount.send(expectationCount.value + 1)

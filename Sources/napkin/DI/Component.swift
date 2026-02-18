@@ -16,33 +16,122 @@
 
 import Foundation
 
-/// The base class for all components.
+/// The base class for dependency injection components in the napkin architecture.
 ///
-/// A component defines private properties a napkin provides to its internal `Router`, `Interactor`, `Presenter` and
-/// view units, as well as public properties to its child napkins.
+/// A `Component` serves as the dependency injection container for a napkin unit.
+/// It defines the dependencies that the napkin provides to its internal units
+/// (Router, Interactor, Presenter, View) and to its child napkins.
 ///
-/// A component subclass implementation should conform to child 'Dependency' protocols, defined by all of its immediate
-/// children.
+/// ## Overview
+///
+/// Components form a tree structure that mirrors the router tree. Each component:
+/// - Receives dependencies from its parent via the ``dependency`` property
+/// - Provides dependencies to its own napkin units
+/// - Conforms to child dependency protocols to provide dependencies to children
+///
+/// ## Creating a Component
+///
+/// Subclass `Component` with your parent's dependency protocol as the generic type:
+///
+/// ```swift
+/// // Define what this napkin needs from its parent
+/// protocol MyFeatureDependency: Dependency {
+///     var analyticsService: AnalyticsServiceProtocol { get }
+///     var userSession: UserSession { get }
+/// }
+///
+/// // Define what this napkin provides to its children
+/// protocol MyFeatureChildDependency: Dependency {
+///     var myService: MyServiceProtocol { get }
+///     var analyticsService: AnalyticsServiceProtocol { get }
+/// }
+///
+/// final class MyFeatureComponent: Component<MyFeatureDependency>, MyFeatureChildDependency {
+///
+///     // Pass through from parent
+///     var analyticsService: AnalyticsServiceProtocol {
+///         return dependency.analyticsService
+///     }
+///
+///     // Create a shared instance scoped to this component
+///     var myService: MyServiceProtocol {
+///         return shared { MyService(session: dependency.userSession) }
+///     }
+///
+///     // Create a new instance each time (not shared)
+///     var viewModel: MyViewModel {
+///         return MyViewModel(service: myService)
+///     }
+/// }
+/// ```
+///
+/// ## Shared vs Non-Shared Dependencies
+///
+/// Use the ``shared(_:)`` method to create singleton-like dependencies scoped to
+/// the component's lifetime:
+///
+/// ```swift
+/// // Shared: Same instance returned every time
+/// var database: DatabaseProtocol {
+///     return shared { Database() }
+/// }
+///
+/// // Not shared: New instance every time
+/// var viewModel: ViewModel {
+///     return ViewModel(database: database)
+/// }
+/// ```
+///
+/// ## Topics
+///
+/// ### Creating a Component
+///
+/// - ``init(dependency:)``
+/// - ``dependency``
+///
+/// ### Managing Shared Dependencies
+///
+/// - ``shared(_:)``
+///
+/// - SeeAlso: ``Dependency``
+/// - SeeAlso: ``EmptyComponent``
+/// - SeeAlso: ``Builder``
 open class Component<DependencyType>: Dependency {
 
-    /// The dependency of this `Component`.
+    /// The dependency object provided by the parent component.
+    ///
+    /// Use this property to access dependencies from the parent scope.
+    /// The dependency object typically conforms to a protocol that defines
+    /// the required services and objects.
     public let dependency: DependencyType
 
-    /// Initializer.
+    /// Creates a component with the specified parent dependency.
     ///
-    /// - parameter dependency: The dependency of this `Component`, usually provided by the parent `Component`.
+    /// - Parameter dependency: The dependency object from the parent component,
+    ///   typically the parent's component conforming to this napkin's dependency protocol.
     public init(dependency: DependencyType) {
         self.dependency = dependency
     }
 
-    /// Used to create a shared dependency in your `Component` sub-class. Shared dependencies are retained and reused
-    /// by the component. Each dependent asking for this dependency will receive the same instance while the component
-    /// is alive.
+    /// Creates a shared instance that is retained for the component's lifetime.
     ///
-    /// - note: Any shared dependency's constructor may not switch threads as this might cause a deadlock.
+    /// Use this method to create dependencies that should be shared within the
+    /// component's scope. The factory closure is only called once; subsequent
+    /// calls return the cached instance.
     ///
-    /// - parameter factory: The closure to construct the dependency.
-    /// - returns: The instance.
+    /// ```swift
+    /// var myService: MyServiceProtocol {
+    ///     return shared { MyService() }
+    /// }
+    /// ```
+    ///
+    /// - Important: The factory closure must not switch threads, as this could
+    ///   cause a deadlock due to the internal locking mechanism.
+    ///
+    /// - Parameter factory: A closure that creates the shared instance.
+    /// - Returns: The shared instance, either newly created or cached.
+    ///
+    /// - Note: This method is thread-safe.
     public final func shared<T>(__function: String = #function, _ factory: () -> T) -> T {
         lock.lock()
         defer {
@@ -69,9 +158,27 @@ open class Component<DependencyType>: Dependency {
     private let lock = NSRecursiveLock()
 }
 
-/// The special empty component.
+/// A component for root napkins that have no parent dependencies.
+///
+/// Use `EmptyComponent` as the base for your application's root component:
+///
+/// ```swift
+/// final class AppComponent: EmptyComponent, RootDependency {
+///
+///     var analyticsService: AnalyticsServiceProtocol {
+///         return shared { AnalyticsService() }
+///     }
+///
+///     var networkService: NetworkServiceProtocol {
+///         return shared { NetworkService() }
+///     }
+/// }
+/// ```
+///
+/// - SeeAlso: ``EmptyDependency``
+/// - SeeAlso: ``Component``
 open class EmptyComponent: EmptyDependency {
 
-    /// Initializer.
+    /// Creates an empty component.
     public init() {}
 }
