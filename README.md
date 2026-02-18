@@ -25,8 +25,7 @@ napkin supports Apple platforms only:
 - iOS 13.0+
 - macOS (via Mac Catalyst)
 
-## Installation
-
+## 🛠️ Installation
 **napkin** can be installed with Swift Package Manager.
 
 ### Swift Package Manager (Xcode 12 or higher)
@@ -40,7 +39,8 @@ The preferred way of installing **napkin** is via the [Swift Package Manager](ht
 
 [Adding Package Dependencies to Your App](https://developer.apple.com/documentation/swift_packages/adding_package_dependencies_to_your_app)
 
-## Usage
+
+## 👩🏽‍💻 Usage
 
 ### Core Components
 
@@ -112,11 +112,10 @@ class MyRouter: ViewableRouter<MyInteractor, MyViewController> {
 }
 ```
 
-## Tooling
+## 🪛 Tooling
 
-### Xcode Templates
-
-**napkin** comes with templates that let you add all components of a napkin (Builder, Interactor, Router & optional ViewController) straight from the `New > File..` menu.
+### 🗺️ Get **napkin** Xcode templates
+**napkin** comes with sweet templates that let you add all of the components of a napkin (Builder, Interactor, Router & optional ViewController) straight from the `New > File..` menu. To add them:
 
 #### Clone the repository
 ```bash
@@ -131,42 +130,33 @@ bash napkin/Tools/InstallXcodeTemplates.sh
 #### Check Xcode
 Open an Xcode project and create a new napkin. Let us know if it doesn't work by creating an issue.
 
-## Testing
+## 🧪 Test
 
-Run `Command+U` in Xcode to run the unit tests. Tests are run automatically for all pull requests.
+Run `command+u` in ***Xcode*** to run the unit tests. Test are run automatically for all pull requests. When running tests locally, be sure to be using `iOS 17.2` or later or `macOS 14.5` or later.
 
-The test suite includes:
-- **InteractorTests**: Lifecycle, activation/deactivation, stream emissions
-- **RouterTests**: Child management, lifecycle, subtree activation
-- **ComponentTests**: Dependency injection, shared instances, thread safety
-- **BuilderTests**: Dependency storage, router creation
+### 🏎️ Fastlane Scan
 
-### Fastlane
+You can also run tests on both `iOS` & `macOS` using [`fastlane`](https://fastlane.tools). This requires installing `fastlane` which in turn requires installing [`Homebrew`](https://brew.sh). With `Homebrew` and `fastlane` installed you can open a terminal and navigate to the `SFSymbolsKit`'s root folder and run the command `fastlane unit_test`. This will run the unit tests for both `iOS` & `macOS` in succession.
 
-You can also run tests using [`fastlane`](https://fastlane.tools). With `Homebrew` and `fastlane` installed, navigate to the napkin root folder and run:
-
-```bash
-fastlane unit_test
-```
-
-## Versioning
+## 🐁 Versioning
 
 **napkin** releases a [new version on GitHub](https://github.com/WikipediaBrown/napkin/releases) automatically when a pull request is approved from the `develop` branch to the `main` branch.
 
-## Contribute
+## 👩🏽‍💻 Contribute
 
-Send a pull request or create an issue.
+Send a pull request my dude... or create an issue.
+>>>>>>> main
 
 Must sign commits:
 ```bash
 git config commit.gpgsign true
 ```
-
-## Author
+from this repository
+## ✍🏽 Author
 
 Wikipedia Brown
 
-## License
+## 🪪 License
 
 **napkin** is available under the Apache 2.0 license. See the LICENSE file for more info.
 
