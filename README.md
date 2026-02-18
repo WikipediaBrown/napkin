@@ -61,8 +61,9 @@ napkin implements the RIB (Router-Interactor-Builder) architecture pattern, whic
 ```mermaid
 flowchart TB
     subgraph napkin["napkin"]
-        Builder --> Component
         Builder --> Router
+        Builder --> Interactor
+        Component --> Builder
         Router --> Interactor
         Router --> ChildRouters["Child Routers"]
         Interactor --> Presenter["Presenter (optional)"]
