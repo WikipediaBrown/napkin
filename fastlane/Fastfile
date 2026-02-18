@@ -22,10 +22,9 @@ project_name = File.basename(Pathname.getwd.parent) # This just gets the name of
 
 platform :ios do
 
-  desc 'Run iOS & macOS Unit Tests'
+  desc 'Run Unit Tests'
   lane :unit_test do
-    unit_test_iOS
-    # unit_test_macOS
+    unit_test_macOS
   end
 
   desc 'Run iOS Unit Tests'
@@ -35,25 +34,13 @@ platform :ios do
     run_tests(
       package_path: ".",
       scheme: "#{project_name}",
-      device: 'iPhone 15 Pro',
+      device: 'iPhone 16 Pro',
       code_coverage: true,
       output_directory: COVERAGE_OUTPUT_PATH,
       output_types: 'html',
       result_bundle: true,
       clean: true
     )
-    # xcov(
-    #    is_swift_package: true,
-    #    output_directory: COVERAGE_OUTPUT_PATH,
-    #    markdown_report: true,
-    #    minimum_coverage_percentage: 99.999 # Cannot be 100% because xcov has a bug where it wont support total code coverage.
-    # )
-    # danger(
-    #    danger_id: 'unit-tests-iOS',
-    #    dangerfile: 'DangerFile',
-    #    github_api_token: ENV['GITHUB_TOKEN'],
-    #    verbose: true
-    # ) if ENV['CI']
   end
 
   desc 'Run macOS Unit Tests'
@@ -63,25 +50,13 @@ platform :ios do
     run_tests(
       package_path: ".",
       scheme: "#{project_name}",
-      destination: 'platform=macOS',
+      destination: 'platform=macOS,variant=Mac Catalyst',
       code_coverage: true,
       output_directory: COVERAGE_OUTPUT_PATH,
       output_types: 'html',
       result_bundle: true,
       clean: true
     )
-    # xcov(
-    #    is_swift_package: true,
-    #    output_directory: COVERAGE_OUTPUT_PATH,
-    #    markdown_report: true,
-    #    minimum_coverage_percentage: 99.999 # Cannot be 100% because xcov has a bug where it wont support total code coverage.
-    # )
-    # danger(
-    #    danger_id: 'unit-tests-macOS',
-    #    dangerfile: 'DangerFile',
-    #    github_api_token: ENV['GITHUB_TOKEN'],
-    #    verbose: true
-    # ) if ENV['CI']
   end
 
   desc "Create Release for GitHub"
@@ -93,7 +68,7 @@ platform :ios do
       merge_commit_filtering: "exclude_merges",
       pretty: "- (%ae) %s"
     )
-    
+
     github_release = set_github_release(
       repository_name: ENV["REPOSITORY_NAME"],
       api_bearer: ENV["GITHUB_TOKEN"],
@@ -112,34 +87,9 @@ platform :ios do
     new_version
   end
 
-  # desc "Run Unit Tests"
-  # lane :unit_test do
-  #   spm(
-  #     command: 'generate-xcodeproj',
-  #     enable_code_coverage: true
-  #   )
-  #   run_tests(
-  #     project: "#{project_name}.xcodeproj",
-  #     scheme: "#{project_name}-Package",
-  #     device: 'iPhone 13',
-  #     code_coverage: true,
-  #     output_directory: './fastlane/test_output',
-  #     output_types: 'html',
-  #     clean: true,
-  #     result_bundle: true
-  #   )
-  #   xcov(
-  #     project: "#{project_name}.xcodeproj",
-  #     scheme: "#{project_name}-Package",
-  #     output_directory: './fastlane/code_coverage',
-  #     include_targets: "#{project_name}.framework",
-  #     minimum_coverage_percentage: 0.0
-  #   )
-  # end
-
   # Increments and returns version of last tag. Pass the string `major
   # or `minor` to increment major or minor version. Otherwise a the
-  # patch is incremented.  
+  # patch is incremented.
   def increment_version(bump="")
     major, minor, patch = last_git_tag.split('.').map(&:to_i)
 
