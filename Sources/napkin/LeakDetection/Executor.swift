@@ -18,19 +18,77 @@ import Dispatch
 import Foundation
 import Combine
 
+/// A utility for executing delayed logic with debugger-aware timing.
+///
+/// `Executor` provides a mechanism for scheduling delayed execution that
+/// accounts for time spent paused in the debugger. This is essential for
+/// leak detection, where breakpoint pauses shouldn't count toward
+/// deallocation timeouts.
+///
+/// ## Overview
+///
+/// Standard delay mechanisms like `DispatchQueue.asyncAfter` count real
+/// wall-clock time, including time spent paused at breakpoints. This causes
+/// false positives in leak detection during debugging sessions.
+///
+/// `Executor` solves this by measuring actual application run time rather
+/// than wall-clock time, excluding long pauses that exceed the expected
+/// frame duration.
+///
+/// ## Usage
+///
+/// ```swift
+/// // Execute after 2 seconds of actual app runtime
+/// Executor.execute(withDelay: 2.0) {
+///     print("This runs after 2 seconds of runtime")
+/// }
+///
+/// // Custom frame duration for performance-sensitive code
+/// Executor.execute(withDelay: 1.0, maxFrameDuration: 16) {
+///     // More sensitive to dropped frames
+/// }
+/// ```
+///
+/// ## How It Works
+///
+/// The executor uses a timer that fires every `maxFrameDuration / 3`
+/// milliseconds. Each tick, it measures elapsed time and caps it at
+/// `maxFrameDuration`. This means if you pause in the debugger for
+/// 10 seconds, only ~33ms is counted toward the delay.
+///
+/// ## Topics
+///
+/// ### Delayed Execution
+///
+/// - ``execute(withDelay:maxFrameDuration:logic:)``
+///
+/// - SeeAlso: ``LeakDetector``
 public class Executor {
 
-    /// Execute the given logic after the given delay assuming the given maximum frame duration.
+    /// Executes logic after a delay, excluding debugger pause time.
     ///
-    /// This allows excluding the time elapsed due to breakpoint pauses.
+    /// This method schedules the given closure to execute after the
+    /// specified delay of actual application runtime. Time spent paused
+    /// in the debugger is not counted toward the delay.
     ///
-    /// - note: The logic closure is not guaranteed to be performed exactly after the given delay. It may be performed
-    ///   later if the actual frame duration exceeds the given maximum frame duration.
+    /// ```swift
+    /// Executor.execute(withDelay: 1.0) {
+    ///     // Verify object deallocation
+    ///     assert(weakRef == nil, "Object should have deallocated")
+    /// }
+    /// ```
     ///
-    /// - parameter delay: The delay to perform the logic, excluding any potential elapsed time due to breakpoint
-    ///   pauses.
-    /// - parameter maxFrameDuration: The maximum duration a single frame should take. Defaults to 33ms.
-    /// - parameter logic: The closure logic to perform.
+    /// - Note: The closure may execute later than the specified delay if
+    ///   frames are dropped or the app is backgrounded. The delay represents
+    ///   a minimum time, not an exact time.
+    ///
+    /// - Parameters:
+    ///   - delay: The minimum delay before execution, measured in seconds
+    ///            of actual application runtime.
+    ///   - maxFrameDuration: The maximum time in milliseconds that a single
+    ///                       frame should take. Time beyond this per frame
+    ///                       is ignored (debugger pauses, etc.). Defaults to 33ms.
+    ///   - logic: The closure to execute after the delay.
     public static func execute(withDelay delay: TimeInterval, maxFrameDuration: Int = 33, logic: @escaping () -> ()) {
         let period = TimeInterval(maxFrameDuration / 3)
         var lastRunLoopTime = Date().timeIntervalSinceReferenceDate

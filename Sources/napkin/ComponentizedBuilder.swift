@@ -16,21 +16,43 @@
 
 import Foundation
 
-/// Utility that instantiates a napkin and sets up its internal wirings.
-/// This class ensures the strict one to one relationship between a
-/// new instance of the napkin and a single new instance of the component.
-/// Every time a new napkin is built a new instance of the corresponding
-/// component is also instantiated.
+/// A builder that ensures a one-to-one relationship between napkin and component instances.
 ///
-/// This is the most generic version of the builder class that supports
-/// both dynamic dependencies injected when building the napkin as well
-/// as dynamic dependencies for instantiating the component. For more
-/// convenient base class, please refer to `SimpleComponentizedBuilder`.
+/// `ComponentizedBuilder` provides an alternative to ``Builder`` that guarantees each
+/// napkin instance receives a fresh component instance. This is useful when you need
+/// strict lifecycle coupling between the napkin and its dependency scope.
 ///
-/// - note: Subclasses should override the `build(with)` method to
-/// implement the actual napkin building logic, with the given component
-/// and dynamic dependency.
-/// - SeeAlso: SimpleComponentizedBuilder
+/// ## Overview
+///
+/// Unlike ``Builder``, which receives a pre-existing dependency, `ComponentizedBuilder`:
+/// - Creates a new component instance for each build invocation
+/// - Supports dynamic dependencies for both building and component creation
+/// - Validates that the component builder produces new instances
+///
+/// ## When to Use
+///
+/// Use `ComponentizedBuilder` when:
+/// - You need guaranteed fresh dependency scopes per napkin instance
+/// - You're building reusable napkins that may be instantiated multiple times
+/// - You need to pass runtime values to the component
+///
+/// For simpler cases, use ``SimpleComponentizedBuilder`` or the standard ``Builder``.
+///
+/// ## Topics
+///
+/// ### Creating a Builder
+///
+/// - ``init(componentBuilder:)``
+///
+/// ### Building
+///
+/// - ``build(withDynamicBuildDependency:dynamicComponentDependency:)-4t8bp``
+/// - ``build(withDynamicBuildDependency:dynamicComponentDependency:)-3vxfl``
+/// - ``build(with:_:)``
+///
+/// - SeeAlso: ``SimpleComponentizedBuilder``
+/// - SeeAlso: ``Builder``
+/// - SeeAlso: ``MultiStageComponentizedBuilder``
 open class ComponentizedBuilder<Component, Router, DynamicBuildDependency, DynamicComponentDependency>: Buildable {
 
     // Builder should not directly retain an instance of the component.
@@ -38,32 +60,36 @@ open class ComponentizedBuilder<Component, Router, DynamicBuildDependency, Dynam
     // napkin. Instead, whenever a new instance of the napkin is built, a new
     // instance of the DI component should also be instantiated.
 
-    /// Initializer.
+    /// Creates a builder with the specified component factory.
     ///
-    /// - parameter componentBuilder: The closure to instantiate a new
-    /// instance of the DI component that should be paired with this napkin.
+    /// - Parameter componentBuilder: A closure that creates a new component instance.
+    ///   This closure is called each time ``build(withDynamicBuildDependency:dynamicComponentDependency:)-4t8bp``
+    ///   is invoked.
     public init(componentBuilder: @escaping (DynamicComponentDependency) -> Component) {
         self.componentBuilder = componentBuilder
     }
 
-    /// Build a new instance of the napkin with the given dynamic dependencies.
+    /// Builds a new napkin instance with the given dynamic dependencies.
     ///
-    /// - parameter dynamicBuildDependency: The dynamic dependency to use
-    /// to build the napkin.
-    /// - parameter dynamicComponentDependency: The dynamic dependency to
-    /// use to instantiate the component.
-    /// - returns: The router of the napkin.
+    /// This method creates a fresh component and uses it to build the napkin.
+    ///
+    /// - Parameters:
+    ///   - dynamicBuildDependency: Runtime dependencies needed for building the napkin.
+    ///   - dynamicComponentDependency: Runtime dependencies needed for creating the component.
+    /// - Returns: The router representing the built napkin.
     public final func build(withDynamicBuildDependency dynamicBuildDependency: DynamicBuildDependency, dynamicComponentDependency: DynamicComponentDependency) -> Router {
         return build(withDynamicBuildDependency: dynamicBuildDependency, dynamicComponentDependency: dynamicComponentDependency).1
     }
 
-    /// Build a new instance of the napkin with the given dynamic dependencies.
+    /// Builds a new napkin instance and returns both the component and router.
     ///
-    /// - parameter dynamicBuildDependency: The dynamic dependency to use
-    /// to build the napkin.
-    /// - parameter dynamicComponentDependency: The dynamic dependency to
-    /// use to instantiate the component.
-    /// - returns: The tuple of component and router of the napkin.
+    /// Use this method when you need access to the component after building,
+    /// for example to use it as a dependency for sibling napkins.
+    ///
+    /// - Parameters:
+    ///   - dynamicBuildDependency: Runtime dependencies needed for building the napkin.
+    ///   - dynamicComponentDependency: Runtime dependencies needed for creating the component.
+    /// - Returns: A tuple containing the component and router.
     public final func build(withDynamicBuildDependency dynamicBuildDependency: DynamicBuildDependency, dynamicComponentDependency: DynamicComponentDependency) -> (Component, Router) {
         let component = componentBuilder(dynamicComponentDependency)
 
@@ -78,14 +104,15 @@ open class ComponentizedBuilder<Component, Router, DynamicBuildDependency, Dynam
         return (component, build(with: component, dynamicBuildDependency))
     }
 
-    /// Abstract method that must be overriden to implement the napkin building
-    /// logic using the given component and dynamic dependency.
+    /// Override this method to implement the napkin building logic.
     ///
-    /// - note: This method should never be invoked directly. Instead
-    /// consumers of this builder should invoke `build(with dynamicDependency:)`.
-    /// - parameter component: The corresponding DI component to use.
-    /// - parameter dynamicBuildDependency: The given dynamic dependency.
-    /// - returns: The router of the napkin.
+    /// - Important: Do not call this method directly. Use
+    ///   ``build(withDynamicBuildDependency:dynamicComponentDependency:)-4t8bp`` instead.
+    ///
+    /// - Parameters:
+    ///   - component: The freshly created component to use for dependency injection.
+    ///   - dynamicBuildDependency: The runtime dependencies for building.
+    /// - Returns: The router representing the built napkin.
     open func build(with component: Component, _ dynamicBuildDependency: DynamicBuildDependency) -> Router {
         fatalError("This method should be overridden by the subclass.")
     }
@@ -96,43 +123,73 @@ open class ComponentizedBuilder<Component, Router, DynamicBuildDependency, Dynam
     private weak var lastComponent: AnyObject?
 }
 
-/// A convenient base builder class that does not require any build or
-/// component dynamic dependencies.
+/// A simplified componentized builder that requires no dynamic dependencies.
 ///
-/// - note: If the build method requires dynamic dependency, please
-/// refer to `DynamicBuildComponentizedBuilder`. If component instantiation
-/// requires dynamic dependency, please refer to `DynamicComponentizedBuilder`.
-/// If both require dynamic dependencies, please use `ComponentizedBuilder`.
-/// - SeeAlso: ComponentizedBuilder
+/// `SimpleComponentizedBuilder` is a convenience subclass of ``ComponentizedBuilder``
+/// for cases where neither the build process nor component creation require
+/// runtime dependencies.
+///
+/// ## Usage
+///
+/// ```swift
+/// final class MyFeatureBuilder: SimpleComponentizedBuilder<MyFeatureComponent, MyFeatureRouting>,
+///                               MyFeatureBuildable {
+///
+///     init(dependency: MyFeatureDependency) {
+///         super.init {
+///             MyFeatureComponent(dependency: dependency)
+///         }
+///     }
+///
+///     override func build(with component: MyFeatureComponent) -> MyFeatureRouting {
+///         let interactor = MyFeatureInteractor()
+///         return MyFeatureRouter(interactor: interactor)
+///     }
+/// }
+/// ```
+///
+/// ## Topics
+///
+/// ### Creating a Builder
+///
+/// - ``init(componentBuilder:)``
+///
+/// ### Building
+///
+/// - ``build()``
+/// - ``build(with:)``
+///
+/// - SeeAlso: ``ComponentizedBuilder``
+/// - SeeAlso: ``Builder``
 open class SimpleComponentizedBuilder<Component, Router>: ComponentizedBuilder<Component, Router, (), ()> {
 
-    /// Initializer.
+    /// Creates a builder with the specified component factory.
     ///
-    /// - parameter componentBuilder: The closure to instantiate a new
-    /// instance of the DI component that should be paired with this napkin.
+    /// - Parameter componentBuilder: A closure that creates a new component instance.
     public init(componentBuilder: @escaping () -> Component) {
         super.init(componentBuilder: componentBuilder)
     }
 
-    /// This method should not be directly invoked.
+    /// Internal override. Do not call directly.
     public final override func build(with component: Component, _ dynamicDependency: ()) -> Router {
         return build(with: component)
     }
 
-    /// Abstract method that must be overriden to implement the napkin building
-    /// logic using the given component.
+    /// Override this method to implement the napkin building logic.
     ///
-    /// - note: This method should never be invoked directly. Instead
-    /// consumers of this builder should invoke `build(with dynamicDependency:)`.
-    /// - parameter component: The corresponding DI component to use.
-    /// - returns: The router of the napkin.
+    /// - Important: Do not call this method directly. Use ``build()`` instead.
+    ///
+    /// - Parameter component: The freshly created component to use for dependency injection.
+    /// - Returns: The router representing the built napkin.
     open func build(with component: Component) -> Router {
         fatalError("This method should be overridden by the subclass.")
     }
 
-    /// Build a new instance of the napkin.
+    /// Builds a new napkin instance.
     ///
-    /// - returns: The router of the napkin.
+    /// This method creates a fresh component and uses it to build the napkin.
+    ///
+    /// - Returns: The router representing the built napkin.
     public final func build() -> Router {
         return build(withDynamicBuildDependency: (), dynamicComponentDependency: ())
     }

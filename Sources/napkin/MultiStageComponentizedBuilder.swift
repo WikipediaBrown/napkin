@@ -16,13 +16,68 @@
 
 import Foundation
 
-/// The base class of a builder that involves multiple stages of building
-/// a napkin. Within the same pass, accesses to the component property shares
-/// the same instance. Once `finalStageBuild` is invoked, a new instance
-/// is returned from the component property, representing a new pass of
-/// the multi-stage building process.
+/// A builder for napkins that require multiple stages of construction.
 ///
-/// - SeeAlso: SimpleMultiStageComponentizedBuilder
+/// `MultiStageComponentizedBuilder` supports building processes where the
+/// component needs to be accessed multiple times before finalizing the napkin.
+/// Within a single build pass, the same component instance is reused.
+///
+/// ## Overview
+///
+/// Some napkins require a multi-stage build process:
+/// 1. Access the component to configure dependencies
+/// 2. Build child napkins using the same component
+/// 3. Finally build the parent napkin
+///
+/// This builder ensures component consistency throughout these stages.
+///
+/// ## Usage
+///
+/// ```swift
+/// final class ComplexBuilder: MultiStageComponentizedBuilder<ComplexComponent,
+///                                                             ComplexRouting,
+///                                                             ComplexListener> {
+///
+///     init(dependency: ComplexDependency) {
+///         super.init {
+///             ComplexComponent(dependency: dependency)
+///         }
+///     }
+///
+///     func buildChildA() -> ChildARouting {
+///         // Uses the same component instance
+///         return ChildABuilder(dependency: componentForCurrentBuildPass).build()
+///     }
+///
+///     func buildChildB() -> ChildBRouting {
+///         // Uses the same component instance
+///         return ChildBBuilder(dependency: componentForCurrentBuildPass).build()
+///     }
+///
+///     override func finalStageBuild(with component: ComplexComponent,
+///                                   _ listener: ComplexListener) -> ComplexRouting {
+///         let interactor = ComplexInteractor()
+///         interactor.listener = listener
+///         return ComplexRouter(interactor: interactor,
+///                              childA: buildChildA(),
+///                              childB: buildChildB())
+///     }
+/// }
+/// ```
+///
+/// ## Topics
+///
+/// ### Accessing the Component
+///
+/// - ``componentForCurrentBuildPass``
+///
+/// ### Building
+///
+/// - ``finalStageBuild(withDynamicDependency:)``
+/// - ``finalStageBuild(with:_:)``
+///
+/// - SeeAlso: ``SimpleMultiStageComponentizedBuilder``
+/// - SeeAlso: ``ComponentizedBuilder``
 open class MultiStageComponentizedBuilder<Component, Router, DynamicBuildDependency>: Buildable {
 
     // Builder should not directly retain an instance of the component.

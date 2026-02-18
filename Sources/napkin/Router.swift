@@ -17,21 +17,76 @@
 import Combine
 
 /// The lifecycle stages of a router scope.
+///
+/// Use this enum to observe when a router transitions through its lifecycle stages
+/// via the ``RouterScope/lifecycle`` publisher.
 public enum RouterLifecycle {
 
-    /// Router did load.
+    /// The router has finished loading and is ready to be used.
+    ///
+    /// This event is emitted once when the router's ``Router/load()`` method completes.
+    /// At this point, the router's ``Router/didLoad()`` method has been called and
+    /// any initial child routers should be attached.
     case didLoad
 }
 
-/// The scope of a `Router`, defining various lifecycles of a `Router`.
+/// A protocol that defines the lifecycle scope of a router.
+///
+/// `RouterScope` provides a reactive interface for observing router lifecycle events.
+/// Use the ``lifecycle`` publisher to respond to lifecycle changes.
+///
+/// - SeeAlso: ``RouterLifecycle``
+/// - SeeAlso: ``Routing``
 public protocol RouterScope: AnyObject {
 
-    /// An observable that emits values when the router scope reaches its corresponding life-cycle stages. This
-    /// observable completes when the router scope is deallocated.
+    /// A publisher that emits lifecycle events for this router.
+    ///
+    /// Subscribe to this publisher to observe when the router reaches specific lifecycle stages.
+    /// The publisher completes when the router is deallocated.
+    ///
+    /// ```swift
+    /// router.lifecycle
+    ///     .sink { stage in
+    ///         switch stage {
+    ///         case .didLoad:
+    ///             print("Router loaded")
+    ///         }
+    ///     }
+    ///     .store(in: &cancellables)
+    /// ```
     var lifecycle: AnyPublisher<RouterLifecycle, Never> { get }
 }
 
-/// The base protocol for all routers.
+/// The base protocol for all routers in the napkin architecture.
+///
+/// `Routing` extends ``RouterScope`` to provide the core functionality for managing
+/// the napkin tree structure. Routers are responsible for:
+/// - Owning and driving the lifecycle of their associated ``Interactor``
+/// - Managing child routers through attach and detach operations
+/// - Coordinating navigation within the application
+///
+/// ## Overview
+///
+/// A router acts as the backbone of a napkin unit, connecting business logic (interactor)
+/// with navigation and child management. The router tree mirrors the logical structure
+/// of your application.
+///
+/// ## Implementing Custom Routing Protocols
+///
+/// Define a custom routing protocol that extends `Routing` for type-safe navigation:
+///
+/// ```swift
+/// protocol MyFeatureRouting: Routing {
+///     func routeToDetails(withId id: String)
+///     func routeBackFromDetails()
+/// }
+/// ```
+///
+/// - Note: The attach and detach methods accept `Routing` rather than concrete `Router`
+///   instances to support mocking in unit tests.
+///
+/// - SeeAlso: ``Router``
+/// - SeeAlso: ``Interactable``
 public protocol Routing: RouterScope {
 
     // The following methods must be declared in the base protocol, since `Router` internally  invokes these methods.
@@ -39,61 +94,169 @@ public protocol Routing: RouterScope {
     // custom subclass routing protocol, and also this base protocol to allow the `Router` implementation to execute
     // base class logic without error.
 
-    /// The base interactable associated with this `Router`.
+    /// The interactor associated with this router.
+    ///
+    /// The router owns this interactor and drives its lifecycle. When the router is attached
+    /// to a parent, the interactor is activated. When detached, the interactor is deactivated.
     var interactable: Interactable { get }
 
-    /// The list of children routers of this `Router`.
+    /// The list of child routers currently attached to this router.
+    ///
+    /// This array contains all routers that have been attached via ``attachChild(_:)``
+    /// and not yet detached. The order reflects the order of attachment.
     var children: [Routing] { get }
 
-    /// Loads the `Router`.
+    /// Loads the router and prepares it for use.
     ///
-    /// - note: This method is internally used by the framework. Application code should never
-    ///   invoke this method explicitly.
+    /// This method is called internally by the framework when the router is attached
+    /// to its parent. It triggers the ``Router/didLoad()`` callback.
+    ///
+    /// - Important: Application code should never invoke this method directly.
+    ///   The framework manages router loading automatically.
     func load()
 
     // We cannot declare the attach/detach child methods to take in concrete `Router` instances,
     // since during unit testing, we need to use mocked child routers.
 
-    /// Attaches the given router as a child.
+    /// Attaches a child router to this router.
     ///
-    /// - parameter child: The child router to attach.
+    /// When a child router is attached:
+    /// 1. The child's interactor is activated
+    /// 2. The child router is loaded (if not already loaded)
+    /// 3. The child is added to the ``children`` array
+    ///
+    /// - Parameter child: The child router to attach. Must not already be attached.
+    /// - Precondition: The child router must not already be attached to this router.
     func attachChild(_ child: Routing)
 
-    /// Detaches the given router from the tree.
+    /// Detaches a child router from this router.
     ///
-    /// - parameter child: The child router to detach.
+    /// When a child router is detached:
+    /// 1. The child's interactor is deactivated
+    /// 2. The child is removed from the ``children`` array
+    /// 3. Leak detection is triggered to verify proper cleanup
+    ///
+    /// - Parameter child: The child router to detach. Must be currently attached.
     func detachChild(_ child: Routing)
 }
 
-/// The base class of all routers that does not own view controllers, representing application states.
+/// The base class for routers that do not own view controllers.
 ///
-/// A router acts on inputs from its corresponding interactor, to manipulate application state, forming a tree of
-/// routers. A router may obtain a view controller through constructor injection to manipulate view controller tree.
-/// The DI structure guarantees that the injected view controller must be from one of this router's ancestors.
-/// Router drives the lifecycle of its owned `Interactor`.
+/// `Router` is the core class that manages application state and the napkin tree structure.
+/// It owns an ``Interactor`` and drives its lifecycle based on attachment state.
 ///
-/// Routers should always use helper builders to instantiate children routers.
+/// ## Overview
+///
+/// A router serves as the backbone of a napkin unit:
+/// - It owns and manages the lifecycle of its associated ``Interactor``
+/// - It maintains a tree of child routers via ``attachChild(_:)`` and ``detachChild(_:)``
+/// - It coordinates navigation and state transitions
+///
+/// ## Lifecycle
+///
+/// The router has two main lifecycle events:
+/// 1. **Loading**: When ``load()`` is called (internally by the framework), ``didLoad()`` is invoked
+/// 2. **Activation**: When attached to a parent, the interactor is activated; when detached, it's deactivated
+///
+/// ## Usage
+///
+/// Subclass `Router` to create custom routers:
+///
+/// ```swift
+/// final class MyFeatureRouter: Router<MyFeatureInteractor>, MyFeatureRouting {
+///
+///     private let detailsBuilder: DetailsBuildable
+///     private var detailsRouter: DetailsRouting?
+///
+///     init(interactor: MyFeatureInteractor, detailsBuilder: DetailsBuildable) {
+///         self.detailsBuilder = detailsBuilder
+///         super.init(interactor: interactor)
+///         interactor.router = self
+///     }
+///
+///     override func didLoad() {
+///         super.didLoad()
+///         // Attach any permanent child routers here
+///     }
+///
+///     func routeToDetails(withId id: String) {
+///         guard detailsRouter == nil else { return }
+///         let router = detailsBuilder.build(withListener: interactor, id: id)
+///         detailsRouter = router
+///         attachChild(router)
+///     }
+///
+///     func routeBackFromDetails() {
+///         guard let router = detailsRouter else { return }
+///         detachChild(router)
+///         detailsRouter = nil
+///     }
+/// }
+/// ```
+///
+/// ## Topics
+///
+/// ### Creating a Router
+///
+/// - ``init(interactor:)``
+///
+/// ### Lifecycle
+///
+/// - ``load()``
+/// - ``didLoad()``
+/// - ``lifecycle``
+///
+/// ### Managing Children
+///
+/// - ``attachChild(_:)``
+/// - ``detachChild(_:)``
+/// - ``children``
+///
+/// ### Accessing the Interactor
+///
+/// - ``interactor``
+/// - ``interactable``
+///
+/// - SeeAlso: ``Routing``
+/// - SeeAlso: ``ViewableRouter``
+/// - SeeAlso: ``Interactor``
 open class Router<InteractorType>: Routing {
 
-    /// The corresponding `Interactor` owned by this `Router`.
+    /// The strongly-typed interactor owned by this router.
+    ///
+    /// Use this property to access the specific interactor type with all its custom methods and properties.
+    /// The router drives this interactor's lifecycle based on attachment state.
     public let interactor: InteractorType
 
-    /// The base `Interactable` associated with this `Router`.
+    /// The interactor as an ``Interactable`` protocol reference.
+    ///
+    /// This property provides access to the base interactor lifecycle methods.
+    /// It's used internally by the framework for activation and deactivation.
     public let interactable: Interactable
 
-    /// The list of children `Router`s of this `Router`.
+    /// The child routers currently attached to this router.
+    ///
+    /// This array is automatically updated when children are attached or detached.
+    /// Children are stored in the order they were attached.
     public final var children: [Routing] = []
 
-    /// The observable that emits values when the router scope reaches its corresponding life-cycle stages.
+    /// A publisher that emits router lifecycle events.
     ///
-    /// This observable completes when the router scope is deallocated.
+    /// Subscribe to this publisher to observe when the router completes loading.
+    /// The publisher completes when the router is deallocated.
+    ///
+    /// - SeeAlso: ``RouterLifecycle``
     public final var lifecycle: AnyPublisher<RouterLifecycle, Never> {
         return lifecycleSubject.eraseToAnyPublisher()
     }
 
-    /// Initializer.
+    /// Creates a router with the specified interactor.
     ///
-    /// - parameter interactor: The corresponding `Interactor` of this `Router`.
+    /// The interactor must conform to ``Interactable``. If it doesn't, this initializer
+    /// will trigger a fatal error.
+    ///
+    /// - Parameter interactor: The interactor that this router will own and manage.
+    /// - Precondition: The interactor must conform to ``Interactable``.
     public init(interactor: InteractorType) {
         self.interactor = interactor
         guard let interactable = interactor as? Interactable else {
@@ -102,10 +265,12 @@ open class Router<InteractorType>: Routing {
         self.interactable = interactable
     }
 
-    /// Loads the `Router`.
+    /// Loads the router and prepares it for use.
     ///
-    /// - note: This method is internally used by the framework. Application code should never invoke this method
-    ///   explicitly.
+    /// This method is called internally by the framework when the router is attached.
+    /// It triggers the ``didLoad()`` callback and emits a lifecycle event.
+    ///
+    /// - Important: Do not call this method directly. The framework manages loading automatically.
     public final func load() {
         guard !didLoadFlag else {
             return
@@ -116,10 +281,19 @@ open class Router<InteractorType>: Routing {
         didLoad()
     }
 
-    /// Called when the router has finished loading.
+    /// Called once when the router finishes loading.
     ///
-    /// This method is invoked only once. Subclasses should override this method to perform one time setup logic,
-    /// such as attaching immutable children. The default implementation does nothing.
+    /// Override this method to perform one-time setup, such as attaching permanent child routers.
+    /// Always call `super.didLoad()` when overriding.
+    ///
+    /// ```swift
+    /// override func didLoad() {
+    ///     super.didLoad()
+    ///     // Attach permanent children
+    ///     let tabBarRouter = tabBarBuilder.build(withListener: interactor)
+    ///     attachChild(tabBarRouter)
+    /// }
+    /// ```
     open func didLoad() {
         // No-op
     }
@@ -127,9 +301,17 @@ open class Router<InteractorType>: Routing {
     // We cannot declare the attach/detach child methods to take in concrete `Router` instances,
     // since during unit testing, we need to use mocked child routers.
 
-    /// Attaches the given router as a child.
+    /// Attaches a child router to this router.
     ///
-    /// - parameter child: The child `Router` to attach.
+    /// This method:
+    /// 1. Adds the child to the ``children`` array
+    /// 2. Activates the child's interactor
+    /// 3. Loads the child router (if not already loaded)
+    ///
+    /// - Parameter child: The router to attach as a child.
+    /// - Precondition: The child must not already be attached to this router.
+    ///
+    /// - Important: Always store a reference to attached children so you can detach them later.
     public final func attachChild(_ child: Routing) {
         assert(!(children.contains { $0 === child }), "Attempt to attach child: \(child), which is already attached to \(self).")
 
@@ -141,9 +323,15 @@ open class Router<InteractorType>: Routing {
         child.load()
     }
 
-    /// Detaches the given `Router` from the tree.
+    /// Detaches a child router from this router.
     ///
-    /// - parameter child: The child `Router` to detach.
+    /// This method:
+    /// 1. Deactivates the child's interactor (triggering ``Interactor/willResignActive()``)
+    /// 2. Removes the child from the ``children`` array
+    ///
+    /// After detaching, you should clear your reference to the child router.
+    ///
+    /// - Parameter child: The child router to detach.
     public final func detachChild(_ child: Routing) {
         child.interactable.deactivate()
         children.removeAll { $0 === child }
