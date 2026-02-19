@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/WikipediaBrown/napkin/develop/Tools/napkin/napkin.xctemplate/TemplateIcon%402x.png" alt="napkin logo" width="128" height="128">
+</p>
+
 # napkin
 
 ### Now Supporting ***SwiftUI***
@@ -661,11 +665,14 @@ bash napkin/Tools/InstallXcodeTemplates.sh
 ```
 
 #### Available Templates
-- **napkin** - Creates a complete napkin (Builder, Interactor, Router)
-- **Launch napkin** - Creates a root napkin for app launch
-- **napkin Unit Tests** - Creates test files for a napkin
-- **Component Extension** - Creates a component extension for child dependencies
-- **Service Manager** - Creates a service manager pattern
+
+| Template | Description |
+|----------|-------------|
+| ![napkin](https://raw.githubusercontent.com/WikipediaBrown/napkin/develop/Tools/napkin/napkin.xctemplate/TemplateIcon%402x.png) **napkin** | Creates a complete napkin (Builder, Interactor, Router) |
+| ![Launch napkin](https://raw.githubusercontent.com/WikipediaBrown/napkin/develop/Tools/napkin/Launch%20napkin.xctemplate/TemplateIcon%402x.png) **Launch napkin** | Creates a root napkin for app launch |
+| ![napkin Unit Tests](https://raw.githubusercontent.com/WikipediaBrown/napkin/develop/Tools/napkin/napkin%20Unit%20Tests.xctemplate/TemplateIcon%402x.png) **napkin Unit Tests** | Creates test files for a napkin |
+| ![Component Extension](https://raw.githubusercontent.com/WikipediaBrown/napkin/develop/Tools/napkin/Component%20Extension.xctemplate/TemplateIcon%402x.png) **Component Extension** | Creates a component extension for child dependencies |
+| ![Service Manager](https://raw.githubusercontent.com/WikipediaBrown/napkin/develop/Tools/napkin/Service%20Manager.xctemplate/TemplateIcon%402x.png) **Service Manager** | Creates a service manager pattern |
 
 ## 🧪 Testing
 
