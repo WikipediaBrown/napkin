@@ -18,6 +18,7 @@ import XCTest
 import Combine
 @testable import napkin
 
+@MainActor
 final class InteractorTests: XCTestCase {
 
     private var cancellables: Set<AnyCancellable>!
@@ -179,6 +180,7 @@ final class InteractorTests: XCTestCase {
 
 // MARK: - Test Doubles
 
+@MainActor
 private class TestInteractor: Interactor {
     var didBecomeActiveCalled = false
     var willResignActiveCalled = false

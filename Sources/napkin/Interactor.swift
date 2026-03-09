@@ -116,6 +116,13 @@ public protocol Interactable: InteractorScope {
 /// - Communicating with parent napkins via listener protocols
 /// - Requesting navigation changes via the router
 ///
+/// ## Swift 6 Concurrency
+///
+/// `Interactor` is isolated to the `@MainActor` by default. This simplifies
+/// concurrency handling for most iOS applications where UI interactions drive
+/// business logic. For background work, use `Task.detached` or mark specific
+/// methods with `nonisolated`.
+///
 /// ## Lifecycle
 ///
 /// Override these methods to respond to lifecycle changes:
@@ -180,6 +187,7 @@ public protocol Interactable: InteractorScope {
 /// - SeeAlso: ``Interactable``
 /// - SeeAlso: ``PresentableInteractor``
 /// - SeeAlso: ``Router``
+@MainActor
 open class Interactor: Interactable {
 
     /// A Boolean value indicating whether the interactor is currently active.
@@ -292,8 +300,13 @@ open class Interactor: Interactable {
     private let isActiveSubject = CurrentValueSubject<Bool, Never>(false)
 
     deinit {
-        if isActive {
-            deactivate()
+        // deinit is nonisolated, but we need to access MainActor-isolated state.
+        // Since this class is @MainActor and UIKit objects are deallocated on main,
+        // we can safely assume MainActor isolation here.
+        MainActor.assumeIsolated {
+            if isActive {
+                deactivate()
+            }
         }
         isActiveSubject.send(completion: .finished)
     }

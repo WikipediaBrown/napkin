@@ -17,6 +17,7 @@
 import XCTest
 @testable import napkin
 
+@MainActor
 final class ComponentTests: XCTestCase {
 
     // MARK: - Initialization Tests
@@ -107,10 +108,12 @@ final class ComponentTests: XCTestCase {
 
 // MARK: - Test Doubles
 
+@MainActor
 private protocol TestDependencyProtocol: Dependency {
     var testValue: String { get }
 }
 
+@MainActor
 private class TestDependency: TestDependencyProtocol {
     let testValue: String = "test"
 }
@@ -119,6 +122,7 @@ private class TestService {
     let id = UUID()
 }
 
+@MainActor
 private class TestComponent: Component<TestDependencyProtocol>, TestDependencyProtocol {
 
     var testValue: String {
@@ -138,4 +142,5 @@ private class TestComponent: Component<TestDependencyProtocol>, TestDependencyPr
     }
 }
 
+@MainActor
 private class ChildComponent: Component<TestDependencyProtocol> {}

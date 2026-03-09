@@ -92,6 +92,7 @@ public protocol Presentable: AnyObject {}
 /// - SeeAlso: ``Presentable``
 /// - SeeAlso: ``PresentableInteractor``
 /// - SeeAlso: ``Interactor``
+@MainActor
 open class Presenter<ViewControllerType>: Presentable {
 
     /// The view controller that this presenter updates.

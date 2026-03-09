@@ -96,6 +96,7 @@ import Foundation
 /// - SeeAlso: ``Dependency``
 /// - SeeAlso: ``EmptyComponent``
 /// - SeeAlso: ``Builder``
+@MainActor
 open class Component<DependencyType>: Dependency {
 
     /// The dependency object provided by the parent component.
@@ -177,6 +178,7 @@ open class Component<DependencyType>: Dependency {
 ///
 /// - SeeAlso: ``EmptyDependency``
 /// - SeeAlso: ``Component``
+@MainActor
 open class EmptyComponent: EmptyDependency {
 
     /// Creates an empty component.

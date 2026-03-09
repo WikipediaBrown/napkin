@@ -18,6 +18,7 @@ import XCTest
 import Combine
 @testable import napkin
 
+@MainActor
 final class RouterTests: XCTestCase {
 
     private var cancellables: Set<AnyCancellable>!
@@ -235,6 +236,7 @@ final class RouterTests: XCTestCase {
 
 // MARK: - Test Doubles
 
+@MainActor
 private class TestInteractor: Interactor {
     var didBecomeActiveCalled = false
     var willResignActiveCalled = false
@@ -250,6 +252,7 @@ private class TestInteractor: Interactor {
     }
 }
 
+@MainActor
 private class TestRouter: Router<TestInteractor> {
     var didLoadCalled = false
 

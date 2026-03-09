@@ -17,6 +17,7 @@
 import XCTest
 @testable import napkin
 
+@MainActor
 final class napkinTests: XCTestCase {
 
     func testDependencyProtocol_conformance() {
@@ -30,4 +31,5 @@ final class napkinTests: XCTestCase {
     }
 }
 
+@MainActor
 private class TestEmptyDependency: EmptyDependency {}

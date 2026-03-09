@@ -147,6 +147,7 @@ public protocol LaunchRouting: ViewableRouting {
 ///
 /// - SeeAlso: ``LaunchRouting``
 /// - SeeAlso: ``ViewableRouter``
+@MainActor
 open class LaunchRouter<InteractorType, ViewControllerType>: ViewableRouter<InteractorType, ViewControllerType>, LaunchRouting {
 
     /// Creates a launch router with the specified interactor and view controller.

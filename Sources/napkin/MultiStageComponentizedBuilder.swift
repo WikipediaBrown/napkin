@@ -78,6 +78,7 @@ import Foundation
 ///
 /// - SeeAlso: ``SimpleMultiStageComponentizedBuilder``
 /// - SeeAlso: ``ComponentizedBuilder``
+@MainActor
 open class MultiStageComponentizedBuilder<Component, Router, DynamicBuildDependency>: Buildable {
 
     // Builder should not directly retain an instance of the component.
@@ -160,6 +161,7 @@ open class MultiStageComponentizedBuilder<Component, Router, DynamicBuildDepende
 /// refer to `MultiStageComponentizedBuilder`.
 ///
 /// - SeeAlso: MultiStageComponentizedBuilder
+@MainActor
 open class SimpleMultiStageComponentizedBuilder<Component, Router>: MultiStageComponentizedBuilder<Component, Router, ()> {
 
     /// Initializer.

@@ -82,6 +82,7 @@ public protocol Buildable: AnyObject {}
 /// - SeeAlso: ``Buildable``
 /// - SeeAlso: ``Component``
 /// - SeeAlso: ``Router``
+@MainActor
 open class Builder<DependencyType>: Buildable {
 
     /// The dependency provided by the parent napkin.

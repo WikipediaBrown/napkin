@@ -220,6 +220,7 @@ public protocol Routing: RouterScope {
 /// - SeeAlso: ``Routing``
 /// - SeeAlso: ``ViewableRouter``
 /// - SeeAlso: ``Interactor``
+@MainActor
 open class Router<InteractorType>: Routing {
 
     /// The strongly-typed interactor owned by this router.
@@ -399,14 +400,19 @@ open class Router<InteractorType>: Routing {
     }
 
     deinit {
-        interactable.deactivate()
+        // deinit is nonisolated, but we need to access MainActor-isolated state.
+        // Since this class is @MainActor and UIKit objects are deallocated on main,
+        // we can safely assume MainActor isolation here.
+        MainActor.assumeIsolated {
+            interactable.deactivate()
 
-        if !children.isEmpty {
-            detachAllChildren()
+            if !children.isEmpty {
+                detachAllChildren()
+            }
+
+            LeakDetector.instance.expectDeallocate(object: interactable)
         }
 
         lifecycleSubject.send(completion: .finished)
-
-        LeakDetector.instance.expectDeallocate(object: interactable)
     }
 }

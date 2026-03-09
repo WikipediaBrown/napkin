@@ -102,6 +102,7 @@ import Foundation
 ///
 /// - SeeAlso: ``Interactor``
 /// - SeeAlso: ``Presenter``
+@MainActor
 open class PresentableInteractor<PresenterType>: Interactor {
 
     /// The presenter owned by this interactor.

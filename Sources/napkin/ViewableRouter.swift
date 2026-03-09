@@ -126,6 +126,7 @@ public protocol ViewableRouting: Routing {
 /// - SeeAlso: ``ViewableRouting``
 /// - SeeAlso: ``Router``
 /// - SeeAlso: ``LaunchRouter``
+@MainActor
 open class ViewableRouter<InteractorType, ViewControllerType>: Router<InteractorType>, ViewableRouting {
 
     /// The strongly-typed view controller owned by this router.

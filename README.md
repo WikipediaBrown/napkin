@@ -17,6 +17,7 @@ napkin is a reimagining of Uber's [RIBs](https://github.com/uber/RIBs) with RxSw
 - [Supported Platforms](#supported-platforms)
 - [Installation](#-installation)
 - [Architecture Overview](#architecture-overview)
+- [Swift 6 Concurrency](#swift-6-concurrency)
 - [Core Components](#core-components)
   - [Interactor](#interactor)
   - [Router](#router)
@@ -85,6 +86,56 @@ flowchart LR
 - **Single responsibility**: Each component has a clear, focused purpose
 - **Testability**: Business logic is isolated in Interactors, making unit testing straightforward
 - **Scalability**: Large teams can work on different napkins independently
+
+## Swift 6 Concurrency
+
+napkin is fully compatible with Swift 6's strict concurrency model. All core classes are isolated to `@MainActor` by default, which simplifies concurrency handling for iOS applications where UI interactions drive business logic.
+
+### MainActor-Isolated Classes
+
+The following classes are `@MainActor` isolated:
+
+- `Interactor` / `PresentableInteractor`
+- `Router` / `ViewableRouter` / `LaunchRouter`
+- `Builder` / `ComponentizedBuilder` / `MultiStageComponentizedBuilder`
+- `Component` / `EmptyComponent`
+- `Presenter`
+
+### Working with Background Tasks
+
+For work that needs to run off the main actor, use `Task.detached` or mark specific methods with `nonisolated`:
+
+```swift
+final class MyInteractor: Interactor, MyInteractable {
+
+    private let networkService: NetworkServiceProtocol
+
+    override func didBecomeActive() {
+        super.didBecomeActive()
+        fetchData()
+    }
+
+    private func fetchData() {
+        Task.detached { [weak self] in
+            let data = await self?.networkService.fetch()
+            await self?.handleData(data)
+        }
+    }
+
+    private func handleData(_ data: Data?) {
+        // Back on MainActor - safe to update UI
+        presenter.display(data)
+    }
+}
+```
+
+### Migration from Earlier Versions
+
+If you're migrating from a version before Swift 6 support, your subclasses will automatically inherit `@MainActor` isolation. If you have code that explicitly manages threading, you may need to:
+
+1. Remove manual `DispatchQueue.main.async` calls (no longer needed)
+2. Use `Task.detached` for background work instead of `DispatchQueue.global()`
+3. Mark any background-compatible methods as `nonisolated` if needed
 
 ## Core Components
 
