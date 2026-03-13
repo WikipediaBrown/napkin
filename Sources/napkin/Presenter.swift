@@ -106,7 +106,7 @@ open class Presenter<ViewControllerType>: Presentable {
     ///
     /// - Parameter viewController: The view controller that will display
     ///   the data formatted by this presenter.
-    public init(viewController: ViewControllerType) {
+    nonisolated public init(viewController: ViewControllerType) {
         self.viewController = viewController
     }
 }

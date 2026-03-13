@@ -217,7 +217,7 @@ open class Interactor: Interactable {
     ///     super.init()
     /// }
     /// ```
-    public init() {
+    nonisolated public init() {
         // No-op
     }
 
