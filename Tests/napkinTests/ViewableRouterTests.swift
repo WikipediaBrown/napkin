@@ -15,7 +15,11 @@
 //
 
 import XCTest
+#if canImport(UIKit)
 import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 @testable import napkin
 
 @MainActor
@@ -54,7 +58,11 @@ final class ViewableRouterTests: XCTestCase {
         let viewController = TestViewController()
         let router = TestViewableRouter(interactor: interactor, viewController: viewController)
 
+        #if canImport(UIKit)
         XCTAssertTrue(router.viewControllable.uiviewController === viewController)
+        #elseif canImport(AppKit)
+        XCTAssertTrue(router.viewControllable.nsviewController === viewController)
+        #endif
     }
 
     // MARK: - Lifecycle Tests
@@ -130,8 +138,15 @@ final class ViewableRouterTests: XCTestCase {
 @MainActor
 private class TestInteractor: Interactor {}
 
+#if canImport(UIKit)
 @MainActor
 private class TestViewController: UIViewController, ViewControllable {}
+#elseif canImport(AppKit)
+@MainActor
+private class TestViewController: NSViewController, ViewControllable {
+    override func loadView() { self.view = NSView() }
+}
+#endif
 
 @MainActor
 private class TestViewableRouter: ViewableRouter<TestInteractor, TestViewController> {

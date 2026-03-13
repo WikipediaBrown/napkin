@@ -1,5 +1,5 @@
 //
-//  RootHostingViewController.swift
+//  LaunchNapkinHostingViewController.swift
 //  napkin
 //
 //  Created by nonplus on 3/13/26.
@@ -9,18 +9,18 @@ import napkin
 import Combine
 import SwiftUI
 
-@MainActor protocol RootPresentableListener: AnyObject {
+@MainActor protocol LaunchNapkinPresentableListener: AnyObject {
     // TODO: Declare properties and methods that the view controller can invoke to perform
     // business logic, such as signIn(). This protocol is implemented by the corresponding
     // interactor class.
 }
 
-@MainActor final class RootViewController: UIHostingController<RootView>, RootPresentable {
+@MainActor final class LaunchNapkinViewController: UIHostingController<LaunchNapkinView>, LaunchNapkinPresentable {
 
-    weak var listener: RootPresentableListener?
+    weak var listener: LaunchNapkinPresentableListener?
 
     init() {
-        super.init(rootView: RootView())
+        super.init(rootView: LaunchNapkinView())
     }
 
     @MainActor required dynamic init?(coder aDecoder: NSCoder) {
@@ -28,4 +28,4 @@ import SwiftUI
     }
 }
 
-extension RootViewController: RootViewControllable {}
+extension LaunchNapkinViewController: LaunchNapkinViewControllable {}

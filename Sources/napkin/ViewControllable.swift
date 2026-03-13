@@ -14,18 +14,23 @@
 //  limitations under the License.
 //
 
+#if canImport(UIKit)
 import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 
-/// A protocol that provides access to the underlying UIKit view controller.
+/// A protocol that provides access to the underlying platform view controller.
 ///
-/// `ViewControllable` serves as the bridge between the napkin architecture and UIKit.
-/// It allows routers to manage view controller presentation and hierarchy without
-/// depending on concrete view controller types.
+/// `ViewControllable` serves as the bridge between the napkin architecture and
+/// the platform's view controller (UIKit or AppKit). It allows routers to manage
+/// view controller presentation and hierarchy without depending on concrete
+/// view controller types.
 ///
 /// ## Overview
 ///
 /// All view controllers used with ``ViewableRouter`` must conform to this protocol.
-/// The protocol provides a single property that returns the underlying `UIViewController`.
+/// The protocol provides a single property that returns the underlying view controller.
 ///
 /// ## UIKit View Controllers
 ///
@@ -40,7 +45,8 @@ import UIKit
 ///
 /// ## SwiftUI Views
 ///
-/// For SwiftUI views, wrap them in a `UIHostingController`:
+/// For SwiftUI views, wrap them in a `UIHostingController` (iOS) or
+/// `NSHostingController` (macOS):
 ///
 /// ```swift
 /// import SwiftUI
@@ -76,13 +82,22 @@ import UIKit
 /// - SeeAlso: ``ViewableRouting``
 public protocol ViewControllable: AnyObject {
 
+#if canImport(UIKit)
     /// The underlying UIKit view controller.
     ///
     /// Use this property when you need to present, embed, or otherwise
     /// manipulate the view controller in the UIKit hierarchy.
     var uiviewController: UIViewController { get }
+#elseif canImport(AppKit)
+    /// The underlying AppKit view controller.
+    ///
+    /// Use this property when you need to present, embed, or otherwise
+    /// manipulate the view controller in the AppKit hierarchy.
+    var nsviewController: NSViewController { get }
+#endif
 }
 
+#if canImport(UIKit)
 /// Default implementation that makes `UIViewController` subclasses
 /// automatically conform to ``ViewControllable``.
 ///
@@ -95,3 +110,17 @@ public extension ViewControllable where Self: UIViewController {
         return self
     }
 }
+#elseif canImport(AppKit)
+/// Default implementation that makes `NSViewController` subclasses
+/// automatically conform to ``ViewControllable``.
+///
+/// This extension allows any `NSViewController` subclass to satisfy
+/// the `ViewControllable` protocol without additional implementation.
+public extension ViewControllable where Self: NSViewController {
+
+    /// Returns `self` as the underlying view controller.
+    var nsviewController: NSViewController {
+        return self
+    }
+}
+#endif

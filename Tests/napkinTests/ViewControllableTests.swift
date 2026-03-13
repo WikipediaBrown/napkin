@@ -15,7 +15,11 @@
 //
 
 import XCTest
+#if canImport(UIKit)
 import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 @testable import napkin
 
 @MainActor
@@ -26,7 +30,11 @@ final class ViewControllableTests: XCTestCase {
     func testViewControllable_defaultImplementation_returnsSelf() {
         let viewController = TestViewController()
 
+        #if canImport(UIKit)
         XCTAssertTrue(viewController.uiviewController === viewController)
+        #elseif canImport(AppKit)
+        XCTAssertTrue(viewController.nsviewController === viewController)
+        #endif
     }
 
     func testViewControllable_UIViewController_conformsToViewControllable() {
@@ -35,30 +43,48 @@ final class ViewControllableTests: XCTestCase {
         XCTAssertTrue(viewController is ViewControllable)
     }
 
-    // MARK: - UIHostingController Pattern Tests
+    // MARK: - HostingController Pattern Tests
 
     func testViewControllable_hostingControllerPattern_returnsController() {
         let hostingController = MockHostingController()
 
+        #if canImport(UIKit)
         XCTAssertTrue(hostingController.uiviewController === hostingController)
+        #elseif canImport(AppKit)
+        XCTAssertTrue(hostingController.nsviewController === hostingController)
+        #endif
     }
 
     // MARK: - Protocol Requirement Tests
 
-    func testViewControllable_protocolRequiresUIViewController() {
+    func testViewControllable_protocolRequiresViewController() {
         let viewController = TestViewController()
         let controllable: ViewControllable = viewController
 
+        #if canImport(UIKit)
         XCTAssertNotNil(controllable.uiviewController)
+        #elseif canImport(AppKit)
+        XCTAssertNotNil(controllable.nsviewController)
+        #endif
     }
 }
 
 // MARK: - Test Doubles
 
+#if canImport(UIKit)
 @MainActor
 private class TestViewController: UIViewController, ViewControllable {}
 
 @MainActor
-private class MockHostingController: UIViewController, ViewControllable {
-    // Simulates UIHostingController pattern where the controller itself is ViewControllable
+private class MockHostingController: UIViewController, ViewControllable {}
+#elseif canImport(AppKit)
+@MainActor
+private class TestViewController: NSViewController, ViewControllable {
+    override func loadView() { self.view = NSView() }
 }
+
+@MainActor
+private class MockHostingController: NSViewController, ViewControllable {
+    override func loadView() { self.view = NSView() }
+}
+#endif

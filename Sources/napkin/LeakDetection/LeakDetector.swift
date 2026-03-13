@@ -15,7 +15,11 @@
 //
 
 import Combine
+#if canImport(UIKit)
 import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 
 /// The status of leak detection operations.
 ///
@@ -317,6 +321,7 @@ public class LeakDetector {
     ///   - time: The time window within which disappearance should occur.
     ///           Defaults to ``LeakDefaultExpectationTime/viewDisappear``.
     /// - Returns: A handle that can be used to cancel the expectation.
+#if canImport(UIKit)
     @discardableResult
     public func expectViewControllerDisappear(viewController: UIViewController, inTime time: TimeInterval = LeakDefaultExpectationTime.viewDisappear) -> LeakDetectionHandle {
         expectationCount.send(expectationCount.value + 1)
@@ -347,6 +352,36 @@ public class LeakDetector {
 
         return handle
     }
+#elseif canImport(AppKit)
+    @discardableResult
+    public func expectViewControllerDisappear(viewController: NSViewController, inTime time: TimeInterval = LeakDefaultExpectationTime.viewDisappear) -> LeakDetectionHandle {
+        expectationCount.send(expectationCount.value + 1)
+
+        let handle = LeakDetectionHandleImpl {
+            self.expectationCount.send(self.expectationCount.value - 1)
+        }
+
+        Executor.execute(withDelay: time) { [weak viewController] in
+            if let viewController = viewController, !handle.cancelled {
+                let viewDidDisappear = (!viewController.isViewLoaded || viewController.view.window == nil)
+                let message = "\(viewController) appearance has leaked. Either its parent router who does not own a view controller was detached, but failed to dismiss the leaked view controller; or the view controller is reused and re-added to window, yet the router is not re-attached but re-created. Objects are expected to be deallocated at this time: \(self.trackingObjects)"
+
+                if self.disableLeakDetector {
+                    if !viewDidDisappear {
+                        print("Leak detection is disabled. This should only be used for debugging purposes.")
+                        print(message)
+                    }
+                } else {
+                    assert(viewDidDisappear, message)
+                }
+            }
+
+            self.expectationCount.send(self.expectationCount.value - 1)
+        }
+
+        return handle
+    }
+#endif
 
     // MARK: - Internal Interface
 

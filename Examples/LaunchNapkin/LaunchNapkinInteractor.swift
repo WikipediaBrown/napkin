@@ -1,5 +1,5 @@
 //
-//  RootInteractor.swift
+//  LaunchNapkinInteractor.swift
 //  napkin
 //
 //  Created by nonplus on 3/13/26.
@@ -8,27 +8,27 @@
 import napkin
 import Combine
 
-@MainActor protocol RootRouting: LaunchRouting {
+@MainActor protocol LaunchNapkinRouting: LaunchRouting {
     // TODO: Declare methods the interactor can invoke to manage sub-tree via the router.
 }
 
-@MainActor protocol RootPresentable: Presentable {
-    var listener: RootPresentableListener? { get set }
+@MainActor protocol LaunchNapkinPresentable: Presentable {
+    var listener: LaunchNapkinPresentableListener? { get set }
     // TODO: Declare methods the interactor can invoke the presenter to present data.
 }
 
-@MainActor protocol RootListener: AnyObject {
+@MainActor protocol LaunchNapkinListener: AnyObject {
     // TODO: Declare methods the interactor can invoke to communicate with other napkins.
 }
 
-@MainActor final class RootInteractor: PresentableInteractor<RootPresentable>, RootInteractable, RootPresentableListener {
+@MainActor final class LaunchNapkinInteractor: PresentableInteractor<LaunchNapkinPresentable>, LaunchNapkinInteractable, LaunchNapkinPresentableListener {
 
-    weak var router: RootRouting?
-    weak var listener: RootListener?
+    weak var router: LaunchNapkinRouting?
+    weak var listener: LaunchNapkinListener?
 
     // TODO: Add additional dependencies to constructor. Do not perform any logic
     // in constructor.
-    init(presenter: RootPresentable) {
+    init(presenter: LaunchNapkinPresentable) {
         super.init(presenter: presenter)
         presenter.listener = self
     }

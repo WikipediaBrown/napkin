@@ -16,7 +16,11 @@
 
 import XCTest
 import Combine
+#if canImport(UIKit)
 import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 @testable import napkin
 
 @MainActor
@@ -109,7 +113,11 @@ final class LeakDetectorTests: XCTestCase {
     // MARK: - ExpectViewControllerDisappear Tests
 
     func testLeakDetector_expectViewControllerDisappear_returnsHandle() {
+        #if canImport(UIKit)
         let viewController = UIViewController()
+        #elseif canImport(AppKit)
+        let viewController = NSViewController()
+        #endif
 
         let handle = LeakDetector.instance.expectViewControllerDisappear(viewController: viewController)
 
@@ -117,7 +125,11 @@ final class LeakDetectorTests: XCTestCase {
     }
 
     func testLeakDetector_expectViewControllerDisappear_handleCanBeCancelled() {
+        #if canImport(UIKit)
         let viewController = UIViewController()
+        #elseif canImport(AppKit)
+        let viewController = NSViewController()
+        #endif
 
         let handle = LeakDetector.instance.expectViewControllerDisappear(viewController: viewController)
         handle.cancel()

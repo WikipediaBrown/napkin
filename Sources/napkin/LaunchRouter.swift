@@ -14,7 +14,11 @@
 //  limitations under the License.
 //
 
+#if canImport(UIKit)
 import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 
 /// A protocol for the root router of an application.
 ///
@@ -30,7 +34,11 @@ public protocol LaunchRouting: ViewableRouting {
     /// napkin tree, starting the application's business logic.
     ///
     /// - Parameter window: The application's main window.
+#if canImport(UIKit)
     func launch(from window: UIWindow)
+#elseif canImport(AppKit)
+    func launch(from window: NSWindow)
+#endif
 }
 
 /// The root router for a napkin-based application.
@@ -172,6 +180,7 @@ open class LaunchRouter<InteractorType, ViewControllerType>: ViewableRouter<Inte
     /// - Important: This method should only be called once, typically in
     ///   `application(_:didFinishLaunchingWithOptions:)` or
     ///   `scene(_:willConnectTo:options:)`.
+#if canImport(UIKit)
     public final func launch(from window: UIWindow) {
         window.rootViewController = viewControllable.uiviewController
         window.makeKeyAndVisible()
@@ -179,4 +188,13 @@ open class LaunchRouter<InteractorType, ViewControllerType>: ViewableRouter<Inte
         interactable.activate()
         load()
     }
+#elseif canImport(AppKit)
+    public final func launch(from window: NSWindow) {
+        window.contentViewController = viewControllable.nsviewController
+        window.makeKeyAndOrderFront(nil)
+
+        interactable.activate()
+        load()
+    }
+#endif
 }
