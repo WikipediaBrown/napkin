@@ -2,14 +2,14 @@
 
 import napkin
 
-protocol ___VARIABLE_productName___Dependency: Dependency {
+@MainActor protocol ___VARIABLE_productName___Dependency: Dependency {
     // TODO: Make sure to convert the variable into lower-camelcase.
     var ___VARIABLE_productName___ViewController: ___VARIABLE_productName___ViewControllable { get }
     // TODO: Declare the set of dependencies required by this napkin, but won't be
     // created by this napkin.
 }
 
-final class ___VARIABLE_productName___Component: Component<___VARIABLE_productName___Dependency> {
+@MainActor final class ___VARIABLE_productName___Component: Component<___VARIABLE_productName___Dependency> {
 
     // TODO: Make sure to convert the variable into lower-camelcase.
     fileprivate var ___VARIABLE_productName___ViewController: ___VARIABLE_productName___ViewControllable {
@@ -21,13 +21,13 @@ final class ___VARIABLE_productName___Component: Component<___VARIABLE_productNa
 
 // MARK: - Builder
 
-protocol ___VARIABLE_productName___Buildable: Buildable {
+@MainActor protocol ___VARIABLE_productName___Buildable: Buildable {
     func build(withListener listener: ___VARIABLE_productName___Listener) -> ___VARIABLE_productName___Routing
 }
 
-final class ___VARIABLE_productName___Builder: Builder<___VARIABLE_productName___Dependency>, ___VARIABLE_productName___Buildable {
+@MainActor final class ___VARIABLE_productName___Builder: Builder<___VARIABLE_productName___Dependency>, ___VARIABLE_productName___Buildable {
 
-    override init(dependency: ___VARIABLE_productName___Dependency) {
+    init(dependency: ___VARIABLE_productName___Dependency) {
         super.init(dependency: dependency)
     }
 

@@ -2,18 +2,18 @@
 
 import napkin
 
-protocol ___VARIABLE_productName___Interactable: Interactable {
+@MainActor protocol ___VARIABLE_productName___Interactable: Interactable {
     var router: ___VARIABLE_productName___Routing? { get set }
     var listener: ___VARIABLE_productName___Listener? { get set }
 }
 
-protocol ___VARIABLE_productName___ViewControllable: ViewControllable {
+@MainActor protocol ___VARIABLE_productName___ViewControllable: ViewControllable {
     // TODO: Declare methods the router invokes to manipulate the view hierarchy. Since
     // this napkin does not own its own view, this protocol is conformed to by one of this
     // napkin's ancestor napkins' view.
 }
 
-final class ___VARIABLE_productName___Router: Router<___VARIABLE_productName___Interactable>, ___VARIABLE_productName___Routing {
+@MainActor final class ___VARIABLE_productName___Router: Router<___VARIABLE_productName___Interactable>, ___VARIABLE_productName___Routing {
 
     // TODO: Constructor inject child builder protocols to allow building children.
     init(interactor: ___VARIABLE_productName___Interactable, viewController: ___VARIABLE_productName___ViewControllable) {

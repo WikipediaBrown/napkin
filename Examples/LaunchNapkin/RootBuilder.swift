@@ -7,25 +7,25 @@
 
 import napkin
 
-protocol RootDependency: Dependency {
+@MainActor protocol RootDependency: Dependency {
     // TODO: Declare the set of dependencies required by this napkin, but cannot be
     // created by this napkin.
 }
 
-final class RootComponent: Component<RootDependency> {
+@MainActor final class RootComponent: Component<RootDependency> {
 
     // TODO: Declare 'fileprivate' dependencies that are only used by this napkin.
 }
 
 // MARK: - Builder
 
-protocol RootBuildable: Buildable {
+@MainActor protocol RootBuildable: Buildable {
     func build(withListener listener: RootListener) -> RootRouting
 }
 
-final class RootBuilder: Builder<RootDependency>, RootBuildable {
+@MainActor final class RootBuilder: Builder<RootDependency>, RootBuildable {
 
-    override init(dependency: RootDependency) {
+    init(dependency: RootDependency) {
         super.init(dependency: dependency)
     }
 
