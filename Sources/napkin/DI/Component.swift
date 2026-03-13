@@ -110,7 +110,7 @@ open class Component<DependencyType>: Dependency {
     ///
     /// - Parameter dependency: The dependency object from the parent component,
     ///   typically the parent's component conforming to this napkin's dependency protocol.
-    nonisolated public init(dependency: DependencyType) {
+    public init(dependency: DependencyType) {
         self.dependency = dependency
     }
 

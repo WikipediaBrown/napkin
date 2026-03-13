@@ -258,7 +258,7 @@ open class Router<InteractorType>: Routing {
     ///
     /// - Parameter interactor: The interactor that this router will own and manage.
     /// - Precondition: The interactor must conform to ``Interactable``.
-    nonisolated public init(interactor: InteractorType) {
+    public init(interactor: InteractorType) {
         self.interactor = interactor
         guard let interactable = interactor as? Interactable else {
             fatalError("\(interactor) should conform to \(Interactable.self)")

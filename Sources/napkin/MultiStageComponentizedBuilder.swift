@@ -113,7 +113,7 @@ open class MultiStageComponentizedBuilder<Component, Router, DynamicBuildDepende
     ///
     /// - parameter componentBuilder: The closure to instantiate a new
     /// instance of the DI component that should be paired with this napkin.
-    nonisolated public init(componentBuilder: @escaping () -> Component) {
+    public init(componentBuilder: @escaping () -> Component) {
         self.componentBuilder = componentBuilder
     }
 
@@ -168,7 +168,7 @@ open class SimpleMultiStageComponentizedBuilder<Component, Router>: MultiStageCo
     ///
     /// - parameter componentBuilder: The closure to instantiate a new
     /// instance of the DI component that should be paired with this napkin.
-    nonisolated public override init(componentBuilder: @escaping () -> Component) {
+    public override init(componentBuilder: @escaping () -> Component) {
         super.init(componentBuilder: componentBuilder)
     }
 

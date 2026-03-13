@@ -100,7 +100,7 @@ open class Builder<DependencyType>: Buildable {
     ///
     /// - Parameter dependency: The dependency object provided by the parent napkin,
     ///   typically conforming to a protocol that defines required services and objects.
-    nonisolated public init(dependency: DependencyType) {
+    public init(dependency: DependencyType) {
         self.dependency = dependency
     }
 }

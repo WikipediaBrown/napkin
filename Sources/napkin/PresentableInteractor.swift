@@ -117,7 +117,7 @@ open class PresentableInteractor<PresenterType>: Interactor {
     ///
     /// - Parameter presenter: The presenter that will format data for the view.
     ///   The interactor retains the presenter strongly.
-    nonisolated public init(presenter: PresenterType) {
+    public init(presenter: PresenterType) {
         self.presenter = presenter
     }
 

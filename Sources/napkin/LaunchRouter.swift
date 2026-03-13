@@ -155,7 +155,7 @@ open class LaunchRouter<InteractorType, ViewControllerType>: ViewableRouter<Inte
     /// - Parameters:
     ///   - interactor: The root interactor for the application.
     ///   - viewController: The root view controller that will be set on the window.
-    nonisolated public override init(interactor: InteractorType, viewController: ViewControllerType) {
+    public override init(interactor: InteractorType, viewController: ViewControllerType) {
         super.init(interactor: interactor, viewController: viewController)
     }
 

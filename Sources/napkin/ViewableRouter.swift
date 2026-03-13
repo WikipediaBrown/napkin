@@ -150,7 +150,7 @@ open class ViewableRouter<InteractorType, ViewControllerType>: Router<Interactor
     ///   - interactor: The interactor that this router will own and manage.
     ///   - viewController: The view controller that this router will own.
     /// - Precondition: The view controller must conform to ``ViewControllable``.
-    nonisolated public init(interactor: InteractorType, viewController: ViewControllerType) {
+    public init(interactor: InteractorType, viewController: ViewControllerType) {
         self.viewController = viewController
         guard let viewControllable = viewController as? ViewControllable else {
             fatalError("\(viewController) should conform to \(ViewControllable.self)")
