@@ -66,7 +66,7 @@ open class ComponentizedBuilder<Component, Router, DynamicBuildDependency, Dynam
     /// - Parameter componentBuilder: A closure that creates a new component instance.
     ///   This closure is called each time ``build(withDynamicBuildDependency:dynamicComponentDependency:)-4t8bp``
     ///   is invoked.
-    public init(componentBuilder: @escaping (DynamicComponentDependency) -> Component) {
+    nonisolated public init(componentBuilder: @escaping (DynamicComponentDependency) -> Component) {
         self.componentBuilder = componentBuilder
     }
 
@@ -168,7 +168,7 @@ open class SimpleComponentizedBuilder<Component, Router>: ComponentizedBuilder<C
     /// Creates a builder with the specified component factory.
     ///
     /// - Parameter componentBuilder: A closure that creates a new component instance.
-    public init(componentBuilder: @escaping () -> Component) {
+    nonisolated public init(componentBuilder: @escaping () -> Component) {
         super.init(componentBuilder: componentBuilder)
     }
 
