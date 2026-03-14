@@ -25,14 +25,6 @@ import AppKit
 @MainActor
 final class ViewableRouterTests: XCTestCase {
 
-    override func setUp() {
-        super.setUp()
-    }
-
-    override func tearDown() {
-        super.tearDown()
-    }
-
     // MARK: - Initialization Tests
 
     func testViewableRouter_initialization_storesInteractor() {

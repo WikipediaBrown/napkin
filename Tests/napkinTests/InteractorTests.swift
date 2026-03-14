@@ -21,17 +21,7 @@ import Combine
 @MainActor
 final class InteractorTests: XCTestCase {
 
-    private var cancellables: Set<AnyCancellable>!
-
-    override func setUp() {
-        super.setUp()
-        cancellables = []
-    }
-
-    override func tearDown() {
-        cancellables = nil
-        super.tearDown()
-    }
+    private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Initial State Tests
 

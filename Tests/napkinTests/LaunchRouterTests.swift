@@ -25,14 +25,6 @@ import AppKit
 @MainActor
 final class LaunchRouterTests: XCTestCase {
 
-    override func setUp() {
-        super.setUp()
-    }
-
-    override func tearDown() {
-        super.tearDown()
-    }
-
     // MARK: - Initialization Tests
 
     func testLaunchRouter_initialization_storesInteractor() {
