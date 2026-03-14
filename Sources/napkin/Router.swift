@@ -136,7 +136,6 @@ public protocol Routing: RouterScope {
     /// When a child router is detached:
     /// 1. The child's interactor is deactivated
     /// 2. The child is removed from the ``children`` array
-    /// 3. Leak detection is triggered to verify proper cleanup
     ///
     /// - Parameter child: The child router to detach. Must be currently attached.
     func detachChild(_ child: Routing)
@@ -403,7 +402,7 @@ open class Router<InteractorType>: Routing {
 
     deinit {
         // deinit is nonisolated, but we need to access MainActor-isolated state.
-        // Since this class is @MainActor and UIKit objects are deallocated on main,
+        // Since this class is @MainActor and view controllers are deallocated on main,
         // we can safely assume MainActor isolation here.
         MainActor.assumeIsolated {
             interactable.deactivate()
@@ -411,8 +410,6 @@ open class Router<InteractorType>: Routing {
             if !children.isEmpty {
                 detachAllChildren()
             }
-
-            LeakDetector.instance.expectDeallocate(object: interactable)
 
             lifecycleSubject.send(completion: .finished)
         }

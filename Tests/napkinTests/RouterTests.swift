@@ -26,12 +26,10 @@ final class RouterTests: XCTestCase {
     override func setUp() {
         super.setUp()
         cancellables = []
-        LeakDetector.disableLeakDetectorOverride = true
     }
 
     override func tearDown() {
         cancellables = nil
-        LeakDetector.disableLeakDetectorOverride = false
         super.tearDown()
     }
 

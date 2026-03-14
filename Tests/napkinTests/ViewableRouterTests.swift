@@ -27,11 +27,9 @@ final class ViewableRouterTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        LeakDetector.disableLeakDetectorOverride = true
     }
 
     override func tearDown() {
-        LeakDetector.disableLeakDetectorOverride = false
         super.tearDown()
     }
 
