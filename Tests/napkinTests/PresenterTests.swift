@@ -66,7 +66,7 @@ final class PresenterTests: XCTestCase {
         let viewController = TestViewController()
         let presenter = TestPresenter(viewController: viewController)
 
-        XCTAssertTrue(presenter is Presentable)
+        XCTAssertTrue((presenter as Any) is Presentable)
     }
 }
 

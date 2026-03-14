@@ -119,7 +119,7 @@ final class ViewableRouterTests: XCTestCase {
         let viewController = TestViewController()
         let router = TestViewableRouter(interactor: interactor, viewController: viewController)
 
-        XCTAssertTrue(router is ViewableRouting)
+        XCTAssertTrue((router as Any) is ViewableRouting)
     }
 }
 

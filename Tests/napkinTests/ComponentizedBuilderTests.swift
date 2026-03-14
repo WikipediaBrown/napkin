@@ -89,13 +89,13 @@ final class ComponentizedBuilderTests: XCTestCase {
     func testComponentizedBuilder_conformsToBuildable() {
         let builder = TestComponentizedBuilder()
 
-        XCTAssertTrue(builder is Buildable)
+        XCTAssertTrue((builder as Any) is Buildable)
     }
 
     func testSimpleComponentizedBuilder_conformsToBuildable() {
         let builder = TestSimpleComponentizedBuilder()
 
-        XCTAssertTrue(builder is Buildable)
+        XCTAssertTrue((builder as Any) is Buildable)
     }
 }
 

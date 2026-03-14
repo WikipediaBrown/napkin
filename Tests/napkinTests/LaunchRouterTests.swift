@@ -101,7 +101,7 @@ final class LaunchRouterTests: XCTestCase {
         let viewController = TestViewController()
         let router = TestLaunchRouter(interactor: interactor, viewController: viewController)
 
-        XCTAssertTrue(router is LaunchRouting)
+        XCTAssertTrue((router as Any) is LaunchRouting)
     }
 
     func testLaunchRouter_conformsToViewableRouting() {
@@ -109,7 +109,7 @@ final class LaunchRouterTests: XCTestCase {
         let viewController = TestViewController()
         let router = TestLaunchRouter(interactor: interactor, viewController: viewController)
 
-        XCTAssertTrue(router is ViewableRouting)
+        XCTAssertTrue((router as Any) is ViewableRouting)
     }
 }
 

@@ -103,13 +103,13 @@ final class MultiStageComponentizedBuilderTests: XCTestCase {
     func testMultiStageComponentizedBuilder_conformsToBuildable() {
         let builder = TestMultiStageBuilder()
 
-        XCTAssertTrue(builder is Buildable)
+        XCTAssertTrue((builder as Any) is Buildable)
     }
 
     func testSimpleMultiStageComponentizedBuilder_conformsToBuildable() {
         let builder = TestSimpleMultiStageBuilder()
 
-        XCTAssertTrue(builder is Buildable)
+        XCTAssertTrue((builder as Any) is Buildable)
     }
 }
 

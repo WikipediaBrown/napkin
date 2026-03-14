@@ -33,7 +33,7 @@ final class BuilderTests: XCTestCase {
         let dependency = TestDependency()
         let builder = TestBuilder(dependency: dependency)
 
-        XCTAssertTrue(builder is Buildable)
+        XCTAssertTrue((builder as Any) is Buildable)
     }
 
     // MARK: - Building Tests

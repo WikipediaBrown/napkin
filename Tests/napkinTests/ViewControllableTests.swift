@@ -40,7 +40,7 @@ final class ViewControllableTests: XCTestCase {
     func testViewControllable_UIViewController_conformsToViewControllable() {
         let viewController = TestViewController()
 
-        XCTAssertTrue(viewController is ViewControllable)
+        XCTAssertTrue((viewController as Any) is ViewControllable)
     }
 
     // MARK: - HostingController Pattern Tests
