@@ -26,6 +26,7 @@ import AppKit
 /// the entire router tree from an application window.
 ///
 /// - SeeAlso: ``LaunchRouter``
+@MainActor
 public protocol LaunchRouting: ViewableRouting {
 
     /// Launches the router tree from the specified window.

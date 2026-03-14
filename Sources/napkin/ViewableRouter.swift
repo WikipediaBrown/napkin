@@ -14,8 +14,6 @@
 //  limitations under the License.
 //
 
-import Combine
-
 /// A protocol for routers that own and manage a view controller.
 ///
 /// `ViewableRouting` extends ``Routing`` to add view controller ownership.
@@ -34,6 +32,7 @@ import Combine
 ///
 /// - SeeAlso: ``ViewableRouter``
 /// - SeeAlso: ``Routing``
+@MainActor
 public protocol ViewableRouting: Routing {
 
     // The following methods must be declared in the base protocol, since `Router` internally invokes these methods.
@@ -58,7 +57,6 @@ public protocol ViewableRouting: Routing {
 /// A viewable router:
 /// - Owns a strongly-typed view controller
 /// - Manages the view controller's lifecycle in sync with the router
-/// - Provides leak detection for the view controller
 /// - Can present and dismiss child view controllers
 ///
 /// ## Usage
@@ -160,50 +158,4 @@ open class ViewableRouter<InteractorType, ViewControllerType>: Router<Interactor
         super.init(interactor: interactor)
     }
 
-    // MARK: - Internal
-
-    override func internalDidLoad() {
-        setupViewControllerLeakDetection()
-
-        super.internalDidLoad()
-    }
-
-    // MARK: - Private
-
-    private var cancellables = Set<AnyCancellable>()
-    private var viewControllerDisappearExpectation: LeakDetectionHandle?
-
-    private func setupViewControllerLeakDetection() {
-        let cancellable = interactable.isActiveStream
-            // Do not retain self here to guarantee execution. Retaining self will cause the dispose bag to never be
-            // disposed, thus self is never deallocated. Also cannot just store the disposable and call dispose(),
-            // since we want to keep the subscription alive until deallocation, in case the router is re-attached.
-            // Using weak does require the router to be retained until its interactor is deactivated.
-            .sink { [weak self] (isActive: Bool) in
-                guard let strongSelf = self else {
-                    return
-                }
-
-                strongSelf.viewControllerDisappearExpectation?.cancel()
-                strongSelf.viewControllerDisappearExpectation = nil
-
-                if !isActive {
-                    #if canImport(UIKit)
-                    let viewController = strongSelf.viewControllable.uiviewController
-                    #elseif canImport(AppKit)
-                    let viewController = strongSelf.viewControllable.nsviewController
-                    #endif
-                    strongSelf.viewControllerDisappearExpectation = LeakDetector.instance.expectViewControllerDisappear(viewController: viewController)
-                }
-            }
-        cancellables.insert(cancellable)
-    }
-
-    deinit {
-        #if canImport(UIKit)
-        LeakDetector.instance.expectDeallocate(object: viewControllable.uiviewController, inTime: LeakDefaultExpectationTime.viewDisappear)
-        #elseif canImport(AppKit)
-        LeakDetector.instance.expectDeallocate(object: viewControllable.nsviewController, inTime: LeakDefaultExpectationTime.viewDisappear)
-        #endif
-    }
 }

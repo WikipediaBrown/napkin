@@ -25,16 +25,6 @@ import AppKit
 @MainActor
 final class ViewableRouterTests: XCTestCase {
 
-    override func setUp() {
-        super.setUp()
-        LeakDetector.disableLeakDetectorOverride = true
-    }
-
-    override func tearDown() {
-        LeakDetector.disableLeakDetectorOverride = false
-        super.tearDown()
-    }
-
     // MARK: - Initialization Tests
 
     func testViewableRouter_initialization_storesInteractor() {
@@ -129,7 +119,7 @@ final class ViewableRouterTests: XCTestCase {
         let viewController = TestViewController()
         let router = TestViewableRouter(interactor: interactor, viewController: viewController)
 
-        XCTAssertTrue(router is ViewableRouting)
+        XCTAssertTrue((router as Any) is ViewableRouting)
     }
 }
 

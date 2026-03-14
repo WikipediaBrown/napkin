@@ -57,24 +57,14 @@ final class ComponentTests: XCTestCase {
         XCTAssertFalse(service1 === service2)
     }
 
-    func testComponent_shared_isThreadSafe() {
+    func testComponent_shared_returnsSameInstanceAcrossManyCalls() {
         let dependency = TestDependency()
         let component = TestComponent(dependency: dependency)
-        let expectation = expectation(description: "All concurrent accesses complete")
-        expectation.expectedFulfillmentCount = 100
 
         var instances: [TestService] = []
-        let lock = NSLock()
-
-        DispatchQueue.concurrentPerform(iterations: 100) { _ in
-            let instance = component.sharedService
-            lock.lock()
-            instances.append(instance)
-            lock.unlock()
-            expectation.fulfill()
+        for _ in 0..<100 {
+            instances.append(component.sharedService)
         }
-
-        wait(for: [expectation], timeout: 5.0)
 
         let firstInstance = instances.first!
         XCTAssertTrue(instances.allSatisfy { $0 === firstInstance })

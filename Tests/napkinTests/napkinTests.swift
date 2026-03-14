@@ -22,12 +22,12 @@ final class napkinTests: XCTestCase {
 
     func testDependencyProtocol_conformance() {
         let dependency = TestEmptyDependency()
-        XCTAssertTrue(dependency is Dependency)
+        XCTAssertTrue((dependency as Any) is Dependency)
     }
 
     func testEmptyDependency_conformsToDependency() {
         let dependency = TestEmptyDependency()
-        XCTAssertTrue(dependency is EmptyDependency)
+        XCTAssertTrue((dependency as Any) is EmptyDependency)
     }
 }
 

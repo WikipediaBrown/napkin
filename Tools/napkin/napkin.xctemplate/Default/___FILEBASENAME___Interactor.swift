@@ -1,7 +1,6 @@
 //___FILEHEADER___
 
 import napkin
-import Combine
 
 @MainActor protocol ___VARIABLE_productName___Routing: Routing {
     func cleanupViews()

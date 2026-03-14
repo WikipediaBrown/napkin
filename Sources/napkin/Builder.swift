@@ -40,6 +40,7 @@ import Foundation
 ///
 /// - SeeAlso: ``Builder``
 /// - SeeAlso: ``Component``
+@MainActor
 public protocol Buildable: AnyObject {}
 
 /// A base class for creating napkin builders with dependency injection support.

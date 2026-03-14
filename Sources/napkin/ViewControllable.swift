@@ -80,6 +80,7 @@ import AppKit
 ///
 /// - SeeAlso: ``ViewableRouter``
 /// - SeeAlso: ``ViewableRouting``
+@MainActor
 public protocol ViewControllable: AnyObject {
 
 #if canImport(UIKit)
