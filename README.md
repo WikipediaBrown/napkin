@@ -10,7 +10,7 @@
 [![Swift Versions](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FWikipediaBrown%2Fnapkin%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/WikipediaBrown/napkin)
 [![Platforms Supported](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FWikipediaBrown%2Fnapkin%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/WikipediaBrown/napkin)
 
-napkin is a reimagining of Uber's [RIBs](https://github.com/uber/RIBs) with RxSwift replaced by Combine. It provides a robust architecture for building scalable iOS applications using the Router-Interactor-Builder pattern.
+napkin is a reimagining of Uber's [RIBs](https://github.com/uber/RIBs) with RxSwift replaced by Combine. It provides a robust architecture for building scalable iOS and macOS applications using the Router-Interactor-Builder pattern.
 
 ## Table of Contents
 
@@ -40,22 +40,20 @@ napkin is a reimagining of Uber's [RIBs](https://github.com/uber/RIBs) with RxSw
 
 ## Supported Platforms
 
-napkin supports Apple platforms only:
+napkin supports Apple platforms:
 - iOS 13.0+
-- macOS (via Mac Catalyst)
+- macOS 10.15+
 
 ## 🛠️ Installation
 
 **napkin** can be installed with Swift Package Manager.
 
-### Swift Package Manager (Xcode 12 or higher)
+### Swift Package Manager (Xcode 16 or higher)
 
 The preferred way of installing **napkin** is via the [Swift Package Manager](https://swift.org/package-manager/).
 
-1. In Xcode, open your project and navigate to **File** → **Swift Packages** → **Add Package Dependency...**
-2. Paste the repository URL (`https://github.com/WikipediaBrown/napkin.git`) and click **Next**.
-3. For **Rules**, select **Version (Up to Next Major)** and click **Next**.
-4. Click **Finish**.
+1. In Xcode, open your project and navigate to **File** → **Add Package Dependencies...**
+2. Paste the repository URL (`https://github.com/WikipediaBrown/napkin.git`) and click **Add Package**.
 
 [Adding Package Dependencies to Your App](https://developer.apple.com/documentation/swift_packages/adding_package_dependencies_to_your_app)
 
@@ -89,26 +87,36 @@ flowchart LR
 
 ## Swift 6 Concurrency
 
-napkin is fully compatible with Swift 6's strict concurrency model. All core classes are isolated to `@MainActor` by default, which simplifies concurrency handling for iOS applications where UI interactions drive business logic.
+napkin is built with Swift 6 language mode and strict concurrency checking enabled. All core types and protocols are isolated to `@MainActor`, which ensures thread safety and simplifies concurrency handling for applications where UI interactions drive business logic.
 
-### MainActor-Isolated Classes
+### MainActor-Isolated Types
 
-The following classes are `@MainActor` isolated:
+All public protocols and classes are `@MainActor` isolated:
 
+**Protocols:** `Dependency`, `Buildable`, `Presentable`, `InteractorScope`, `Interactable`, `RouterScope`, `Routing`, `ViewableRouting`, `LaunchRouting`, `ViewControllable`
+
+**Classes:**
 - `Interactor` / `PresentableInteractor`
 - `Router` / `ViewableRouter` / `LaunchRouter`
-- `Builder` / `ComponentizedBuilder` / `MultiStageComponentizedBuilder`
+- `Builder` / `ComponentizedBuilder` / `SimpleComponentizedBuilder` / `MultiStageComponentizedBuilder` / `SimpleMultiStageComponentizedBuilder`
 - `Component` / `EmptyComponent`
 - `Presenter`
+
+Subclasses in consuming packages automatically inherit `@MainActor` isolation with full cross-module support.
 
 ### Working with Background Tasks
 
 For work that needs to run off the main actor, use `Task.detached` or mark specific methods with `nonisolated`:
 
 ```swift
-final class MyInteractor: Interactor, MyInteractable {
+final class MyInteractor: PresentableInteractor<MyPresentable>, MyInteractable {
 
     private let networkService: NetworkServiceProtocol
+
+    init(presenter: MyPresentable, networkService: NetworkServiceProtocol) {
+        self.networkService = networkService
+        super.init(presenter: presenter)
+    }
 
     override func didBecomeActive() {
         super.didBecomeActive()
@@ -131,11 +139,13 @@ final class MyInteractor: Interactor, MyInteractable {
 
 ### Migration from Earlier Versions
 
-If you're migrating from a version before Swift 6 support, your subclasses will automatically inherit `@MainActor` isolation. If you have code that explicitly manages threading, you may need to:
+If you're migrating from a version before Swift 6 support:
 
-1. Remove manual `DispatchQueue.main.async` calls (no longer needed)
-2. Use `Task.detached` for background work instead of `DispatchQueue.global()`
-3. Mark any background-compatible methods as `nonisolated` if needed
+1. Your subclasses automatically inherit `@MainActor` isolation — no annotations needed
+2. Remove manual `DispatchQueue.main.async` calls (no longer needed)
+3. Use `Task.detached` for background work instead of `DispatchQueue.global()`
+4. Mark any background-compatible methods as `nonisolated` if needed
+5. Your consuming package should use `swift-tools-version:6.0` for full cross-module actor isolation support
 
 ## Core Components
 
@@ -400,7 +410,7 @@ class MyPresenter: MyPresentable {
 
 ### View (Optional)
 
-The **View** layer handles UI rendering. napkin supports both UIKit and SwiftUI.
+The **View** layer handles UI rendering. napkin supports UIKit, AppKit, and SwiftUI.
 
 **Purpose:**
 - Renders UI

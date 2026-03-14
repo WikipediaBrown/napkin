@@ -27,7 +27,7 @@ import Foundation
 /// - Owns a strongly-typed presenter
 /// - Sends business data to the presenter for formatting
 /// - Receives user events via presenter listener protocols
-/// - Automatically registers the presenter for leak detection
+/// - Manages the presenter's lifecycle alongside the interactor
 ///
 /// ## Usage
 ///
