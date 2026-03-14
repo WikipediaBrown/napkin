@@ -25,6 +25,7 @@ import Combine
 ///
 /// - SeeAlso: ``Interactable``
 /// - SeeAlso: ``Interactor``
+@MainActor
 public protocol InteractorScope: AnyObject {
 
     // The following properties must be declared in the base protocol, since `Router` internally invokes these methods.
@@ -77,6 +78,7 @@ public protocol InteractorScope: AnyObject {
 ///
 /// - SeeAlso: ``Interactor``
 /// - SeeAlso: ``InteractorScope``
+@MainActor
 public protocol Interactable: InteractorScope {
 
     // The following methods must be declared in the base protocol, since `Router` internally invokes these methods.

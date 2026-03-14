@@ -22,6 +22,7 @@ import Foundation
 /// They transform business models into view-friendly formats.
 ///
 /// - SeeAlso: ``Presenter``
+@MainActor
 public protocol Presentable: AnyObject {}
 
 /// A base class for presenters that transform business data for display.

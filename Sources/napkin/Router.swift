@@ -37,6 +37,7 @@ public enum RouterLifecycle {
 ///
 /// - SeeAlso: ``RouterLifecycle``
 /// - SeeAlso: ``Routing``
+@MainActor
 public protocol RouterScope: AnyObject {
 
     /// A publisher that emits lifecycle events for this router.
@@ -87,6 +88,7 @@ public protocol RouterScope: AnyObject {
 ///
 /// - SeeAlso: ``Router``
 /// - SeeAlso: ``Interactable``
+@MainActor
 public protocol Routing: RouterScope {
 
     // The following methods must be declared in the base protocol, since `Router` internally  invokes these methods.

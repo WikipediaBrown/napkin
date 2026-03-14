@@ -34,6 +34,7 @@ import Combine
 ///
 /// - SeeAlso: ``ViewableRouter``
 /// - SeeAlso: ``Routing``
+@MainActor
 public protocol ViewableRouting: Routing {
 
     // The following methods must be declared in the base protocol, since `Router` internally invokes these methods.
@@ -200,10 +201,15 @@ open class ViewableRouter<InteractorType, ViewControllerType>: Router<Interactor
     }
 
     deinit {
-        #if canImport(UIKit)
-        LeakDetector.instance.expectDeallocate(object: viewControllable.uiviewController, inTime: LeakDefaultExpectationTime.viewDisappear)
-        #elseif canImport(AppKit)
-        LeakDetector.instance.expectDeallocate(object: viewControllable.nsviewController, inTime: LeakDefaultExpectationTime.viewDisappear)
-        #endif
+        // deinit is nonisolated, but we need to access MainActor-isolated state.
+        // Since this class is @MainActor and view controllers are deallocated on main,
+        // we can safely assume MainActor isolation here.
+        _ = MainActor.assumeIsolated {
+            #if canImport(UIKit)
+            LeakDetector.instance.expectDeallocate(object: viewControllable.uiviewController, inTime: LeakDefaultExpectationTime.viewDisappear)
+            #elseif canImport(AppKit)
+            LeakDetector.instance.expectDeallocate(object: viewControllable.nsviewController, inTime: LeakDefaultExpectationTime.viewDisappear)
+            #endif
+        }
     }
 }
