@@ -14,7 +14,7 @@
 //  limitations under the License.
 //
 
-import Combine
+@preconcurrency import Combine
 
 /// A protocol for routers that own and manage a view controller.
 ///

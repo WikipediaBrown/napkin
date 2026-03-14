@@ -15,7 +15,7 @@
 //
 
 import Foundation
-import Combine
+@preconcurrency import Combine
 
 /// A protocol that defines the active state scope of an interactor.
 ///
@@ -303,14 +303,14 @@ open class Interactor: Interactable {
 
     deinit {
         // deinit is nonisolated, but we need to access MainActor-isolated state.
-        // Since this class is @MainActor and UIKit objects are deallocated on main,
+        // Since this class is @MainActor and view controllers are deallocated on main,
         // we can safely assume MainActor isolation here.
         MainActor.assumeIsolated {
             if isActive {
                 deactivate()
             }
+            isActiveSubject.send(completion: .finished)
         }
-        isActiveSubject.send(completion: .finished)
     }
 }
 

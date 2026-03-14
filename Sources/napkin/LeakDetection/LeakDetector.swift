@@ -14,7 +14,7 @@
 //  limitations under the License.
 //
 
-import Combine
+@preconcurrency import Combine
 #if canImport(UIKit)
 import UIKit
 #elseif canImport(AppKit)
@@ -128,7 +128,7 @@ public struct LeakDefaultExpectationTime {
 /// ### Cancellation
 ///
 /// - ``cancel()``
-public protocol LeakDetectionHandle {
+public protocol LeakDetectionHandle: Sendable {
 
     /// Cancels the scheduled leak detection.
     ///
@@ -209,6 +209,7 @@ public protocol LeakDetectionHandle {
 /// - SeeAlso: ``LeakDetectionStatus``
 /// - SeeAlso: ``LeakDetectionHandle``
 /// - SeeAlso: ``LeakDefaultExpectationTime``
+@MainActor
 public class LeakDetector {
 
     /// The shared singleton instance of the leak detector.
@@ -386,7 +387,7 @@ public class LeakDetector {
     // MARK: - Internal Interface
 
     // Test override for leak detectors.
-    static var disableLeakDetectorOverride: Bool = false
+    nonisolated(unsafe) static var disableLeakDetectorOverride: Bool = false
 
     #if DEBUG
         /// Reset the state of Leak Detector, internal for UI test only.
@@ -412,7 +413,7 @@ public class LeakDetector {
     private init() {}
 }
 
-fileprivate class LeakDetectionHandleImpl: LeakDetectionHandle {
+fileprivate final class LeakDetectionHandleImpl: LeakDetectionHandle, @unchecked Sendable {
 
     var cancelled: Bool {
         return cancelledRelay.value

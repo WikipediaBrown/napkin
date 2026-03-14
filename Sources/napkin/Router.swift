@@ -14,7 +14,7 @@
 //  limitations under the License.
 //
 
-import Combine
+@preconcurrency import Combine
 
 /// The lifecycle stages of a router scope.
 ///
@@ -413,8 +413,8 @@ open class Router<InteractorType>: Routing {
             }
 
             LeakDetector.instance.expectDeallocate(object: interactable)
-        }
 
-        lifecycleSubject.send(completion: .finished)
+            lifecycleSubject.send(completion: .finished)
+        }
     }
 }

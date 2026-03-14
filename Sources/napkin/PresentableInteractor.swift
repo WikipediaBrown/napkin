@@ -124,6 +124,8 @@ open class PresentableInteractor<PresenterType>: Interactor {
     // MARK: - Private
 
     deinit {
-        LeakDetector.instance.expectDeallocate(object: presenter as AnyObject)
+        _ = MainActor.assumeIsolated {
+            LeakDetector.instance.expectDeallocate(object: presenter as AnyObject)
+        }
     }
 }
