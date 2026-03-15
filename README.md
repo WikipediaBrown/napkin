@@ -4,62 +4,51 @@
 
 # napkin
 
-### Now Supporting ***SwiftUI***
-
 ![Release Workflow](https://github.com/WikipediaBrown/napkin/actions/workflows/Release.yml/badge.svg)
 [![Swift Versions](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FWikipediaBrown%2Fnapkin%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/WikipediaBrown/napkin)
 [![Platforms Supported](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FWikipediaBrown%2Fnapkin%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/WikipediaBrown/napkin)
 
-napkin is a reimagining of Uber's [RIBs](https://github.com/uber/RIBs) with RxSwift replaced by Combine. It provides a robust architecture for building scalable iOS and macOS applications using the Router-Interactor-Builder pattern.
+napkin is a fork of Uber's [RIBs](https://github.com/uber/RIBs) with RxSwift replaced by Combine. It structures iOS and macOS applications as a tree of modular units using the Router-Interactor-Builder pattern.
 
 ## Table of Contents
 
 - [Supported Platforms](#supported-platforms)
-- [Installation](#-installation)
+- [Installation](#installation)
 - [Architecture Overview](#architecture-overview)
-- [Swift 6 Concurrency](#swift-6-concurrency)
+- [Concurrency Model](#concurrency-model)
 - [Core Components](#core-components)
-  - [Interactor](#interactor)
-  - [Router](#router)
   - [Builder](#builder)
   - [Component & Dependency](#component--dependency)
+  - [Interactor](#interactor)
+  - [Router](#router)
   - [Presenter (Optional)](#presenter-optional)
-  - [View (Optional)](#view-optional)
-- [Usage Examples](#-usage-examples)
-  - [Creating a Basic napkin](#creating-a-basic-napkin)
-  - [Parent-Child Communication](#parent-child-communication)
-  - [SwiftUI Integration](#swiftui-integration)
-  - [UIKit Integration](#uikit-integration)
-- [Best Practices](#-best-practices)
-- [Tooling](#-tooling)
-- [Testing](#-testing)
-- [Versioning](#-versioning)
-- [Contributing](#-contributing)
-- [Author](#-author)
-- [License](#-license)
+  - [ViewControllable](#viewcontrollable)
+- [Routing & Navigation](#routing--navigation)
+- [Launching the App](#launching-the-app)
+- [SwiftUI Integration](#swiftui-integration)
+- [Testing](#testing)
+- [Tooling](#tooling)
+- [Versioning](#versioning)
+- [Contributing](#contributing)
+- [Author](#author)
+- [License](#license)
 
 ## Supported Platforms
 
-napkin supports Apple platforms:
 - iOS 13.0+
 - macOS 10.15+
 
-## 🛠️ Installation
+## Installation
 
-**napkin** can be installed with Swift Package Manager.
+Add napkin via [Swift Package Manager](https://swift.org/package-manager/):
 
-### Swift Package Manager (Xcode 16 or higher)
-
-The preferred way of installing **napkin** is via the [Swift Package Manager](https://swift.org/package-manager/).
-
-1. In Xcode, open your project and navigate to **File** → **Add Package Dependencies...**
-2. Paste the repository URL (`https://github.com/WikipediaBrown/napkin.git`) and click **Add Package**.
-
-[Adding Package Dependencies to Your App](https://developer.apple.com/documentation/swift_packages/adding_package_dependencies_to_your_app)
+1. In Xcode, navigate to **File** > **Add Package Dependencies...**
+2. Paste the repository URL: `https://github.com/WikipediaBrown/napkin.git`
+3. Click **Add Package**.
 
 ## Architecture Overview
 
-napkin implements the RIB (Router-Interactor-Builder) architecture pattern, which structures your app as a tree of modular units called "napkins." Each napkin encapsulates a specific feature or screen and consists of:
+napkin structures your app as a tree of units called "napkins." Each napkin encapsulates a feature and consists of:
 
 ```mermaid
 flowchart LR
@@ -79,646 +68,555 @@ flowchart LR
     classDef children fill:#ffb347,stroke:#cc8a2e,color:#fff
 ```
 
-**Key Principles:**
-- **Unidirectional data flow**: Data flows down through the tree, events flow up
-- **Single responsibility**: Each component has a clear, focused purpose
-- **Testability**: Business logic is isolated in Interactors, making unit testing straightforward
-- **Scalability**: Large teams can work on different napkins independently
+| Component | Required | Role |
+|-----------|----------|------|
+| **Builder** | Yes | Constructs the napkin, wires dependencies |
+| **Component** | Yes | Provides dependencies to this napkin and its children |
+| **Interactor** | Yes | Business logic, state management, lifecycle |
+| **Router** | Yes | Manages the napkin tree (attach/detach children) |
+| **Presenter** | No | Transforms business data into view-friendly formats |
+| **View** | No | UIKit view controller or SwiftUI hosting controller |
 
-## Swift 6 Concurrency
+Data flows down the tree. Events flow up via listener protocols.
 
-napkin is built with Swift 6 language mode and strict concurrency checking enabled. All core types and protocols are isolated to `@MainActor`, which ensures thread safety and simplifies concurrency handling for applications where UI interactions drive business logic.
+## Concurrency Model
 
-### MainActor-Isolated Types
+napkin is built with Swift 6 strict concurrency. Business logic runs off the main thread. Only view controllers are `@MainActor`.
 
-All public protocols and classes are `@MainActor` isolated:
+| Layer | Isolation | Sendable |
+|-------|-----------|----------|
+| `Interactor` | Non-isolated | `@unchecked Sendable` (lock-protected) |
+| `Router` | Non-isolated | `@unchecked Sendable` (lock-protected) |
+| `Builder` | Non-isolated | — |
+| `Component` | Non-isolated | — (lock-protected `shared()`) |
+| `Presenter` | Non-isolated | — |
+| **`ViewControllable`** | **`@MainActor`** | — |
 
-**Protocols:** `Dependency`, `Buildable`, `Presentable`, `InteractorScope`, `Interactable`, `RouterScope`, `Routing`, `ViewableRouting`, `LaunchRouting`, `ViewControllable`
+`ViewControllable` is the **enforcement boundary**. The compiler requires `@MainActor` context to access any view controller. Everything else — interactors, routers, builders, components — runs on whatever thread the caller is on.
 
-**Classes:**
-- `Interactor` / `PresentableInteractor`
-- `Router` / `ViewableRouter` / `LaunchRouter`
-- `Builder` / `ComponentizedBuilder` / `SimpleComponentizedBuilder` / `MultiStageComponentizedBuilder` / `SimpleMultiStageComponentizedBuilder`
-- `Component` / `EmptyComponent`
-- `Presenter`
-
-Subclasses in consuming packages automatically inherit `@MainActor` isolation with full cross-module support.
-
-### Working with Background Tasks
-
-For work that needs to run off the main actor, use `Task.detached` or mark specific methods with `nonisolated`:
+On `ViewableRouter` and `Presenter`, the `viewController` property is `@MainActor`-isolated. To access it from a non-isolated context, use `Task { @MainActor in }`:
 
 ```swift
-final class MyInteractor: PresentableInteractor<MyPresentable>, MyInteractable {
+// Inside a router method (non-isolated)
+func routeToDetails() {
+    guard detailsRouter == nil else { return }
 
-    private let networkService: NetworkServiceProtocol
-
-    init(presenter: MyPresentable, networkService: NetworkServiceProtocol) {
-        self.networkService = networkService
-        super.init(presenter: presenter)
-    }
-
-    override func didBecomeActive() {
-        super.didBecomeActive()
-        fetchData()
-    }
-
-    private func fetchData() {
-        Task.detached { [weak self] in
-            let data = await self?.networkService.fetch()
-            await self?.handleData(data)
-        }
-    }
-
-    private func handleData(_ data: Data?) {
-        // Back on MainActor - safe to update UI
-        presenter.display(data)
+    Task { @MainActor in
+        let router = detailsBuilder.build(withListener: interactor)
+        detailsRouter = router
+        attachChild(router)
+        viewController.uiviewController.present(
+            router.viewControllable.uiviewController,
+            animated: true
+        )
     }
 }
 ```
-
-### Migration from Earlier Versions
-
-If you're migrating from a version before Swift 6 support:
-
-1. Your subclasses automatically inherit `@MainActor` isolation — no annotations needed
-2. Remove manual `DispatchQueue.main.async` calls (no longer needed)
-3. Use `Task.detached` for background work instead of `DispatchQueue.global()`
-4. Mark any background-compatible methods as `nonisolated` if needed
-5. Your consuming package should use `swift-tools-version:6.0` for full cross-module actor isolation support
 
 ## Core Components
 
-### Interactor
-
-The **Interactor** is the brain of a napkin. It contains all business logic and manages the napkin's state. Interactors have a lifecycle driven by their parent Router.
-
-**Purpose:**
-- Contains business logic
-- Manages state
-- Communicates with services and data layers
-- Responds to user actions (via listener protocols)
-
-**Lifecycle:**
-- `didBecomeActive()` - Called when the napkin is attached to its parent
-- `willResignActive()` - Called when the napkin is about to be detached
-
-```swift
-// Define a listener protocol for parent communication
-protocol MyListener: AnyObject {
-    func didComplete(with result: String)
-}
-
-class MyInteractor: Interactor {
-
-    weak var listener: MyListener?
-    weak var router: MyRouting?
-
-    private let myService: MyServiceProtocol
-    private var cancellables = Set<AnyCancellable>()
-
-    init(myService: MyServiceProtocol) {
-        self.myService = myService
-        super.init()
-    }
-
-    override func didBecomeActive() {
-        super.didBecomeActive()
-        // Subscribe to data streams
-        myService.dataPublisher
-            .sink { [weak self] data in
-                self?.handleData(data)
-            }
-            .store(in: &cancellables)
-    }
-
-    override func willResignActive() {
-        super.willResignActive()
-        // Cancel subscriptions automatically via cancellables
-        cancellables.removeAll()
-    }
-
-    // MARK: - Business Logic
-
-    func userDidTapButton() {
-        myService.performAction()
-            .sink { [weak self] result in
-                self?.listener?.didComplete(with: result)
-            }
-            .store(in: &cancellables)
-    }
-
-    private func handleData(_ data: MyData) {
-        // Process data and update state
-    }
-}
-```
-
-### Router
-
-The **Router** manages the napkin tree structure. It handles attaching and detaching child napkins and coordinates navigation.
-
-**Purpose:**
-- Owns and drives the Interactor's lifecycle
-- Manages child napkins (attach/detach)
-- Handles navigation logic
-- Optionally owns a view controller
-
-**Key Methods:**
-- `didLoad()` - Called once when the router is first loaded
-- `attachChild(_:)` - Attaches a child router
-- `detachChild(_:)` - Detaches a child router
-
-```swift
-// Define a routing protocol for the Interactor to use
-protocol MyRouting: AnyObject {
-    func routeToDetails(with id: String)
-    func routeBackFromDetails()
-}
-
-class MyRouter: Router<MyInteractor>, MyRouting {
-
-    private let detailsBuilder: DetailsBuilding
-    private var detailsRouter: DetailsRouting?
-
-    init(interactor: MyInteractor, detailsBuilder: DetailsBuilding) {
-        self.detailsBuilder = detailsBuilder
-        super.init(interactor: interactor)
-        interactor.router = self
-    }
-
-    override func didLoad() {
-        super.didLoad()
-        // Attach any permanent child napkins here
-    }
-
-    // MARK: - MyRouting
-
-    func routeToDetails(with id: String) {
-        // Only attach if not already attached
-        guard detailsRouter == nil else { return }
-
-        let router = detailsBuilder.build(withListener: interactor, id: id)
-        detailsRouter = router
-        attachChild(router)
-    }
-
-    func routeBackFromDetails() {
-        guard let router = detailsRouter else { return }
-        detachChild(router)
-        detailsRouter = nil
-    }
-}
-```
-
 ### Builder
 
-The **Builder** is responsible for constructing a napkin and wiring up all its dependencies. It's the factory for creating napkin instances.
+The **Builder** constructs a napkin and wires its dependencies. It receives a `Dependency` from its parent and returns a `Router`.
 
-**Purpose:**
-- Creates and assembles napkin components
-- Wires up dependencies via the Component
-- Returns a Router that represents the napkin
+When the napkin has a view, mark `build()` as `@MainActor` because `UIViewController` initialization requires the main thread:
 
 ```swift
-// Define what this builder needs from its parent
-protocol MyDependency: Dependency {
-    var analyticsService: AnalyticsServiceProtocol { get }
+protocol HomeDependency: Dependency {
+    var userService: UserServiceProtocol { get }
 }
 
-// Define the build interface
-protocol MyBuilding {
-    func build(withListener listener: MyListener) -> MyRouting
+protocol HomeBuildable: Buildable {
+    @MainActor func build(withListener listener: HomeListener) -> HomeRouting
 }
 
-final class MyBuilder: Builder<MyDependency>, MyBuilding {
+final class HomeBuilder: Builder<HomeDependency>, HomeBuildable {
 
-    func build(withListener listener: MyListener) -> MyRouting {
-        let component = MyComponent(dependency: dependency)
-        let interactor = MyInteractor(myService: component.myService)
-        interactor.listener = listener
-
-        let detailsBuilder = DetailsBuilder(dependency: component)
-
-        return MyRouter(
-            interactor: interactor,
-            detailsBuilder: detailsBuilder
+    @MainActor func build(withListener listener: HomeListener) -> HomeRouting {
+        let component = HomeComponent(dependency: dependency)
+        let viewController = HomeViewController()
+        let interactor = HomeInteractor(
+            presenter: viewController,
+            userService: component.userService
         )
+        interactor.listener = listener
+        return HomeRouter(interactor: interactor, viewController: viewController)
     }
+}
+```
+
+For napkins without views, `build()` does not need `@MainActor`:
+
+```swift
+protocol AnalyticsBuildable: Buildable {
+    func build(withListener listener: AnalyticsListener) -> AnalyticsRouting
 }
 ```
 
 ### Component & Dependency
 
-**Components** provide dependency injection within a napkin tree. They define what dependencies a napkin provides to its children.
+A **Dependency** protocol declares what a napkin requires from its parent. A **Component** provides those dependencies and can create new ones for its children.
 
-**Dependency** is a protocol that defines what a napkin requires from its parent.
-
-**Purpose:**
-- Manages dependency injection
-- Provides shared instances within a scope
-- Connects parent and child dependencies
+Use `shared {}` to create a single instance per component scope. Without `shared`, a new instance is created on each access. The `shared()` method is thread-safe.
 
 ```swift
-// What this napkin requires from its parent
-protocol MyDependency: Dependency {
+protocol HomeDependency: Dependency {
     var analyticsService: AnalyticsServiceProtocol { get }
     var userSession: UserSession { get }
 }
 
-// What this napkin provides to its children
-protocol MyChildDependency: Dependency {
-    var myService: MyServiceProtocol { get }
-    var analyticsService: AnalyticsServiceProtocol { get }
-}
+final class HomeComponent: Component<HomeDependency> {
 
-final class MyComponent: Component<MyDependency>, MyChildDependency {
-
-    // Pass through from parent
+    // Passed through from parent
     var analyticsService: AnalyticsServiceProtocol {
-        return dependency.analyticsService
+        dependency.analyticsService
     }
 
-    // Create a new shared instance for this scope
-    var myService: MyServiceProtocol {
-        return shared { MyService(session: dependency.userSession) }
-    }
-
-    // Create a new instance each time (not shared)
-    var viewModel: MyViewModel {
-        return MyViewModel(service: myService)
-    }
-}
-
-// For the root napkin with no parent dependencies
-final class RootComponent: Component<EmptyDependency>, MyDependency {
-
-    var analyticsService: AnalyticsServiceProtocol {
-        return shared { AnalyticsService() }
-    }
-
-    var userSession: UserSession {
-        return shared { UserSession() }
-    }
-}
-```
-
-### Presenter (Optional)
-
-The **Presenter** transforms business data into view-friendly formats. Use it when you need complex data transformation between the Interactor and View.
-
-**Purpose:**
-- Transforms business models to view models
-- Keeps Interactor focused on business logic
-- Keeps View focused on display
-
-```swift
-protocol MyPresentable: AnyObject {
-    func present(items: [Item])
-    func presentError(_ error: Error)
-}
-
-protocol MyPresentableListener: AnyObject {
-    func didSelectItem(at index: Int)
-}
-
-class MyPresenter: MyPresentable {
-
-    weak var view: MyViewControllable?
-
-    func present(items: [Item]) {
-        let viewModels = items.map { item in
-            ItemViewModel(
-                title: item.name.uppercased(),
-                subtitle: formatDate(item.date),
-                imageURL: item.thumbnailURL
-            )
-        }
-        view?.display(viewModels: viewModels)
-    }
-
-    func presentError(_ error: Error) {
-        let message = ErrorMessageFormatter.format(error)
-        view?.displayError(message: message)
-    }
-
-    private func formatDate(_ date: Date) -> String {
-        // Format date for display
-    }
-}
-```
-
-### View (Optional)
-
-The **View** layer handles UI rendering. napkin supports UIKit, AppKit, and SwiftUI.
-
-**Purpose:**
-- Renders UI
-- Captures user interactions
-- Forwards events to the Interactor (via listener)
-
-## 👩🏽‍💻 Usage Examples
-
-### Creating a Basic napkin
-
-Here's a complete example of a simple napkin:
-
-```swift
-// MARK: - Dependency
-
-protocol ProfileDependency: Dependency {
-    var userService: UserServiceProtocol { get }
-}
-
-// MARK: - Component
-
-final class ProfileComponent: Component<ProfileDependency> {
-
+    // Created once, shared within this scope
     var userService: UserServiceProtocol {
-        return dependency.userService
+        shared { UserService(session: dependency.userSession) }
+    }
+
+    // New instance each time
+    var viewModel: HomeViewModel {
+        HomeViewModel(service: userService)
     }
 }
+```
 
-// MARK: - Interactor
+The root napkin uses `EmptyDependency`:
 
-protocol ProfileListener: AnyObject {
-    func profileDidRequestLogout()
+```swift
+final class AppComponent: Component<EmptyDependency>, HomeDependency {
+    var analyticsService: AnalyticsServiceProtocol {
+        shared { AnalyticsService() }
+    }
+    var userSession: UserSession {
+        shared { UserSession() }
+    }
+}
+```
+
+### Interactor
+
+The **Interactor** contains all business logic. It has a lifecycle driven by its parent router: `didBecomeActive()` when attached, `willResignActive()` when detached.
+
+Interactors communicate:
+- **Up** to parent napkins via `weak var listener` (a protocol the parent implements)
+- **Down** to navigation via `weak var router` (a routing protocol the router implements)
+
+```swift
+protocol HomeListener: AnyObject {
+    func homeDidRequestLogout()
 }
 
-final class ProfileInteractor: Interactor {
+protocol HomeInteractable: Interactable {
+    var router: HomeRouting? { get set }
+    var listener: HomeListener? { get set }
+}
 
-    weak var listener: ProfileListener?
-    weak var router: ProfileRouting?
+final class HomeInteractor: PresentableInteractor<HomePresentable>,
+                            HomeInteractable,
+                            HomePresentableListener {
+
+    weak var router: HomeRouting?
+    weak var listener: HomeListener?
 
     private let userService: UserServiceProtocol
-
-    init(userService: UserServiceProtocol) {
-        self.userService = userService
-        super.init()
-    }
-
-    func logoutTapped() {
-        userService.logout()
-        listener?.profileDidRequestLogout()
-    }
-}
-
-// MARK: - Router
-
-protocol ProfileRouting: AnyObject {
-    // Define routing methods
-}
-
-final class ProfileRouter: Router<ProfileInteractor>, ProfileRouting {
-
-    override func didLoad() {
-        super.didLoad()
-    }
-}
-
-// MARK: - Builder
-
-protocol ProfileBuilding {
-    func build(withListener listener: ProfileListener) -> ProfileRouting
-}
-
-final class ProfileBuilder: Builder<ProfileDependency>, ProfileBuilding {
-
-    func build(withListener listener: ProfileListener) -> ProfileRouting {
-        let component = ProfileComponent(dependency: dependency)
-        let interactor = ProfileInteractor(userService: component.userService)
-        interactor.listener = listener
-        return ProfileRouter(interactor: interactor)
-    }
-}
-```
-
-### Parent-Child Communication
-
-napkins communicate via listener protocols (child to parent) and method calls (parent to child):
-
-```swift
-// Child notifies parent via listener
-protocol ChildListener: AnyObject {
-    func childDidFinish(with result: Result)
-}
-
-// Parent implements the listener
-extension ParentInteractor: ChildListener {
-    func childDidFinish(with result: Result) {
-        // Handle result from child
-        processResult(result)
-        router?.detachChild()
-    }
-}
-
-// Parent tells router to attach child
-func showChild() {
-    router?.routeToChild()
-}
-```
-
-### SwiftUI Integration
-
-Use `ViewableRouter` with a hosting controller for SwiftUI views:
-
-```swift
-// MARK: - SwiftUI View
-
-struct MySwiftUIView: View {
-    @ObservedObject var viewModel: MyViewModel
-    let listener: MyViewListener
-
-    var body: some View {
-        VStack {
-            Text(viewModel.title)
-            Button("Action") {
-                listener.didTapAction()
-            }
-        }
-    }
-}
-
-// MARK: - HostingController
-
-protocol MyViewControllable: ViewControllable {}
-
-final class MyHostingController: UIHostingController<MySwiftUIView>, MyViewControllable {
-
-    init(viewModel: MyViewModel, listener: MyViewListener) {
-        let view = MySwiftUIView(viewModel: viewModel, listener: listener)
-        super.init(rootView: view)
-    }
-
-    @MainActor required dynamic init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-}
-
-// MARK: - Router
-
-final class MyRouter: ViewableRouter<MyInteractor, MyViewControllable> {
-
-    override func didLoad() {
-        super.didLoad()
-    }
-}
-
-// MARK: - Builder
-
-final class MyBuilder: Builder<MyDependency>, MyBuilding {
-
-    func build(withListener listener: MyListener) -> MyRouting {
-        let component = MyComponent(dependency: dependency)
-        let viewModel = component.viewModel
-        let interactor = MyInteractor()
-        interactor.listener = listener
-
-        let viewController = MyHostingController(
-            viewModel: viewModel,
-            listener: interactor
-        )
-
-        return MyRouter(interactor: interactor, viewController: viewController)
-    }
-}
-```
-
-### UIKit Integration
-
-For UIKit, create a standard view controller:
-
-```swift
-protocol MyViewControllable: ViewControllable {
-    func display(items: [ItemViewModel])
-}
-
-final class MyViewController: UIViewController, MyViewControllable {
-
-    weak var listener: MyViewListener?
-
-    private let tableView = UITableView()
-    private var items: [ItemViewModel] = []
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        setupUI()
-    }
-
-    func display(items: [ItemViewModel]) {
-        self.items = items
-        tableView.reloadData()
-    }
-
-    private func setupUI() {
-        // Setup table view, constraints, etc.
-    }
-}
-
-extension MyViewController: UITableViewDelegate {
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        listener?.didSelectItem(at: indexPath.row)
-    }
-}
-```
-
-## 🎯 Best Practices
-
-### 1. Keep Interactors Focused
-- Interactors should only contain business logic
-- Don't import UIKit in Interactors
-- Use protocols to communicate with Routers and Views
-
-### 2. Use Protocols for Testability
-```swift
-// Good: Protocol-based dependency
-protocol MyServiceProtocol {
-    func fetchData() -> AnyPublisher<Data, Error>
-}
-
-class MyInteractor {
-    private let service: MyServiceProtocol  // Easy to mock
-}
-
-// Bad: Concrete dependency
-class MyInteractor {
-    private let service = MyService()  // Hard to test
-}
-```
-
-### 3. Manage Subscriptions Properly
-```swift
-class MyInteractor: Interactor {
     private var cancellables = Set<AnyCancellable>()
+
+    init(presenter: HomePresentable, userService: UserServiceProtocol) {
+        self.userService = userService
+        super.init(presenter: presenter)
+    }
 
     override func didBecomeActive() {
         super.didBecomeActive()
-        // Setup subscriptions here
+        userService.currentUser
+            .sink { [weak self] user in
+                self?.presenter.presentUser(user)
+            }
+            .store(in: &cancellables)
     }
 
     override func willResignActive() {
         super.willResignActive()
-        cancellables.removeAll()  // Clean up
+        cancellables.removeAll()
+    }
+
+    // MARK: - HomePresentableListener
+
+    func didTapProfile() {
+        router?.routeToProfile()
+    }
+
+    func didTapLogout() {
+        listener?.homeDidRequestLogout()
     }
 }
 ```
 
-### 4. Use `shared` for Expensive Dependencies
+Use `PresentableInteractor<T>` when the interactor communicates with a view through a presentable protocol. Use plain `Interactor` for napkins without views.
+
+### Router
+
+The **Router** manages the napkin tree. It owns the interactor, maintains a list of children, and coordinates navigation.
+
+- `attachChild(_:)` — adds a child router, activates its interactor, and loads it
+- `detachChild(_:)` — deactivates the child's interactor and removes it
+- `didLoad()` — called once when the router is first loaded; attach permanent children here
+
+Use `Router<InteractorType>` for napkins without views. Use `ViewableRouter<InteractorType, ViewControllerType>` when the napkin has a view controller.
+
 ```swift
-class MyComponent: Component<MyDependency> {
-    // Shared: Same instance reused
-    var database: Database {
-        return shared { Database() }
+protocol HomeRouting: ViewableRouting {
+    func routeToProfile()
+    func routeBackFromProfile()
+}
+
+final class HomeRouter: ViewableRouter<HomeInteractable, HomeViewControllable>,
+                        HomeRouting {
+
+    private let profileBuilder: ProfileBuildable
+    private var profileRouter: ProfileRouting?
+
+    init(interactor: HomeInteractable,
+         viewController: HomeViewControllable,
+         profileBuilder: ProfileBuildable) {
+        self.profileBuilder = profileBuilder
+        super.init(interactor: interactor, viewController: viewController)
+        interactor.router = self
     }
 
-    // Not shared: New instance each time
-    var viewModel: ViewModel {
-        return ViewModel(database: database)
+    func routeToProfile() {
+        guard profileRouter == nil else { return }
+
+        Task { @MainActor in
+            let router = profileBuilder.build(withListener: interactor)
+            profileRouter = router
+            attachChild(router)
+            viewController.uiviewController.present(
+                router.viewControllable.uiviewController,
+                animated: true
+            )
+        }
+    }
+
+    func routeBackFromProfile() {
+        guard let router = profileRouter else { return }
+        profileRouter = nil
+
+        Task { @MainActor in
+            viewController.uiviewController.dismiss(animated: true)
+        }
+        detachChild(router)
     }
 }
 ```
 
-### 5. Guard Against Double Attachment
+The `Task { @MainActor in }` block is the boundary crossing: `attachChild` and `detachChild` are thread-safe and non-isolated, but accessing `viewController` or `viewControllable` requires `@MainActor`. The pattern is:
+
+1. Build the child (`@MainActor` if it creates a view controller)
+2. Attach — activates the interactor, loads the router
+3. Present — manipulates the view hierarchy on `@MainActor`
+
+For detaching, the order is reversed: dismiss the view, then detach the child.
+
+### Presenter (Optional)
+
+The **Presenter** transforms business data into view-friendly formats. It sits between the interactor and the view controller.
+
+The `Presenter<ViewControllerType>` class stores the view controller, but its `viewController` property is `@MainActor`. Use `Task { @MainActor in }` to update the view:
+
 ```swift
-func routeToChild() {
-    guard childRouter == nil else { return }  // Prevent double attach
-    let router = childBuilder.build(withListener: interactor)
-    childRouter = router
-    attachChild(router)
+protocol HomePresentable: Presentable {
+    func presentUser(_ user: User)
+}
+
+final class HomePresenter: Presenter<HomeViewControllable>, HomePresentable {
+
+    func presentUser(_ user: User) {
+        let displayName = "\(user.firstName) \(user.lastName)"
+        Task { @MainActor in
+            viewController.displayUserName(displayName)
+        }
+    }
 }
 ```
 
-### 6. Clean Up When Detaching
+In many cases you won't need a separate `Presenter` class. The simpler pattern — used by the included templates — is to make the view controller conform to the `Presentable` protocol directly. The interactor uses `PresentableInteractor<MyPresentable>`, where the view controller is the presentable. The interactor calls methods on `presenter` to send data, and the view controller forwards user events back to the interactor via a `PresentableListener` protocol.
+
+### ViewControllable
+
+`ViewControllable` is the only `@MainActor`-isolated protocol in napkin. It provides access to the underlying platform view controller:
+
 ```swift
-func routeBackFromChild() {
-    guard let router = childRouter else { return }
-    detachChild(router)
-    childRouter = nil  // Clear the reference
+// UIKit — UIViewController subclasses conform automatically
+final class HomeViewController: UIViewController, HomeViewControllable {
+    // uiviewController returns self via default implementation
+}
+
+// SwiftUI — use a UIHostingController
+final class HomeHostingController: UIHostingController<HomeView>, HomeViewControllable {
+    init() {
+        super.init(rootView: HomeView())
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }
 ```
 
-### 7. Use Weak References for Listeners
+Define a feature-specific protocol extending `ViewControllable` for methods the router or presenter needs:
+
 ```swift
-class MyInteractor: Interactor {
-    weak var listener: MyListener?  // Always weak to avoid retain cycles
-    weak var router: MyRouting?     // Always weak
+@MainActor protocol HomeViewControllable: ViewControllable {
+    func displayUserName(_ name: String)
 }
 ```
 
-### 8. Name Protocols Consistently
-- `*Dependency` - What a napkin requires from parent
-- `*Listener` - How child communicates to parent
-- `*Routing` - Router's public interface
-- `*Building` - Builder's public interface
-- `*ViewControllable` - View controller's public interface
+## Routing & Navigation
 
-## 🪛 Tooling
+Routing separates the **logical tree** (attach/detach) from the **visual tree** (present/dismiss).
+
+Attach/detach are non-isolated and manage the napkin tree and interactor lifecycle. Present/dismiss require `@MainActor` because they touch UIKit.
+
+**Modal presentation:**
+
+```swift
+func routeToSettings() {
+    guard settingsRouter == nil else { return }
+
+    Task { @MainActor in
+        let router = settingsBuilder.build(withListener: interactor)
+        settingsRouter = router
+        attachChild(router)
+        viewController.uiviewController.present(
+            router.viewControllable.uiviewController,
+            animated: true
+        )
+    }
+}
+```
+
+**Push onto a navigation stack:**
+
+```swift
+func routeToDetail(id: String) {
+    guard detailRouter == nil else { return }
+
+    Task { @MainActor in
+        let router = detailBuilder.build(withListener: interactor, id: id)
+        detailRouter = router
+        attachChild(router)
+
+        let nav = viewController.uiviewController as! UINavigationController
+        nav.pushViewController(
+            router.viewControllable.uiviewController,
+            animated: true
+        )
+    }
+}
+```
+
+**Embed a child view:**
+
+```swift
+func attachDashboard() {
+    Task { @MainActor in
+        let router = dashboardBuilder.build(withListener: interactor)
+        dashboardRouter = router
+        attachChild(router)
+
+        let parent = viewController.uiviewController
+        let child = router.viewControllable.uiviewController
+        parent.addChild(child)
+        parent.view.addSubview(child.view)
+        child.didMove(toParent: parent)
+    }
+}
+```
+
+**Viewless napkin (no UI):**
+
+```swift
+func attachAnalytics() {
+    guard analyticsRouter == nil else { return }
+    let router = analyticsBuilder.build(withListener: interactor)
+    analyticsRouter = router
+    attachChild(router)  // No @MainActor needed
+}
+```
+
+## Launching the App
+
+Use `LaunchRouter` as the root of the napkin tree. Its `launch(from:)` method sets the root view controller on the window and activates the tree:
+
+```swift
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+
+    var window: UIWindow?
+    private var launchRouter: LaunchRouting?
+
+    func scene(_ scene: UIScene,
+               willConnectTo session: UISceneSession,
+               options connectionOptions: UIScene.ConnectionOptions) {
+
+        guard let windowScene = scene as? UIWindowScene else { return }
+        let window = UIWindow(windowScene: windowScene)
+        self.window = window
+
+        let component = AppComponent()
+        let builder = RootBuilder(dependency: component)
+        let router = builder.build()
+        self.launchRouter = router
+
+        router.launch(from: window)
+    }
+}
+```
+
+The root router subclasses `LaunchRouter`:
+
+```swift
+final class RootRouter: LaunchRouter<RootInteractable, RootViewControllable>,
+                        RootRouting {
+
+    private let homeBuilder: HomeBuildable
+
+    init(interactor: RootInteractable,
+         viewController: RootViewControllable,
+         homeBuilder: HomeBuildable) {
+        self.homeBuilder = homeBuilder
+        super.init(interactor: interactor, viewController: viewController)
+        interactor.router = self
+    }
+
+    override func didLoad() {
+        super.didLoad()
+        routeToHome()
+    }
+
+    func routeToHome() {
+        Task { @MainActor in
+            let router = homeBuilder.build(withListener: interactor)
+            attachChild(router)
+        }
+    }
+}
+```
+
+## SwiftUI Integration
+
+Wrap SwiftUI views in a `UIHostingController` that conforms to `ViewControllable`:
+
+```swift
+struct HomeView: View {
+    @ObservedObject var viewModel: HomeViewModel
+
+    var body: some View {
+        Text(viewModel.userName)
+    }
+}
+
+@MainActor protocol HomeViewControllable: ViewControllable {}
+
+final class HomeViewController: UIHostingController<HomeView>,
+                                HomeViewControllable {
+
+    init(viewModel: HomeViewModel) {
+        super.init(rootView: HomeView(viewModel: viewModel))
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+```
+
+To pass data from the interactor to the SwiftUI view, share an `ObservableObject` view model. The builder creates it and passes it to both the view controller and the interactor:
+
+```swift
+@MainActor func build(withListener listener: HomeListener) -> HomeRouting {
+    let component = HomeComponent(dependency: dependency)
+    let viewModel = HomeViewModel()
+    let viewController = HomeViewController(viewModel: viewModel)
+    let interactor = HomeInteractor(viewModel: viewModel, userService: component.userService)
+    interactor.listener = listener
+    return HomeRouter(interactor: interactor, viewController: viewController)
+}
+```
+
+To forward user actions from SwiftUI back to the interactor, use a listener protocol on the view:
+
+```swift
+protocol HomePresentableListener: AnyObject {
+    func didTapProfile()
+}
+
+struct HomeView: View {
+    @ObservedObject var viewModel: HomeViewModel
+    weak var listener: HomePresentableListener?
+
+    var body: some View {
+        Button("Profile") {
+            listener?.didTapProfile()
+        }
+    }
+}
+```
+
+## Testing
+
+napkin's non-isolated design makes testing straightforward. No `@MainActor` annotations are needed on test classes or mocks for interactors and routers:
+
+```swift
+import Testing
+@testable import YourApp
+
+struct HomeInteractorTests {
+
+    @Test func didTapLogout_notifiesListener() {
+        let listener = MockHomeListener()
+        let presenter = MockHomePresentable()
+        let interactor = HomeInteractor(presenter: presenter, userService: MockUserService())
+        interactor.listener = listener
+        interactor.activate()
+
+        interactor.didTapLogout()
+
+        #expect(listener.logoutCalled)
+    }
+}
+
+final class MockHomeListener: HomeListener {
+    var logoutCalled = false
+    func homeDidRequestLogout() { logoutCalled = true }
+}
+
+final class MockHomePresentable: HomePresentable {
+    var listener: HomePresentableListener?
+    var lastUser: User?
+    func presentUser(_ user: User) { lastUser = user }
+}
+```
+
+Run tests with `Command+U` in Xcode, or via fastlane:
+
+```bash
+cd napkin
+bundle install
+bundle exec fastlane unit_test
+```
+
+## Tooling
 
 ### Xcode Templates
 
-**napkin** comes with templates that let you add all components of a napkin (Builder, Interactor, Router & optional ViewController) straight from the `New > File..` menu.
+napkin includes Xcode templates for creating napkin components from the **File** > **New File...** menu.
 
-#### Install Templates
+#### Install
 
 ```bash
 git clone https://github.com/WikipediaBrown/napkin.git
@@ -729,105 +627,30 @@ bash napkin/Tools/InstallXcodeTemplates.sh
 
 | Template | Description |
 |----------|-------------|
-| ![napkin](https://raw.githubusercontent.com/WikipediaBrown/napkin/develop/Tools/napkin/napkin.xctemplate/TemplateIcon%402x.png) **napkin** | Creates a complete napkin (Builder, Interactor, Router) |
-| ![Launch napkin](https://raw.githubusercontent.com/WikipediaBrown/napkin/develop/Tools/napkin/Launch%20napkin.xctemplate/TemplateIcon%402x.png) **Launch napkin** | Creates a root napkin for app launch |
-| ![napkin Unit Tests](https://raw.githubusercontent.com/WikipediaBrown/napkin/develop/Tools/napkin/napkin%20Unit%20Tests.xctemplate/TemplateIcon%402x.png) **napkin Unit Tests** | Creates test files for a napkin |
-| ![Component Extension](https://raw.githubusercontent.com/WikipediaBrown/napkin/develop/Tools/napkin/Component%20Extension.xctemplate/TemplateIcon%402x.png) **Component Extension** | Creates a component extension for child dependencies |
-| ![Service Manager](https://raw.githubusercontent.com/WikipediaBrown/napkin/develop/Tools/napkin/Service%20Manager.xctemplate/TemplateIcon%402x.png) **Service Manager** | Creates a service manager pattern |
+| **napkin** | Builder, Interactor, Router (+ optional ViewController) |
+| **Launch napkin** | Root napkin for app launch |
+| **napkin Unit Tests** | Interactor and Router test files |
+| **Component Extension** | Component extension for child dependencies |
+| **Service Manager** | Service manager pattern |
 
-## 🧪 Testing
+## Versioning
 
-Run `Command+U` in Xcode to run the unit tests. Tests run automatically for all pull requests.
+napkin releases [new versions on GitHub](https://github.com/WikipediaBrown/napkin/releases) automatically when a pull request is merged from `develop` to `main`.
 
-### Writing Tests
+## Contributing
 
-```swift
-import XCTest
-@testable import YourApp
-
-final class MyInteractorTests: XCTestCase {
-
-    private var interactor: MyInteractor!
-    private var listener: MockMyListener!
-    private var service: MockMyService!
-
-    override func setUp() {
-        super.setUp()
-        listener = MockMyListener()
-        service = MockMyService()
-        interactor = MyInteractor(service: service)
-        interactor.listener = listener
-    }
-
-    func testDidTapButton_callsService() {
-        interactor.activate()
-
-        interactor.didTapButton()
-
-        XCTAssertTrue(service.performActionCalled)
-    }
-
-    func testServiceReturnsResult_notifiesListener() {
-        interactor.activate()
-        service.resultToReturn = "success"
-
-        interactor.didTapButton()
-
-        XCTAssertEqual(listener.lastResult, "success")
-    }
-}
-
-// MARK: - Mocks
-
-final class MockMyListener: MyListener {
-    var lastResult: String?
-
-    func didComplete(with result: String) {
-        lastResult = result
-    }
-}
-
-final class MockMyService: MyServiceProtocol {
-    var performActionCalled = false
-    var resultToReturn: String = ""
-
-    func performAction() -> AnyPublisher<String, Never> {
-        performActionCalled = true
-        return Just(resultToReturn).eraseToAnyPublisher()
-    }
-}
-```
-
-### Fastlane
-
-Run tests using fastlane:
+Send a pull request or create an issue. Commits must be signed:
 
 ```bash
-cd napkin
-bundle install
-bundle exec fastlane unit_test
+git config commit.gpgsign true
 ```
 
-## 🐁 Versioning
-
-**napkin** releases a [new version on GitHub](https://github.com/WikipediaBrown/napkin/releases) automatically when a pull request is approved from the `develop` branch to the `main` branch.
-
-## 👩🏽‍💻 Contributing
-
-Send a pull request or create an issue.
-
-**Requirements:**
-- Sign your commits:
-  ```bash
-  git config commit.gpgsign true
-  ```
-
-## ✍🏽 Author
+## Author
 
 Wikipedia Brown
 
-## 🪪 License
+## License
 
-**napkin** is available under the Apache 2.0 license. See the LICENSE file for more info.
+napkin is available under the Apache 2.0 license. See the LICENSE file for more info.
 
-<p align="center">Made with 🌲🌲🌲 in Cascadia</p>
+<p align="center">Made with cascadian love</p>

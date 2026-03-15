@@ -200,7 +200,9 @@ open class Interactor: Interactable, @unchecked Sendable {
     ///
     /// - Note: This property is thread-safe.
     public final var isActive: Bool {
-        isActiveSubject.value
+        lock.lock()
+        defer { lock.unlock() }
+        return isActiveSubject.value
     }
 
     /// A publisher that emits the current and future active states.
@@ -237,11 +239,8 @@ open class Interactor: Interactable, @unchecked Sendable {
             lock.unlock()
             return
         }
-        lock.unlock()
-
-        // Send outside the lock — CurrentValueSubject.send() synchronously
-        // delivers to subscribers, which may re-enter isActive.
         isActiveSubject.send(true)
+        lock.unlock()
 
         didBecomeActive()
     }
@@ -285,9 +284,9 @@ open class Interactor: Interactable, @unchecked Sendable {
 
         willResignActive()
 
-        // Send outside the lock — CurrentValueSubject.send() synchronously
-        // delivers to subscribers, which may re-enter isActive.
+        lock.lock()
         isActiveSubject.send(false)
+        lock.unlock()
     }
 
     /// Called when the interactor is about to become inactive.
@@ -312,7 +311,7 @@ open class Interactor: Interactable, @unchecked Sendable {
     // MARK: - Private
 
     private let isActiveSubject = CurrentValueSubject<Bool, Never>(false)
-    private let lock = NSLock()
+    private let lock = NSRecursiveLock()
 
     deinit {
         if isActiveSubject.value {
