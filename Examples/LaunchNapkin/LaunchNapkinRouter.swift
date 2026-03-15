@@ -19,7 +19,7 @@ protocol LaunchNapkinInteractable: Interactable {
 final class LaunchNapkinRouter: LaunchRouter<LaunchNapkinInteractable, LaunchNapkinViewControllable>, LaunchNapkinRouting {
 
     // TODO: Constructor inject child builder protocols to allow building children.
-    init(interactor: LaunchNapkinInteractable, viewController: LaunchNapkinViewControllable) {
+    override init(interactor: LaunchNapkinInteractable, viewController: LaunchNapkinViewControllable) {
         super.init(interactor: interactor, viewController: viewController)
         interactor.router = self
     }
