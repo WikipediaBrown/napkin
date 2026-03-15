@@ -22,7 +22,6 @@ import Foundation
 /// They transform business models into view-friendly formats.
 ///
 /// - SeeAlso: ``Presenter``
-@MainActor
 public protocol Presentable: AnyObject {}
 
 /// A base class for presenters that transform business data for display.
@@ -93,7 +92,6 @@ public protocol Presentable: AnyObject {}
 /// - SeeAlso: ``Presentable``
 /// - SeeAlso: ``PresentableInteractor``
 /// - SeeAlso: ``Interactor``
-@MainActor
 open class Presenter<ViewControllerType>: Presentable {
 
     /// The view controller that this presenter updates.
@@ -101,13 +99,21 @@ open class Presenter<ViewControllerType>: Presentable {
     /// Use this property to send formatted data to the view for display.
     /// The view controller should conform to a protocol that defines
     /// the available display methods.
-    public let viewController: ViewControllerType
+    ///
+    /// - Important: This property is `@MainActor`-isolated. Access it from
+    ///   a `@MainActor` context or use `Task { @MainActor in }` to dispatch.
+    @MainActor
+    public var viewController: ViewControllerType { _viewController }
 
     /// Creates a presenter with the specified view controller.
     ///
     /// - Parameter viewController: The view controller that will display
     ///   the data formatted by this presenter.
     public init(viewController: ViewControllerType) {
-        self.viewController = viewController
+        self._viewController = viewController
     }
+
+    // MARK: - Private
+
+    private let _viewController: ViewControllerType
 }

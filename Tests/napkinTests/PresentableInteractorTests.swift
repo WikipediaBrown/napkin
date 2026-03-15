@@ -18,7 +18,6 @@ import XCTest
 import Combine
 @testable import napkin
 
-@MainActor
 final class PresentableInteractorTests: XCTestCase {
 
     private var cancellables = Set<AnyCancellable>()
@@ -121,12 +120,10 @@ final class PresentableInteractorTests: XCTestCase {
 
 // MARK: - Test Doubles
 
-@MainActor
 private protocol TestPresentable: AnyObject {
     func doSomething()
 }
 
-@MainActor
 private class TestPresenter: TestPresentable {
     var methodCalled = false
 
@@ -135,8 +132,7 @@ private class TestPresenter: TestPresentable {
     }
 }
 
-@MainActor
-private class TestPresentableInteractor: PresentableInteractor<TestPresentable> {
+private class TestPresentableInteractor: PresentableInteractor<TestPresentable>, @unchecked Sendable {
     var didBecomeActiveCalled = false
     var willResignActiveCalled = false
 

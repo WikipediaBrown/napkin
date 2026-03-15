@@ -18,7 +18,6 @@ import XCTest
 import Combine
 @testable import napkin
 
-@MainActor
 final class RouterTests: XCTestCase {
 
     private var cancellables = Set<AnyCancellable>()
@@ -224,8 +223,7 @@ final class RouterTests: XCTestCase {
 
 // MARK: - Test Doubles
 
-@MainActor
-private class TestInteractor: Interactor {
+private class TestInteractor: Interactor, @unchecked Sendable {
     var didBecomeActiveCalled = false
     var willResignActiveCalled = false
 
@@ -240,8 +238,7 @@ private class TestInteractor: Interactor {
     }
 }
 
-@MainActor
-private class TestRouter: Router<TestInteractor> {
+private class TestRouter: Router<TestInteractor>, @unchecked Sendable {
     var didLoadCalled = false
 
     override func didLoad() {

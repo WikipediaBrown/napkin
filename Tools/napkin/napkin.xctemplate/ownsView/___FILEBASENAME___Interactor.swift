@@ -2,20 +2,20 @@
 
 import napkin
 
-@MainActor protocol ___VARIABLE_productName___Routing: ViewableRouting {
+protocol ___VARIABLE_productName___Routing: ViewableRouting {
     // TODO: Declare methods the interactor can invoke to manage sub-tree via the router.
 }
 
-@MainActor protocol ___VARIABLE_productName___Presentable: Presentable {
+protocol ___VARIABLE_productName___Presentable: Presentable {
     var listener: ___VARIABLE_productName___PresentableListener? { get set }
     // TODO: Declare methods the interactor can invoke the presenter to present data.
 }
 
-@MainActor protocol ___VARIABLE_productName___Listener: AnyObject {
+protocol ___VARIABLE_productName___Listener: AnyObject {
     // TODO: Declare methods the interactor can invoke to communicate with other napkins.
 }
 
-@MainActor final class ___VARIABLE_productName___Interactor: PresentableInteractor<___VARIABLE_productName___Presentable>, ___VARIABLE_productName___Interactable, ___VARIABLE_productName___PresentableListener {
+final class ___VARIABLE_productName___Interactor: PresentableInteractor<___VARIABLE_productName___Presentable>, ___VARIABLE_productName___Interactable, ___VARIABLE_productName___PresentableListener {
 
     weak var router: ___VARIABLE_productName___Routing?
     weak var listener: ___VARIABLE_productName___Listener?

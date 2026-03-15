@@ -53,7 +53,6 @@ import Foundation
 /// - SeeAlso: ``SimpleComponentizedBuilder``
 /// - SeeAlso: ``Builder``
 /// - SeeAlso: ``MultiStageComponentizedBuilder``
-@MainActor
 open class ComponentizedBuilder<Component, Router, DynamicBuildDependency, DynamicComponentDependency>: Buildable {
 
     // Builder should not directly retain an instance of the component.
@@ -162,7 +161,6 @@ open class ComponentizedBuilder<Component, Router, DynamicBuildDependency, Dynam
 ///
 /// - SeeAlso: ``ComponentizedBuilder``
 /// - SeeAlso: ``Builder``
-@MainActor
 open class SimpleComponentizedBuilder<Component, Router>: ComponentizedBuilder<Component, Router, (), ()> {
 
     /// Creates a builder with the specified component factory.

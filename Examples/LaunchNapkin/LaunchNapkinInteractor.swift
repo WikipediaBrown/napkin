@@ -8,20 +8,20 @@
 import napkin
 import Combine
 
-@MainActor protocol LaunchNapkinRouting: LaunchRouting {
+protocol LaunchNapkinRouting: LaunchRouting {
     // TODO: Declare methods the interactor can invoke to manage sub-tree via the router.
 }
 
-@MainActor protocol LaunchNapkinPresentable: Presentable {
+protocol LaunchNapkinPresentable: Presentable {
     var listener: LaunchNapkinPresentableListener? { get set }
     // TODO: Declare methods the interactor can invoke the presenter to present data.
 }
 
-@MainActor protocol LaunchNapkinListener: AnyObject {
+protocol LaunchNapkinListener: AnyObject {
     // TODO: Declare methods the interactor can invoke to communicate with other napkins.
 }
 
-@MainActor final class LaunchNapkinInteractor: PresentableInteractor<LaunchNapkinPresentable>, LaunchNapkinInteractable, LaunchNapkinPresentableListener {
+final class LaunchNapkinInteractor: PresentableInteractor<LaunchNapkinPresentable>, LaunchNapkinInteractable, LaunchNapkinPresentableListener {
 
     weak var router: LaunchNapkinRouting?
     weak var listener: LaunchNapkinListener?

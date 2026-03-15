@@ -7,7 +7,7 @@
 
 import napkin
 
-@MainActor protocol LaunchNapkinInteractable: Interactable {
+protocol LaunchNapkinInteractable: Interactable {
     var router: LaunchNapkinRouting? { get set }
     var listener: LaunchNapkinListener? { get set }
 }
@@ -16,7 +16,7 @@ import napkin
     // TODO: Declare methods the router invokes to manipulate the view hierarchy.
 }
 
-@MainActor final class LaunchNapkinRouter: LaunchRouter<LaunchNapkinInteractable, LaunchNapkinViewControllable>, LaunchNapkinRouting {
+final class LaunchNapkinRouter: LaunchRouter<LaunchNapkinInteractable, LaunchNapkinViewControllable>, LaunchNapkinRouting {
 
     // TODO: Constructor inject child builder protocols to allow building children.
     init(interactor: LaunchNapkinInteractable, viewController: LaunchNapkinViewControllable) {

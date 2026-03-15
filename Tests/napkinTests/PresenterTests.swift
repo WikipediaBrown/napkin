@@ -92,13 +92,14 @@ private class TestViewController: TestViewControllable {
     }
 }
 
-@MainActor
 private class TestPresenter: Presenter<TestViewControllable> {
 
+    @MainActor
     func updateView() {
         viewController.display()
     }
 
+    @MainActor
     func presentData(_ data: String) {
         viewController.displayData(data)
     }

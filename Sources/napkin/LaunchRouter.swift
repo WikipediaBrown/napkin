@@ -26,7 +26,6 @@ import AppKit
 /// the entire router tree from an application window.
 ///
 /// - SeeAlso: ``LaunchRouter``
-@MainActor
 public protocol LaunchRouting: ViewableRouting {
 
     /// Launches the router tree from the specified window.
@@ -35,10 +34,13 @@ public protocol LaunchRouting: ViewableRouting {
     /// napkin tree, starting the application's business logic.
     ///
     /// - Parameter window: The application's main window.
+    ///
+    /// - Important: This method is `@MainActor`-isolated because it touches
+    ///   the application window and root view controller.
 #if canImport(UIKit)
-    func launch(from window: UIWindow)
+    @MainActor func launch(from window: UIWindow)
 #elseif canImport(AppKit)
-    func launch(from window: NSWindow)
+    @MainActor func launch(from window: NSWindow)
 #endif
 }
 
@@ -156,8 +158,7 @@ public protocol LaunchRouting: ViewableRouting {
 ///
 /// - SeeAlso: ``LaunchRouting``
 /// - SeeAlso: ``ViewableRouter``
-@MainActor
-open class LaunchRouter<InteractorType, ViewControllerType>: ViewableRouter<InteractorType, ViewControllerType>, LaunchRouting {
+open class LaunchRouter<InteractorType, ViewControllerType>: ViewableRouter<InteractorType, ViewControllerType>, LaunchRouting, @unchecked Sendable {
 
     /// Creates a launch router with the specified interactor and view controller.
     ///
@@ -182,6 +183,7 @@ open class LaunchRouter<InteractorType, ViewControllerType>: ViewableRouter<Inte
     ///   `application(_:didFinishLaunchingWithOptions:)` or
     ///   `scene(_:willConnectTo:options:)`.
 #if canImport(UIKit)
+    @MainActor
     public final func launch(from window: UIWindow) {
         window.rootViewController = viewControllable.uiviewController
         window.makeKeyAndVisible()
@@ -190,6 +192,7 @@ open class LaunchRouter<InteractorType, ViewControllerType>: ViewableRouter<Inte
         load()
     }
 #elseif canImport(AppKit)
+    @MainActor
     public final func launch(from window: NSWindow) {
         window.contentViewController = viewControllable.nsviewController
         window.makeKeyAndOrderFront(nil)

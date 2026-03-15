@@ -2,7 +2,7 @@
 
 import napkin
 
-@MainActor protocol ___VARIABLE_productName___Interactable: Interactable {
+protocol ___VARIABLE_productName___Interactable: Interactable {
     var router: ___VARIABLE_productName___Routing? { get set }
     var listener: ___VARIABLE_productName___Listener? { get set }
 }
@@ -11,7 +11,7 @@ import napkin
     // TODO: Declare methods the router invokes to manipulate the view hierarchy.
 }
 
-@MainActor final class ___VARIABLE_productName___Router: LaunchRouter<___VARIABLE_productName___Interactable, ___VARIABLE_productName___ViewControllable>, ___VARIABLE_productName___Routing {
+final class ___VARIABLE_productName___Router: LaunchRouter<___VARIABLE_productName___Interactable, ___VARIABLE_productName___ViewControllable>, ___VARIABLE_productName___Routing {
 
     // TODO: Constructor inject child builder protocols to allow building children.
     init(interactor: ___VARIABLE_productName___Interactable, viewController: ___VARIABLE_productName___ViewControllable) {

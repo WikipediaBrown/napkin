@@ -66,7 +66,6 @@ import Foundation
 /// - SeeAlso: ``Component``
 /// - SeeAlso: ``EmptyDependency``
 /// - SeeAlso: ``Builder``
-@MainActor
 public protocol Dependency: AnyObject {}
 
 /// A dependency protocol for root napkins that require no parent dependencies.

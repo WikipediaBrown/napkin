@@ -17,7 +17,6 @@
 import XCTest
 @testable import napkin
 
-@MainActor
 final class MultiStageComponentizedBuilderTests: XCTestCase {
 
     // MARK: - MultiStageComponentizedBuilder Tests
@@ -115,10 +114,8 @@ final class MultiStageComponentizedBuilderTests: XCTestCase {
 
 // MARK: - Test Doubles
 
-@MainActor
 private class TestComponent {}
 
-@MainActor
 private class TestRouter {
     let dependency: String
 
@@ -127,7 +124,6 @@ private class TestRouter {
     }
 }
 
-@MainActor
 private class TestMultiStageBuilder: MultiStageComponentizedBuilder<TestComponent, TestRouter, String> {
 
     init() {
@@ -141,13 +137,10 @@ private class TestMultiStageBuilder: MultiStageComponentizedBuilder<TestComponen
     }
 }
 
-@MainActor
 private class SimpleTestComponent {}
 
-@MainActor
 private class SimpleTestRouter {}
 
-@MainActor
 private class TestSimpleMultiStageBuilder: SimpleMultiStageComponentizedBuilder<SimpleTestComponent, SimpleTestRouter> {
 
     init() {

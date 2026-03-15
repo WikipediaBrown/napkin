@@ -5,7 +5,7 @@ import napkin
 #if canImport(UIKit)
 import UIKit
 
-@MainActor protocol ___VARIABLE_productName___PresentableListener: AnyObject {
+protocol ___VARIABLE_productName___PresentableListener: AnyObject {
     // TODO: Declare properties and methods that the view controller can invoke to perform
     // business logic, such as signIn(). This protocol is implemented by the corresponding
     // interactor class.
@@ -18,7 +18,7 @@ import UIKit
 #elseif canImport(AppKit)
 import AppKit
 
-@MainActor protocol ___VARIABLE_productName___PresentableListener: AnyObject {
+protocol ___VARIABLE_productName___PresentableListener: AnyObject {
     // TODO: Declare properties and methods that the view controller can invoke to perform
     // business logic, such as signIn(). This protocol is implemented by the corresponding
     // interactor class.

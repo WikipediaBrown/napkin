@@ -17,7 +17,6 @@
 import XCTest
 @testable import napkin
 
-@MainActor
 final class BuilderTests: XCTestCase {
 
     // MARK: - Initialization Tests
@@ -70,20 +69,16 @@ final class BuilderTests: XCTestCase {
 
 // MARK: - Test Doubles
 
-@MainActor
 private class TestDependency: Dependency {
     var testValue: String = "default"
 }
 
-@MainActor
-private class TestInteractor: Interactor {
+private class TestInteractor: Interactor, @unchecked Sendable {
     var receivedValue: String = ""
 }
 
-@MainActor
-private class TestRouter: Router<TestInteractor> {}
+private class TestRouter: Router<TestInteractor>, @unchecked Sendable {}
 
-@MainActor
 private class TestBuilder: Builder<TestDependency> {
 
     func build() -> TestRouter {

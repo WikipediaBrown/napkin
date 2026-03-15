@@ -2,6 +2,6 @@
 
 import napkin
 
-@MainActor final class LaunchDependency: ___VARIABLE_productName___Dependency {
+final class LaunchDependency: ___VARIABLE_productName___Dependency {
 
 }

@@ -32,7 +32,6 @@
 ///
 /// - SeeAlso: ``ViewableRouter``
 /// - SeeAlso: ``Routing``
-@MainActor
 public protocol ViewableRouting: Routing {
 
     // The following methods must be declared in the base protocol, since `Router` internally invokes these methods.
@@ -44,7 +43,10 @@ public protocol ViewableRouting: Routing {
     ///
     /// This property provides access to the view controller as a ``ViewControllable``,
     /// allowing the router to manage the view hierarchy.
-    var viewControllable: ViewControllable { get }
+    ///
+    /// - Important: This property is `@MainActor`-isolated. Access it from
+    ///   a `@MainActor` context or use `await` from an async context.
+    @MainActor var viewControllable: ViewControllable { get }
 }
 
 /// A router that owns and manages a view controller.
@@ -124,20 +126,27 @@ public protocol ViewableRouting: Routing {
 /// - SeeAlso: ``ViewableRouting``
 /// - SeeAlso: ``Router``
 /// - SeeAlso: ``LaunchRouter``
-@MainActor
-open class ViewableRouter<InteractorType, ViewControllerType>: Router<InteractorType>, ViewableRouting {
+open class ViewableRouter<InteractorType, ViewControllerType>: Router<InteractorType>, ViewableRouting, @unchecked Sendable {
 
     /// The strongly-typed view controller owned by this router.
     ///
     /// Use this property to access view controller-specific methods and properties.
     /// For presenting or embedding in other view controllers, use ``viewControllable``.
-    public let viewController: ViewControllerType
+    ///
+    /// - Important: This property is `@MainActor`-isolated. Access it from
+    ///   a `@MainActor` context or use `await` from an async context.
+    @MainActor
+    public var viewController: ViewControllerType { _viewController }
 
     /// The view controller as a ``ViewControllable`` protocol reference.
     ///
     /// Use this property when you need to access the underlying `UIViewController`
     /// for presentation or embedding purposes.
-    public let viewControllable: ViewControllable
+    ///
+    /// - Important: This property is `@MainActor`-isolated. Access it from
+    ///   a `@MainActor` context or use `await` from an async context.
+    @MainActor
+    public var viewControllable: ViewControllable { _viewControllable }
 
     /// Creates a viewable router with the specified interactor and view controller.
     ///
@@ -149,13 +158,17 @@ open class ViewableRouter<InteractorType, ViewControllerType>: Router<Interactor
     ///   - viewController: The view controller that this router will own.
     /// - Precondition: The view controller must conform to ``ViewControllable``.
     public init(interactor: InteractorType, viewController: ViewControllerType) {
-        self.viewController = viewController
+        self._viewController = viewController
         guard let viewControllable = viewController as? ViewControllable else {
             fatalError("\(viewController) should conform to \(ViewControllable.self)")
         }
-        self.viewControllable = viewControllable
+        self._viewControllable = viewControllable
 
         super.init(interactor: interactor)
     }
 
+    // MARK: - Private
+
+    private let _viewController: ViewControllerType
+    private let _viewControllable: ViewControllable
 }

@@ -14,7 +14,8 @@
 //  limitations under the License.
 //
 
-@preconcurrency import Combine
+import Combine
+import Foundation
 
 /// The lifecycle stages of a router scope.
 ///
@@ -37,7 +38,6 @@ public enum RouterLifecycle {
 ///
 /// - SeeAlso: ``RouterLifecycle``
 /// - SeeAlso: ``Routing``
-@MainActor
 public protocol RouterScope: AnyObject {
 
     /// A publisher that emits lifecycle events for this router.
@@ -88,7 +88,6 @@ public protocol RouterScope: AnyObject {
 ///
 /// - SeeAlso: ``Router``
 /// - SeeAlso: ``Interactable``
-@MainActor
 public protocol Routing: RouterScope {
 
     // The following methods must be declared in the base protocol, since `Router` internally  invokes these methods.
@@ -221,8 +220,7 @@ public protocol Routing: RouterScope {
 /// - SeeAlso: ``Routing``
 /// - SeeAlso: ``ViewableRouter``
 /// - SeeAlso: ``Interactor``
-@MainActor
-open class Router<InteractorType>: Routing {
+open class Router<InteractorType>: Routing, @unchecked Sendable {
 
     /// The strongly-typed interactor owned by this router.
     ///
@@ -240,7 +238,11 @@ open class Router<InteractorType>: Routing {
     ///
     /// This array is automatically updated when children are attached or detached.
     /// Children are stored in the order they were attached.
-    public final var children: [Routing] = []
+    ///
+    /// - Note: This property is thread-safe.
+    public final var children: [Routing] {
+        lock.withLock { _children }
+    }
 
     /// A publisher that emits router lifecycle events.
     ///
@@ -274,11 +276,14 @@ open class Router<InteractorType>: Routing {
     ///
     /// - Important: Do not call this method directly. The framework manages loading automatically.
     public final func load() {
+        lock.lock()
         guard !didLoadFlag else {
+            lock.unlock()
             return
         }
-
         didLoadFlag = true
+        lock.unlock()
+
         internalDidLoad()
         didLoad()
     }
@@ -315,9 +320,10 @@ open class Router<InteractorType>: Routing {
     ///
     /// - Important: Always store a reference to attached children so you can detach them later.
     public final func attachChild(_ child: Routing) {
-        assert(!(children.contains { $0 === child }), "Attempt to attach child: \(child), which is already attached to \(self).")
-
-        children.append(child)
+        lock.lock()
+        assert(!(_children.contains { $0 === child }), "Attempt to attach child: \(child), which is already attached to \(self).")
+        _children.append(child)
+        lock.unlock()
 
         // Activate child first before loading. Router usually attaches immutable children in didLoad.
         // We need to make sure the napkin is activated before letting it attach immutable children.
@@ -336,11 +342,13 @@ open class Router<InteractorType>: Routing {
     /// - Parameter child: The child router to detach.
     public final func detachChild(_ child: Routing) {
         child.interactable.deactivate()
-        children.removeAll { $0 === child }
+
+        lock.lock()
+        _children.removeAll { $0 === child }
+        lock.unlock()
     }
 
     // MARK: - Internal
-
 
     func internalDidLoad() {
         bindSubtreeActiveState()
@@ -352,6 +360,8 @@ open class Router<InteractorType>: Routing {
     private let lifecycleSubject = PassthroughSubject<RouterLifecycle, Never>()
     private var cancellables = Set<AnyCancellable>()
     private var didLoadFlag: Bool = false
+    private var _children: [Routing] = []
+    private let lock = NSLock()
 
     private func bindSubtreeActiveState() {
 
@@ -394,24 +404,23 @@ open class Router<InteractorType>: Routing {
     }
 
     private func detachAllChildren() {
+        // Take a snapshot of children under the lock, then detach outside
+        lock.lock()
+        let childrenSnapshot = _children
+        lock.unlock()
 
-        for child in children {
+        for child in childrenSnapshot {
             detachChild(child)
         }
     }
 
     deinit {
-        // deinit is nonisolated, but we need to access MainActor-isolated state.
-        // Since this class is @MainActor and view controllers are deallocated on main,
-        // we can safely assume MainActor isolation here.
-        MainActor.assumeIsolated {
-            interactable.deactivate()
+        interactable.deactivate()
 
-            if !children.isEmpty {
-                detachAllChildren()
-            }
-
-            lifecycleSubject.send(completion: .finished)
+        if !_children.isEmpty {
+            detachAllChildren()
         }
+
+        lifecycleSubject.send(completion: .finished)
     }
 }

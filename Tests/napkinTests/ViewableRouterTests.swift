@@ -125,8 +125,7 @@ final class ViewableRouterTests: XCTestCase {
 
 // MARK: - Test Doubles
 
-@MainActor
-private class TestInteractor: Interactor {}
+private class TestInteractor: Interactor, @unchecked Sendable {}
 
 #if canImport(UIKit)
 @MainActor
@@ -138,8 +137,7 @@ private class TestViewController: NSViewController, ViewControllable {
 }
 #endif
 
-@MainActor
-private class TestViewableRouter: ViewableRouter<TestInteractor, TestViewController> {
+private class TestViewableRouter: ViewableRouter<TestInteractor, TestViewController>, @unchecked Sendable {
     var didLoadCalled = false
 
     override func didLoad() {

@@ -15,7 +15,7 @@
 //
 
 import Foundation
-@preconcurrency import Combine
+import Combine
 
 /// A protocol that defines the active state scope of an interactor.
 ///
@@ -25,7 +25,6 @@ import Foundation
 ///
 /// - SeeAlso: ``Interactable``
 /// - SeeAlso: ``Interactor``
-@MainActor
 public protocol InteractorScope: AnyObject {
 
     // The following properties must be declared in the base protocol, since `Router` internally invokes these methods.
@@ -78,7 +77,6 @@ public protocol InteractorScope: AnyObject {
 ///
 /// - SeeAlso: ``Interactor``
 /// - SeeAlso: ``InteractorScope``
-@MainActor
 public protocol Interactable: InteractorScope {
 
     // The following methods must be declared in the base protocol, since `Router` internally invokes these methods.
@@ -120,10 +118,13 @@ public protocol Interactable: InteractorScope {
 ///
 /// ## Swift 6 Concurrency
 ///
-/// `Interactor` is isolated to the `@MainActor` by default. This simplifies
-/// concurrency handling for most iOS applications where UI interactions drive
-/// business logic. For background work, use `Task.detached` or mark specific
-/// methods with `nonisolated`.
+/// `Interactor` is **not** isolated to `@MainActor`. Business logic runs on
+/// whatever thread the caller is on. The interactor's internal state is protected
+/// by a lock, making `activate()` and `deactivate()` thread-safe.
+///
+/// To update UI from an interactor, send data through a ``Presenter`` which
+/// dispatches to `@MainActor` before passing to the view. For routing,
+/// call async router methods that `await` `@MainActor` view controller access.
 ///
 /// ## Lifecycle
 ///
@@ -189,16 +190,17 @@ public protocol Interactable: InteractorScope {
 /// - SeeAlso: ``Interactable``
 /// - SeeAlso: ``PresentableInteractor``
 /// - SeeAlso: ``Router``
-@MainActor
-open class Interactor: Interactable {
+open class Interactor: Interactable, @unchecked Sendable {
 
     /// A Boolean value indicating whether the interactor is currently active.
     ///
     /// Check this property before performing business logic to ensure the interactor
     /// is in the correct state. This property returns `true` after ``didBecomeActive()``
     /// is called and `false` after ``willResignActive()`` completes.
+    ///
+    /// - Note: This property is thread-safe.
     public final var isActive: Bool {
-        return isActiveSubject.value
+        isActiveSubject.value
     }
 
     /// A publisher that emits the current and future active states.
@@ -230,10 +232,15 @@ open class Interactor: Interactable {
     ///
     /// - Important: Do not call this method directly.
     public final func activate() {
-        guard !isActive else {
+        lock.lock()
+        guard !isActiveSubject.value else {
+            lock.unlock()
             return
         }
+        lock.unlock()
 
+        // Send outside the lock — CurrentValueSubject.send() synchronously
+        // delivers to subscribers, which may re-enter isActive.
         isActiveSubject.send(true)
 
         didBecomeActive()
@@ -269,12 +276,17 @@ open class Interactor: Interactable {
     ///
     /// - Important: Do not call this method directly.
     public final func deactivate() {
-        guard isActive else {
+        lock.lock()
+        guard isActiveSubject.value else {
+            lock.unlock()
             return
         }
+        lock.unlock()
 
         willResignActive()
 
+        // Send outside the lock — CurrentValueSubject.send() synchronously
+        // delivers to subscribers, which may re-enter isActive.
         isActiveSubject.send(false)
     }
 
@@ -300,17 +312,13 @@ open class Interactor: Interactable {
     // MARK: - Private
 
     private let isActiveSubject = CurrentValueSubject<Bool, Never>(false)
+    private let lock = NSLock()
 
     deinit {
-        // deinit is nonisolated, but we need to access MainActor-isolated state.
-        // Since this class is @MainActor and view controllers are deallocated on main,
-        // we can safely assume MainActor isolation here.
-        MainActor.assumeIsolated {
-            if isActive {
-                deactivate()
-            }
-            isActiveSubject.send(completion: .finished)
+        if isActiveSubject.value {
+            deactivate()
         }
+        isActiveSubject.send(completion: .finished)
     }
 }
 
