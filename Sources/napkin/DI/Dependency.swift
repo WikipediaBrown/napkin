@@ -66,7 +66,7 @@ import Foundation
 /// - SeeAlso: ``Component``
 /// - SeeAlso: ``EmptyDependency``
 /// - SeeAlso: ``Builder``
-public protocol Dependency: AnyObject {}
+public protocol Dependency: AnyObject, Sendable {}
 
 /// A dependency protocol for root napkins that require no parent dependencies.
 ///
