@@ -1,119 +1,36 @@
 //
 //  Copyright (c) 2017. Uber Technologies
-//
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
+//  Licensed under the Apache License, Version 2.0
 //
 
 import Foundation
+import Observation
 
-/// The base protocol for all presenters in the napkin architecture.
+/// The base protocol for all presenters. `@MainActor`-isolated so views
+/// (UIKit or SwiftUI) can read presenter state synchronously.
 ///
-/// Presenters act as an intermediary between the ``Interactor`` and the view layer.
-/// They transform business models into view-friendly formats.
-///
-/// - SeeAlso: ``Presenter``
+/// Feature-specific presentable protocols extend this protocol to declare
+/// the methods the interactor calls. Those methods are typically `async`
+/// (the interactor is an `actor`, the presenter is `@MainActor`).
+@MainActor
 public protocol Presentable: AnyObject {}
 
-/// A base class for presenters that transform business data for display.
+/// A base class for presenters. `@Observable` so SwiftUI views can read
+/// stored properties of subclasses directly. UIKit views can observe via
+/// `Observations { presenter.foo }` to bind to changes.
 ///
-/// The `Presenter` sits between the ``Interactor`` and the view controller,
-/// providing a clear separation between business logic and view logic.
-///
-/// ## Overview
-///
-/// Presenters are optional in the napkin architecture. Use them when you need to:
-/// - Transform complex business models into simple view models
-/// - Format data for display (dates, currencies, etc.)
-/// - Keep the interactor focused on business logic
-/// - Keep the view controller focused on UI rendering
-///
-/// ## Usage
-///
-/// Create a presenter that transforms data for the view:
-///
-/// ```swift
-/// protocol MyPresentable: AnyObject {
-///     func presentItems(_ items: [Item])
-///     func presentError(_ error: Error)
-/// }
-///
-/// final class MyPresenter: Presenter<MyViewControllable>, MyPresentable {
-///
-///     func presentItems(_ items: [Item]) {
-///         let viewModels = items.map { item in
-///             ItemViewModel(
-///                 title: item.name.uppercased(),
-///                 subtitle: formatDate(item.date),
-///                 imageURL: item.thumbnailURL
-///             )
-///         }
-///         viewController.displayItems(viewModels)
-///     }
-///
-///     func presentError(_ error: Error) {
-///         let message = ErrorFormatter.format(error)
-///         viewController.displayError(message)
-///     }
-///
-///     private func formatDate(_ date: Date) -> String {
-///         let formatter = DateFormatter()
-///         formatter.dateStyle = .medium
-///         return formatter.string(from: date)
-///     }
-/// }
-/// ```
-///
-/// ## When to Use Presenters
-///
-/// Presenters are optional. Consider using one when:
-/// - You have complex data transformations
-/// - Multiple views display the same data differently
-/// - You want to unit test view formatting logic
-///
-/// For simple cases, the interactor can communicate directly with the view.
-///
-/// ## Topics
-///
-/// ### Creating a Presenter
-///
-/// - ``init(viewController:)``
-/// - ``viewController``
-///
-/// - SeeAlso: ``Presentable``
-/// - SeeAlso: ``PresentableInteractor``
-/// - SeeAlso: ``Interactor``
-open class Presenter<ViewControllerType>: Presentable {
+/// `Presenter` is optional in the napkin architecture: napkins without a view
+/// use ``Interactor`` directly; napkins with a view use
+/// ``PresentableInteractor`` and either subclass `Presenter` here or have the
+/// view controller conform to a feature-specific `Presentable` protocol.
+@MainActor
+@Observable
+open class Presenter<ViewControllerType: ViewControllable>: Presentable {
 
-    /// The view controller that this presenter updates.
-    ///
-    /// Use this property to send formatted data to the view for display.
-    /// The view controller should conform to a protocol that defines
-    /// the available display methods.
-    ///
-    /// - Important: This property is `@MainActor`-isolated. Access it from
-    ///   a `@MainActor` context or use `Task { @MainActor in }` to dispatch.
-    @MainActor
-    public var viewController: ViewControllerType { _viewController }
+    /// The view controller this presenter updates.
+    public let viewController: ViewControllerType
 
-    /// Creates a presenter with the specified view controller.
-    ///
-    /// - Parameter viewController: The view controller that will display
-    ///   the data formatted by this presenter.
     public init(viewController: ViewControllerType) {
-        self._viewController = viewController
+        self.viewController = viewController
     }
-
-    // MARK: - Private
-
-    private let _viewController: ViewControllerType
 }
