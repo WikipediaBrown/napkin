@@ -62,18 +62,35 @@ public final class InteractorLifecycle: @unchecked Sendable {
         await didBecomeActive()
     }
 
-    /// Deactivates the lifecycle. Idempotent. Invokes `willResignActive` first,
-    /// then cancels all registered tasks, then flips the state.
+    /// Deactivates the lifecycle. Idempotent under concurrency — only one caller
+    /// advances past an internal claim flag, so `willResignActive` runs at most
+    /// once per active→inactive transition.
+    ///
+    /// Order of operations:
+    /// 1. Claim deactivation atomically (under lock).
+    /// 2. `await willResignActive()` (lifecycle still observes `isActive == true`).
+    /// 3. Atomically flip `isActive` to `false`, drain registered tasks, yield
+    ///    `false` to subscribers.
+    /// 4. Cancel the drained tasks (outside the lock).
     public func deactivate(
         invoking willResignActive: () async -> Void
     ) async {
-        let wasActive: Bool = state.withLock { $0.isActive }
-        guard wasActive else { return }
+        // Atomically claim deactivation. Only one caller proceeds; concurrent
+        // callers observing isActive==true but isDeactivating==true bail out.
+        let claimed: Bool = state.withLock { storage in
+            guard storage.isActive, !storage.isDeactivating else { return false }
+            storage.isDeactivating = true
+            return true
+        }
+        guard claimed else { return }
+
         await willResignActive()
+
         let tasks: Set<Task<Void, Never>> = state.withLock { storage in
             let tasks = storage.tasks
             storage.tasks.removeAll()
             storage.isActive = false
+            storage.isDeactivating = false
             for continuation in storage.continuations.values {
                 continuation.yield(false)
             }
@@ -112,6 +129,7 @@ public final class InteractorLifecycle: @unchecked Sendable {
 
     private struct State {
         var isActive: Bool = false
+        var isDeactivating: Bool = false
         var tasks: Set<Task<Void, Never>> = []
         var continuations: [UUID: AsyncStream<Bool>.Continuation] = [:]
     }
