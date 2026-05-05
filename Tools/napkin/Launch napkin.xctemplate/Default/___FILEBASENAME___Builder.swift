@@ -22,19 +22,22 @@ final class ___VARIABLE_productName___Component: Component<___VARIABLE_productNa
 // MARK: - Builder
 
 protocol ___VARIABLE_productName___Buildable: Buildable {
-    @MainActor func build(withListener listener: ___VARIABLE_productName___Listener) -> ___VARIABLE_productName___Routing
+    @MainActor func build(withListener listener: ___VARIABLE_productName___Listener) async -> ___VARIABLE_productName___Routing
 }
 
 final class ___VARIABLE_productName___Builder: Builder<___VARIABLE_productName___Dependency>, ___VARIABLE_productName___Buildable {
 
-    init(dependency: ___VARIABLE_productName___Dependency) {
+    override init(dependency: ___VARIABLE_productName___Dependency) {
         super.init(dependency: dependency)
     }
 
-    @MainActor func build(withListener listener: ___VARIABLE_productName___Listener) -> ___VARIABLE_productName___Routing {
+    @MainActor
+    func build(withListener listener: ___VARIABLE_productName___Listener) async -> ___VARIABLE_productName___Routing {
         let component = ___VARIABLE_productName___Component(dependency: dependency)
         let interactor = ___VARIABLE_productName___Interactor()
-        interactor.listener = listener
-        return ___VARIABLE_productName___Router(interactor: interactor, viewController: component.___VARIABLE_productName___ViewController)
+        await interactor.set(listener: listener)
+        let router = ___VARIABLE_productName___Router(interactor: interactor, viewController: component.___VARIABLE_productName___ViewController)
+        await interactor.set(router: router)
+        return router
     }
 }
