@@ -215,14 +215,157 @@ git commit -m "Replace NSRecursiveLock with Synchronization.Mutex in Component"
 
 ---
 
-## Phase 2 — `Interactor` as actor
+## Phase 2 — Interactor: protocol + lifecycle helper
 
-### Task 2.1: Rewrite `Interactor.swift` as `actor`
+> **Background:** Swift actors cannot be subclassed (SE-0306). The original "open actor Interactor" design does not compile — `open` is rejected on actor types. We replace it with: `Interactable` protocol + protocol extension default implementations + a contained `InteractorLifecycle` helper class that holds the synchronized state. User feature interactors become `final actor` types conforming to `Interactable`, each declaring `nonisolated let lifecycle = InteractorLifecycle()`.
+
+### Task 2.1a: Add `InteractorLifecycle` helper
+
+**Files:**
+- Create: `Sources/napkin/InteractorLifecycle.swift`
+
+- [ ] **Step 1: Create the new file**
+
+Create `Sources/napkin/InteractorLifecycle.swift` with:
+
+```swift
+//
+//  Copyright (c) 2026. napkin authors.
+//  Licensed under the Apache License, Version 2.0
+//
+
+import Foundation
+import Synchronization
+
+/// Holds the active-state, lifecycle-bound tasks, and `AsyncStream`
+/// continuations for a single `Interactable` actor.
+///
+/// `InteractorLifecycle` is the only `@unchecked Sendable` type in the napkin
+/// framework. Its mutable state is protected by a `Mutex<State>` from the
+/// `Synchronization` module. All public operations are safe to call from any
+/// actor or thread.
+///
+/// Each `Interactable` declares `nonisolated let lifecycle = InteractorLifecycle()`
+/// and the `Interactable` protocol extension forwards `activate()`,
+/// `deactivate()`, `task(_:)`, `isActive`, and `isActiveStream` to it.
+public final class InteractorLifecycle: @unchecked Sendable {
+
+    public init() {}
+
+    /// Whether the lifecycle is currently active.
+    public var isActive: Bool {
+        get async { state.withLock { $0.isActive } }
+    }
+
+    /// A fresh `AsyncStream` that immediately yields the current state and
+    /// then yields each subsequent transition. Multiple consumers may call
+    /// `isActiveStream` concurrently; each gets its own stream.
+    public var isActiveStream: AsyncStream<Bool> {
+        AsyncStream { continuation in
+            let id = state.withLock { storage -> UUID in
+                let id = UUID()
+                storage.continuations[id] = continuation
+                continuation.yield(storage.isActive)
+                return id
+            }
+            continuation.onTermination = { [state] _ in
+                state.withLock { $0.continuations.removeValue(forKey: id) }
+            }
+        }
+    }
+
+    /// Activates the lifecycle. Idempotent. Invokes `didBecomeActive` while
+    /// the lifecycle is in the active state.
+    public func activate(
+        invoking didBecomeActive: () async -> Void
+    ) async {
+        let alreadyActive: Bool = state.withLock { storage in
+            if storage.isActive { return true }
+            storage.isActive = true
+            for continuation in storage.continuations.values {
+                continuation.yield(true)
+            }
+            return false
+        }
+        if alreadyActive { return }
+        await didBecomeActive()
+    }
+
+    /// Deactivates the lifecycle. Idempotent. Invokes `willResignActive` first,
+    /// then cancels all registered tasks, then flips the state.
+    public func deactivate(
+        invoking willResignActive: () async -> Void
+    ) async {
+        let wasActive: Bool = state.withLock { $0.isActive }
+        guard wasActive else { return }
+        await willResignActive()
+        let tasks: Set<Task<Void, Never>> = state.withLock { storage in
+            let tasks = storage.tasks
+            storage.tasks.removeAll()
+            storage.isActive = false
+            for continuation in storage.continuations.values {
+                continuation.yield(false)
+            }
+            return tasks
+        }
+        for task in tasks { task.cancel() }
+    }
+
+    /// Spawn a `Task` whose lifetime is bound to the active scope.
+    /// Cancelled in `deactivate(invoking:)`.
+    @discardableResult
+    public func register(
+        priority: TaskPriority? = nil,
+        _ work: @Sendable @escaping () async -> Void
+    ) -> Task<Void, Never> {
+        let t = Task(priority: priority) { await work() }
+        state.withLock { $0.tasks.insert(t) }
+        return t
+    }
+
+    deinit {
+        let snapshot = state.withLock { storage -> ([Task<Void, Never>], [AsyncStream<Bool>.Continuation]) in
+            let result = (Array(storage.tasks), Array(storage.continuations.values))
+            storage.tasks.removeAll()
+            storage.continuations.removeAll()
+            storage.isActive = false
+            return result
+        }
+        for task in snapshot.0 { task.cancel() }
+        for continuation in snapshot.1 { continuation.finish() }
+    }
+
+    // MARK: - Private
+
+    private struct State {
+        var isActive: Bool = false
+        var tasks: Set<Task<Void, Never>> = []
+        var continuations: [UUID: AsyncStream<Bool>.Continuation] = [:]
+    }
+
+    private let state = Mutex<State>(State())
+}
+```
+
+- [ ] **Step 2: Verify it compiles**
+
+Run: `swift build 2>&1 | grep -E "InteractorLifecycle\.swift|error:" | head -20`
+Expected: `InteractorLifecycle.swift` itself compiles cleanly. Other errors come from existing files that haven't been migrated yet (current `Interactor.swift` and `PresentableInteractor.swift` still use the old class API; that's the next task).
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add Sources/napkin/InteractorLifecycle.swift
+git commit -m "Add InteractorLifecycle helper with Mutex-protected state"
+```
+
+### Task 2.1b: Replace `Interactor.swift` with `Interactable` protocol design
 
 **Files:**
 - Modify: `Sources/napkin/Interactor.swift`
+- Delete: `Sources/napkin/PresentableInteractor.swift`
 
-- [ ] **Step 1: Replace the file with the new actor implementation**
+- [ ] **Step 1: Replace `Interactor.swift`**
 
 Replace the entire content of `Sources/napkin/Interactor.swift` with:
 
@@ -239,175 +382,135 @@ public protocol InteractorScope: AnyObject, Sendable {
     /// Whether the interactor is currently active.
     var isActive: Bool { get async }
 
-    /// An async sequence that yields the current and subsequent active-state values.
-    /// New consumers receive the current state immediately.
+    /// A fresh `AsyncStream` that yields the current and subsequent
+    /// active-state values. New subscribers receive the current state
+    /// immediately.
     nonisolated var isActiveStream: AsyncStream<Bool> { get }
 }
 
-/// The base protocol for all interactors. Lifecycle hooks are async because
-/// `Interactor` is an `actor`.
-public protocol Interactable: InteractorScope {
+/// The base protocol for all napkin interactors.
+///
+/// Business logic for a feature lives in a `final actor` conforming to
+/// `Interactable`. Default implementations of lifecycle plumbing are provided
+/// here; the conforming actor needs only to:
+///   1. Declare `nonisolated let lifecycle = InteractorLifecycle()`
+///   2. Optionally override `didBecomeActive()` / `willResignActive()`
+///
+/// Example:
+///
+/// ```swift
+/// final actor HomeInteractor: Interactable {
+///     nonisolated let lifecycle = InteractorLifecycle()
+///     private let userService: UserService
+///     init(userService: UserService) { self.userService = userService }
+///
+///     func didBecomeActive() async {
+///         task {
+///             for await user in self.userService.userStream {
+///                 await self.handle(user)
+///             }
+///         }
+///     }
+/// }
+/// ```
+public protocol Interactable: Actor, InteractorScope {
+
+    /// The lifecycle helper that this interactor delegates state and
+    /// lifecycle plumbing to. Conforming actors declare:
+    /// `nonisolated let lifecycle = InteractorLifecycle()`.
+    nonisolated var lifecycle: InteractorLifecycle { get }
+
+    /// Activates the interactor. Idempotent. Invokes ``didBecomeActive()``.
     func activate() async
+
+    /// Deactivates the interactor. Idempotent. Invokes ``willResignActive()``,
+    /// then cancels lifecycle-bound tasks.
     func deactivate() async
-}
-
-/// The base actor for all interactors in the napkin architecture.
-///
-/// Business logic in subclasses runs on the actor's executor, off the main
-/// thread by construction. Subclasses override ``didBecomeActive()`` and
-/// ``willResignActive()`` for lifecycle work; both are `async`.
-///
-/// Tasks registered through ``task(_:)`` are auto-cancelled in
-/// ``willResignActive()``.
-open actor Interactor: Interactable {
-
-    /// Whether the interactor is currently active.
-    public var isActive: Bool { _isActive }
-
-    /// Lifecycle stream. Each call returns a fresh `AsyncStream` that immediately
-    /// yields the current state, then yields each subsequent change.
-    public nonisolated var isActiveStream: AsyncStream<Bool> {
-        AsyncStream { continuation in
-            let id = UUID()
-            Task { await self.subscribeStream(id: id, continuation: continuation) }
-            continuation.onTermination = { _ in
-                Task { await self.unsubscribeStream(id: id) }
-            }
-        }
-    }
-
-    public init() {}
-
-    /// Activates the interactor. Idempotent. Calls ``didBecomeActive()``.
-    public func activate() async {
-        guard !_isActive else { return }
-        _isActive = true
-        emit(true)
-        await didBecomeActive()
-    }
-
-    /// Deactivates the interactor. Idempotent. Cancels lifecycle-bound tasks
-    /// before calling ``willResignActive()``.
-    public func deactivate() async {
-        guard _isActive else { return }
-        await willResignActive()
-        for task in lifecycleTasks { task.cancel() }
-        lifecycleTasks.removeAll()
-        _isActive = false
-        emit(false)
-    }
 
     /// Override to perform setup when the interactor becomes active.
-    /// Always call `super` first.
-    open func didBecomeActive() async {}
+    func didBecomeActive() async
 
     /// Override to perform teardown before the interactor becomes inactive.
-    /// Always call `super` first.
-    open func willResignActive() async {}
+    func willResignActive() async
+}
+
+extension Interactable {
+    public var isActive: Bool {
+        get async { await lifecycle.isActive }
+    }
+
+    public nonisolated var isActiveStream: AsyncStream<Bool> {
+        lifecycle.isActiveStream
+    }
+
+    public func activate() async {
+        await lifecycle.activate { [self] in await self.didBecomeActive() }
+    }
+
+    public func deactivate() async {
+        await lifecycle.deactivate { [self] in await self.willResignActive() }
+    }
 
     /// Spawn a `Task` whose lifetime is bound to the active scope.
-    /// The task is cancelled automatically in ``willResignActive()``.
-    /// Replaces the role of `disposeOnDeactivate` in upstream RIBs.
+    /// Cancelled automatically in ``deactivate()``. Replaces the role of
+    /// `disposeOnDeactivate` in upstream RIBs.
     @discardableResult
     public func task(
         priority: TaskPriority? = nil,
         _ work: @Sendable @escaping () async -> Void
     ) -> Task<Void, Never> {
-        let t = Task(priority: priority) { await work() }
-        lifecycleTasks.insert(t)
-        return t
+        lifecycle.register(priority: priority, work)
     }
 
-    // MARK: - Private
+    public func didBecomeActive() async {}
+    public func willResignActive() async {}
+}
 
-    private var _isActive: Bool = false
-    private var lifecycleTasks: Set<Task<Void, Never>> = []
-    private var streamContinuations: [UUID: AsyncStream<Bool>.Continuation] = [:]
-
-    private func subscribeStream(id: UUID, continuation: AsyncStream<Bool>.Continuation) {
-        streamContinuations[id] = continuation
-        continuation.yield(_isActive)
-    }
-
-    private func unsubscribeStream(id: UUID) {
-        streamContinuations.removeValue(forKey: id)
-    }
-
-    private func emit(_ value: Bool) {
-        for c in streamContinuations.values { c.yield(value) }
-    }
-
-    isolated deinit {
-        for c in streamContinuations.values { c.finish() }
-        streamContinuations.removeAll()
-        for task in lifecycleTasks { task.cancel() }
-        lifecycleTasks.removeAll()
-    }
+/// A `Interactable` that owns a presenter.
+///
+/// The `presenter` is typically a `@MainActor`-isolated type; calls into it
+/// from this actor cross isolation domains and are `await`-required.
+///
+/// Example:
+///
+/// ```swift
+/// final actor HomeInteractor: PresentableInteractable {
+///     nonisolated let lifecycle = InteractorLifecycle()
+///     nonisolated let presenter: HomePresentable
+///     init(presenter: HomePresentable) { self.presenter = presenter }
+/// }
+/// ```
+public protocol PresentableInteractable: Interactable {
+    associatedtype PresenterType
+    nonisolated var presenter: PresenterType { get }
 }
 ```
 
-- [ ] **Step 2: Verify it compiles**
+- [ ] **Step 2: Delete the old `PresentableInteractor.swift`**
 
-Run: `swift build 2>&1 | grep -E "Interactor.swift|error:" | head -20`
-Expected: `Interactor.swift` itself compiles. Errors should now be in `PresentableInteractor.swift` and `Router.swift` because they reference the old API.
-
-- [ ] **Step 3: Commit**
+`PresentableInteractable` is now a protocol declared in `Interactor.swift`. The old open-class `PresentableInteractor` is gone.
 
 ```bash
-git add Sources/napkin/Interactor.swift
-git commit -m "Convert Interactor to actor with async lifecycle and task(_:) helper"
+git rm Sources/napkin/PresentableInteractor.swift
+```
+
+- [ ] **Step 3: Verify the source target builds**
+
+Run: `swift build --target napkin 2>&1 | tail -30`
+Expected: build fails with errors in `Router.swift`, `ViewableRouter.swift`, `LaunchRouter.swift` (they reference the old `Interactable.activate()` / `deactivate()` synchronous API and the missing `Interactor` class). `Interactor.swift` and `InteractorLifecycle.swift` themselves compile cleanly. If `Interactor.swift` itself shows errors, investigate before committing.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add Sources/napkin/Interactor.swift Sources/napkin/PresentableInteractor.swift
+git commit -m "Replace Interactor base class with Interactable protocol + extension"
 ```
 
 ---
 
-## Phase 3 — `PresentableInteractor` actor subclass
+## Phase 3 — (consolidated into Task 2.1b)
 
-### Task 3.1: Rewrite `PresentableInteractor.swift`
-
-**Files:**
-- Modify: `Sources/napkin/PresentableInteractor.swift`
-
-- [ ] **Step 1: Replace the file**
-
-Replace the entire content of `Sources/napkin/PresentableInteractor.swift` with:
-
-```swift
-//
-//  Copyright (c) 2017. Uber Technologies
-//  Licensed under the Apache License, Version 2.0
-//
-
-import Foundation
-
-/// An interactor that owns and communicates with a presenter.
-///
-/// `PresentableInteractor` extends ``Interactor`` to add presenter ownership.
-/// The presenter is typically a `@MainActor`-isolated type; calls into it
-/// from the interactor are `await`.
-open actor PresentableInteractor<PresenterType>: Interactor {
-
-    /// The presenter owned by this interactor.
-    public nonisolated let presenter: PresenterType
-
-    /// Creates a presentable interactor with the specified presenter.
-    public init(presenter: PresenterType) {
-        self.presenter = presenter
-        super.init()
-    }
-}
-```
-
-- [ ] **Step 2: Verify it compiles**
-
-Run: `swift build 2>&1 | grep -E "PresentableInteractor.swift|error:" | head -10`
-Expected: `PresentableInteractor.swift` compiles. Remaining errors in `Router.swift`, `ViewableRouter.swift`, etc.
-
-- [ ] **Step 3: Commit**
-
-```bash
-git add Sources/napkin/PresentableInteractor.swift
-git commit -m "Convert PresentableInteractor to actor subclass"
-```
+Phase 3's original task to rewrite `PresentableInteractor.swift` as an actor subclass is no longer needed: `PresentableInteractable` is now a protocol that lives in `Interactor.swift`, and `Sources/napkin/PresentableInteractor.swift` has been removed in Task 2.1b. **Skip Phase 3.**
 
 ---
 
@@ -1018,17 +1121,17 @@ struct InteractorTests {
 
 // MARK: - Helpers
 
-final actor TestInteractor: napkin.Interactor {
+final actor TestInteractor: Interactable {
+    nonisolated let lifecycle = InteractorLifecycle()
+
     private(set) var didBecomeActiveCallCount = 0
     private(set) var willResignActiveCallCount = 0
 
-    override func didBecomeActive() async {
-        await super.didBecomeActive()
+    func didBecomeActive() async {
         didBecomeActiveCallCount += 1
     }
 
-    override func willResignActive() async {
-        await super.willResignActive()
+    func willResignActive() async {
         willResignActiveCallCount += 1
     }
 }
@@ -1083,8 +1186,8 @@ Replace the entire content of `Tests/napkinTests/PresentableInteractorTests.swif
 import Testing
 @testable import napkin
 
-@Suite("PresentableInteractor")
-struct PresentableInteractorTests {
+@Suite("PresentableInteractable")
+struct PresentableInteractableTests {
 
     @Test func holdsPresenter() async {
         let presenter = StubPresenter()
@@ -1106,7 +1209,11 @@ struct PresentableInteractorTests {
 @MainActor
 final class StubPresenter {}
 
-final actor StubPresentableInteractor: napkin.PresentableInteractor<StubPresenter> {}
+final actor StubPresentableInteractor: PresentableInteractable {
+    nonisolated let lifecycle = InteractorLifecycle()
+    nonisolated let presenter: StubPresenter
+    init(presenter: StubPresenter) { self.presenter = presenter }
+}
 ```
 
 - [ ] **Step 2: Verify**
@@ -1196,7 +1303,9 @@ final class TestRouter: napkin.Router<TestInteractor> {
     }
 }
 
-final actor TestInteractor: napkin.Interactor {}
+final actor TestInteractor: Interactable {
+    nonisolated let lifecycle = InteractorLifecycle()
+}
 ```
 
 - [ ] **Step 2: Verify**
@@ -1626,7 +1735,7 @@ Run: `find Tools/napkin/napkin.xctemplate -name "*.swift" -type f`
 - [ ] **Step 2: For each Swift file, rewrite it to emit the new API**
 
 Each template needs the same rewrites the source files received:
-- `Interactor` template files → emit `final actor` subclass of `napkin.Interactor` or `napkin.PresentableInteractor`, with `async override` for `didBecomeActive` / `willResignActive`.
+- `Interactor` template files → emit `final actor` conforming to `Interactable` (or `PresentableInteractable` when there's a presenter), with `nonisolated let lifecycle = InteractorLifecycle()` declaration and `async` `didBecomeActive` / `willResignActive` (no `override` keyword — the methods are protocol requirements with default impls, not class overrides).
 - `Router` template files → emit `final class` subclass of `napkin.Router` / `napkin.ViewableRouter` with `@MainActor`-implicit isolation (it's inherited).
 - `Builder` template files → emit `async build(...)` when constructing a view controller.
 - `Listener` / `Routing` / `Presentable` protocols → emit methods marked `async`.
