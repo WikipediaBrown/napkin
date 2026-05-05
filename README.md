@@ -621,13 +621,30 @@ final class MockHomePresentable: HomePresentable {
 }
 ```
 
-Run tests with `Command+U` in Xcode, or via fastlane:
+Run tests via SwiftPM:
 
 ```bash
-cd napkin
+swift test
+```
+
+Or via Xcode (Command+U after opening `Package.swift`), or via fastlane:
+
+```bash
 bundle install
 bundle exec fastlane unit_test
 ```
+
+### Runnable example app
+
+A minimal iOS app under [`Examples/LaunchNapkinApp`](Examples/) demonstrates the framework end-to-end. It is verified working on iPhone 17 / iOS 26.4 simulator. Requires [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`):
+
+```bash
+cd Examples/LaunchNapkinApp
+xcodegen
+open LaunchNapkinApp.xcodeproj
+```
+
+See [`Examples/README.md`](Examples/README.md) for details.
 
 ## Tooling
 
