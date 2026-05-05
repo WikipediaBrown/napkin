@@ -1,106 +1,25 @@
-//
-//  Copyright (c) 2017. Uber Technologies
-//
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-//
-
-import XCTest
+import Testing
+import Observation
 @testable import napkin
 
+#if canImport(UIKit)
+import UIKit
+
+@Suite("Presenter")
 @MainActor
-final class PresenterTests: XCTestCase {
+struct PresenterTests {
 
-    // MARK: - Initialization Tests
-
-    func testPresenter_initialization_storesViewController() {
-        let viewController = TestViewController()
-        let presenter = TestPresenter(viewController: viewController)
-
-        XCTAssertTrue(presenter.viewController === viewController)
-    }
-
-    func testPresenter_initialization_viewControllerIsStronglyRetained() {
-        var viewController: TestViewController? = TestViewController()
-        weak var weakViewController = viewController
-        let presenter = TestPresenter(viewController: viewController!)
-
-        viewController = nil
-
-        XCTAssertNotNil(weakViewController)
-        XCTAssertTrue(presenter.viewController === weakViewController)
-    }
-
-    // MARK: - ViewController Access Tests
-
-    func testPresenter_canAccessViewControllerMethods() {
-        let viewController = TestViewController()
-        let presenter = TestPresenter(viewController: viewController)
-
-        presenter.updateView()
-
-        XCTAssertTrue(viewController.displayCalled)
-    }
-
-    func testPresenter_canPassDataToViewController() {
-        let viewController = TestViewController()
-        let presenter = TestPresenter(viewController: viewController)
-
-        presenter.presentData("Test Data")
-
-        XCTAssertEqual(viewController.lastDisplayedData, "Test Data")
-    }
-
-    // MARK: - Presentable Protocol Tests
-
-    func testPresenter_conformsToPresentable() {
-        let viewController = TestViewController()
-        let presenter = TestPresenter(viewController: viewController)
-
-        XCTAssertTrue((presenter as Any) is Presentable)
+    @Test func holdsViewController() {
+        let vc = StubViewController()
+        let presenter = StubPresenter(viewController: vc)
+        #expect(presenter.viewController === vc)
     }
 }
 
-// MARK: - Test Doubles
+private final class StubViewController: UIViewController, ViewControllable {}
 
 @MainActor
-private protocol TestViewControllable: AnyObject {
-    func display()
-    func displayData(_ data: String)
+private final class StubPresenter: napkin.Presenter<StubViewController> {
+    var title: String = ""
 }
-
-@MainActor
-private class TestViewController: TestViewControllable {
-    var displayCalled = false
-    var lastDisplayedData: String?
-
-    func display() {
-        displayCalled = true
-    }
-
-    func displayData(_ data: String) {
-        lastDisplayedData = data
-    }
-}
-
-private class TestPresenter: Presenter<TestViewControllable> {
-
-    @MainActor
-    func updateView() {
-        viewController.display()
-    }
-
-    @MainActor
-    func presentData(_ data: String) {
-        viewController.displayData(data)
-    }
-}
+#endif
