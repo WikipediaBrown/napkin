@@ -78,7 +78,7 @@ import Foundation
 ///
 /// - SeeAlso: ``SimpleMultiStageComponentizedBuilder``
 /// - SeeAlso: ``ComponentizedBuilder``
-open class MultiStageComponentizedBuilder<Component, Router, DynamicBuildDependency>: Buildable {
+open class MultiStageComponentizedBuilder<Component, Router, DynamicBuildDependency>: Buildable, @unchecked Sendable {
 
     // Builder should not directly retain an instance of the component.
     // That would make the component's lifecycle longer than the built
@@ -112,7 +112,7 @@ open class MultiStageComponentizedBuilder<Component, Router, DynamicBuildDepende
     ///
     /// - parameter componentBuilder: The closure to instantiate a new
     /// instance of the DI component that should be paired with this napkin.
-    public init(componentBuilder: @escaping () -> Component) {
+    public init(componentBuilder: @escaping @Sendable () -> Component) {
         self.componentBuilder = componentBuilder
     }
 
@@ -148,7 +148,7 @@ open class MultiStageComponentizedBuilder<Component, Router, DynamicBuildDepende
 
     // MARK: - Private
 
-    private let componentBuilder: () -> Component
+    private let componentBuilder: @Sendable () -> Component
     private var currentPassComponent: Component?
     private weak var lastComponent: AnyObject?
 }
@@ -160,13 +160,13 @@ open class MultiStageComponentizedBuilder<Component, Router, DynamicBuildDepende
 /// refer to `MultiStageComponentizedBuilder`.
 ///
 /// - SeeAlso: MultiStageComponentizedBuilder
-open class SimpleMultiStageComponentizedBuilder<Component, Router>: MultiStageComponentizedBuilder<Component, Router, ()> {
+open class SimpleMultiStageComponentizedBuilder<Component, Router>: MultiStageComponentizedBuilder<Component, Router, ()>, @unchecked Sendable {
 
     /// Initializer.
     ///
     /// - parameter componentBuilder: The closure to instantiate a new
     /// instance of the DI component that should be paired with this napkin.
-    public override init(componentBuilder: @escaping () -> Component) {
+    public override init(componentBuilder: @escaping @Sendable () -> Component) {
         super.init(componentBuilder: componentBuilder)
     }
 
