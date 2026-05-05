@@ -12,7 +12,9 @@ protocol ___VARIABLE_productName___PresentableListener: AnyObject, Sendable {
 #if canImport(UIKit)
 @MainActor final class ___VARIABLE_productName___ViewController: UIHostingController<___VARIABLE_productName___View>, ___VARIABLE_productName___Presentable {
 
-    weak var listener: ___VARIABLE_productName___PresentableListener?
+    weak var listener: ___VARIABLE_productName___PresentableListener? {
+        didSet { rootView.listener = listener }
+    }
 
     init() {
         super.init(rootView: ___VARIABLE_productName___View())
@@ -25,7 +27,9 @@ protocol ___VARIABLE_productName___PresentableListener: AnyObject, Sendable {
 #elseif canImport(AppKit)
 @MainActor final class ___VARIABLE_productName___ViewController: NSHostingController<___VARIABLE_productName___View>, ___VARIABLE_productName___Presentable {
 
-    weak var listener: ___VARIABLE_productName___PresentableListener?
+    weak var listener: ___VARIABLE_productName___PresentableListener? {
+        didSet { rootView.listener = listener }
+    }
 
     init() {
         super.init(rootView: ___VARIABLE_productName___View())

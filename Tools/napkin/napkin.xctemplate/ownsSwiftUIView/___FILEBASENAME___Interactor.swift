@@ -9,8 +9,8 @@ protocol ___VARIABLE_productName___Routing: ViewableRouting {
     // interactor actor.
 }
 
-protocol ___VARIABLE_productName___Presentable: Presentable {
-    var listener: ___VARIABLE_productName___PresentableListener? { get set }
+protocol ___VARIABLE_productName___Presentable: Presentable, Sendable {
+    @MainActor var listener: ___VARIABLE_productName___PresentableListener? { get set }
     // TODO: Declare methods the interactor can invoke the presenter to present data.
     // Presentable methods are async because the presenter is @MainActor.
 }
