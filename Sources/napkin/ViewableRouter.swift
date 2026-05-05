@@ -1,169 +1,28 @@
 //
 //  Copyright (c) 2017. Uber Technologies
-//
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
+//  Licensed under the Apache License, Version 2.0
 //
 
 /// A protocol for routers that own and manage a view controller.
-///
-/// `ViewableRouting` extends ``Routing`` to add view controller ownership.
-/// Use this protocol when defining routing interfaces for napkins that have views.
-///
-/// ## Implementing ViewableRouting
-///
-/// Define a custom routing protocol that extends `ViewableRouting`:
-///
-/// ```swift
-/// protocol MyFeatureRouting: ViewableRouting {
-///     func routeToDetails()
-///     func routeBackFromDetails()
-/// }
-/// ```
-///
-/// - SeeAlso: ``ViewableRouter``
-/// - SeeAlso: ``Routing``
+@MainActor
 public protocol ViewableRouting: Routing {
-
-    // The following methods must be declared in the base protocol, since `Router` internally invokes these methods.
-    // In order to unit test router with a mock child router, the mocked child router first needs to conform to the
-    // custom subclass routing protocol, and also this base protocol to allow the `Router` implementation to execute
-    // base class logic without error.
-
-    /// The view controller owned by this router.
-    ///
-    /// This property provides access to the view controller as a ``ViewControllable``,
-    /// allowing the router to manage the view hierarchy.
-    ///
-    /// - Important: This property is `@MainActor`-isolated. Access it from
-    ///   a `@MainActor` context or use `await` from an async context.
-    @MainActor var viewControllable: ViewControllable { get }
+    var viewControllable: ViewControllable { get }
 }
 
-/// A router that owns and manages a view controller.
-///
-/// `ViewableRouter` extends ``Router`` to add view controller ownership. Use this
-/// class when your napkin has a visual representation (UIKit or SwiftUI).
-///
-/// ## Overview
-///
-/// A viewable router:
-/// - Owns a strongly-typed view controller
-/// - Manages the view controller's lifecycle in sync with the router
-/// - Can present and dismiss child view controllers
-///
-/// ## Usage
-///
-/// ```swift
-/// final class MyFeatureRouter: ViewableRouter<MyFeatureInteractor, MyFeatureViewController>,
-///                              MyFeatureRouting {
-///
-///     private let detailsBuilder: DetailsBuildable
-///     private var detailsRouter: DetailsRouting?
-///
-///     init(interactor: MyFeatureInteractor,
-///          viewController: MyFeatureViewController,
-///          detailsBuilder: DetailsBuildable) {
-///         self.detailsBuilder = detailsBuilder
-///         super.init(interactor: interactor, viewController: viewController)
-///         interactor.router = self
-///     }
-///
-///     func routeToDetails() {
-///         guard detailsRouter == nil else { return }
-///
-///         let router = detailsBuilder.build(withListener: interactor)
-///         detailsRouter = router
-///         attachChild(router)
-///
-///         // Present the view controller
-///         viewController.present(router.viewControllable.uiviewController, animated: true)
-///     }
-///
-///     func routeBackFromDetails() {
-///         guard let router = detailsRouter else { return }
-///
-///         // Dismiss the view controller
-///         viewController.dismiss(animated: true)
-///
-///         detachChild(router)
-///         detailsRouter = nil
-///     }
-/// }
-/// ```
-///
-/// ## SwiftUI Integration
-///
-/// For SwiftUI views, use a `UIHostingController`:
-///
-/// ```swift
-/// final class MySwiftUIRouter: ViewableRouter<MyInteractor, MyHostingController>,
-///                              MyRouting {
-///     // Implementation
-/// }
-/// ```
-///
-/// ## Topics
-///
-/// ### Creating a ViewableRouter
-///
-/// - ``init(interactor:viewController:)``
-///
-/// ### Accessing the View Controller
-///
-/// - ``viewController``
-/// - ``viewControllable``
-///
-/// - SeeAlso: ``ViewableRouting``
-/// - SeeAlso: ``Router``
-/// - SeeAlso: ``LaunchRouter``
-open class ViewableRouter<InteractorType, ViewControllerType>: Router<InteractorType>, ViewableRouting, @unchecked Sendable {
+/// A router that owns a view controller. `@MainActor`.
+@MainActor
+open class ViewableRouter<InteractorType, ViewControllerType>:
+    Router<InteractorType>, ViewableRouting {
 
-    /// The strongly-typed view controller owned by this router.
-    ///
-    /// Use this property to access view controller-specific methods and properties.
-    /// For presenting or embedding in other view controllers, use ``viewControllable``.
-    ///
-    /// - Important: This property is `@MainActor`-isolated. Access it from
-    ///   a `@MainActor` context or use `await` from an async context.
-    @MainActor
     public var viewController: ViewControllerType { _viewController }
-
-    /// The view controller as a ``ViewControllable`` protocol reference.
-    ///
-    /// Use this property when you need to access the underlying `UIViewController`
-    /// for presentation or embedding purposes.
-    ///
-    /// - Important: This property is `@MainActor`-isolated. Access it from
-    ///   a `@MainActor` context or use `await` from an async context.
-    @MainActor
     public var viewControllable: ViewControllable { _viewControllable }
 
-    /// Creates a viewable router with the specified interactor and view controller.
-    ///
-    /// The view controller must conform to ``ViewControllable``. If it doesn't,
-    /// this initializer will trigger a fatal error.
-    ///
-    /// - Parameters:
-    ///   - interactor: The interactor that this router will own and manage.
-    ///   - viewController: The view controller that this router will own.
-    /// - Precondition: The view controller must conform to ``ViewControllable``.
     public init(interactor: InteractorType, viewController: ViewControllerType) {
         self._viewController = viewController
         guard let viewControllable = viewController as? ViewControllable else {
             fatalError("\(viewController) should conform to \(ViewControllable.self)")
         }
         self._viewControllable = viewControllable
-
         super.init(interactor: interactor)
     }
 
