@@ -47,8 +47,9 @@ We keep three of Uber's PR #49 findings that strengthen our design:
 | `ViewControllable` | `@MainActor` | — | UI primitives |
 | `Presenter` / `Presentable` | `@MainActor` | — | `@Observable`. Owns view-state. UIKit and SwiftUI views both read from it. **Optional** (only when the napkin owns a view). |
 | `Router` / `ViewableRouter` / `LaunchRouter` / `Routing` | `@MainActor` | — | Manages view tree. No locks. `attachChild` / `detachChild` are `async` (await child interactor activation). `isolated deinit` for synchronous teardown. |
-| `Interactor` / `Interactable` | `actor` | implicit | Business logic, off-main by construction. `activate()` / `deactivate()` and `didBecomeActive` / `willResignActive` are `async`. `isolated deinit` for synchronous teardown. |
-| `PresentableInteractor<P>` | `actor` | implicit | Subclass of `Interactor` for napkins with a view. Holds a reference to the `@MainActor` Presentable; calls into it via `await`. |
+| `Interactable` (protocol) + per-feature `final actor` | `actor` | implicit | Business logic, off-main by construction. Protocol composition replaces inheritance because Swift actors cannot be subclassed (SE-0306). Default implementations of `activate()` / `deactivate()` / `task(_:)` / observation are provided via protocol extension; the user-facing override hooks `didBecomeActive` / `willResignActive` are protocol requirements with empty default impls. |
+| `InteractorLifecycle` (helper) | `final class`, `Sendable` | `@unchecked Sendable` | The single contained "manually synchronized" type in the framework. Holds `isActive` flag, lifecycle-bound tasks, and `AsyncStream` continuations under a `Synchronization.Mutex`. Exposed to users via the `nonisolated let lifecycle` on every `Interactable` actor; not subclassed. |
+| `PresentableInteractable` (protocol) | actor | implicit | Refines `Interactable` with `nonisolated var presenter: PresenterType { get }`. Replaces the old `PresentableInteractor` base class. |
 | `Builder` / `Buildable` | non-isolated | `Sendable` | `build(...)` is `async` when it constructs a view controller (hops to `@MainActor`); viewless builders stay sync. |
 | `ComponentizedBuilder` / `MultiStageComponentizedBuilder` | non-isolated | `Sendable` | Same async/sync split as `Builder`. |
 | `Component` / `Dependency` | non-isolated | `Sendable` | `shared { }` uses `Mutex<[ObjectIdentifier: Any]>` from `Synchronization`. No `NSRecursiveLock`. |
@@ -65,47 +66,118 @@ We keep three of Uber's PR #49 findings that strengthen our design:
 
 ## Public-API changes
 
-### `Interactor`
+### `Interactable` (protocol) + `InteractorLifecycle` (helper)
+
+Swift actors cannot be subclassed (SE-0306). RIBs's open-class `Interactor` shape is therefore replaced with **protocol composition over a contained lifecycle helper**. Each user feature defines a `final actor` conforming to `Interactable`; default implementations of the lifecycle plumbing are provided by a protocol extension that delegates to a `nonisolated let lifecycle: InteractorLifecycle` property.
 
 ```swift
 public protocol InteractorScope: AnyObject, Sendable {
     var isActive: Bool { get async }
-    var isActiveStream: AsyncStream<Bool> { nonisolated get }
+    nonisolated var isActiveStream: AsyncStream<Bool> { get }
 }
 
-public protocol Interactable: InteractorScope {
-    func activate() async
-    func deactivate() async
+public protocol Interactable: Actor, InteractorScope {
+    nonisolated var lifecycle: InteractorLifecycle { get }
+
+    /// Override to perform setup when the interactor becomes active.
+    func didBecomeActive() async
+
+    /// Override to perform teardown before the interactor becomes inactive.
+    func willResignActive() async
 }
 
-open actor Interactor: Interactable {
+extension Interactable {
+    public var isActive: Bool {
+        get async { await lifecycle.isActive }
+    }
+
+    public nonisolated var isActiveStream: AsyncStream<Bool> {
+        lifecycle.isActiveStream
+    }
+
+    public func activate() async {
+        await lifecycle.activate { [self] in await self.didBecomeActive() }
+    }
+
+    public func deactivate() async {
+        await lifecycle.deactivate { [self] in await self.willResignActive() }
+    }
+
+    /// Spawn a `Task` whose lifetime is bound to the active scope.
+    /// The task is cancelled automatically in `deactivate()`.
+    @discardableResult
+    public func task(
+        priority: TaskPriority? = nil,
+        _ work: @Sendable @escaping () async -> Void
+    ) -> Task<Void, Never> {
+        lifecycle.register(priority: priority, work)
+    }
+
+    public func didBecomeActive() async {}
+    public func willResignActive() async {}
+}
+
+/// The contained "manually synchronized" lifecycle helper. The single place in
+/// the framework that uses `@unchecked Sendable` + `Mutex`. Auditable as a unit.
+public final class InteractorLifecycle: @unchecked Sendable {
     public init() { … }
 
-    open func didBecomeActive() async { }
-    open func willResignActive() async { }
-
-    /// Tie a Task to the active scope. Cancelled automatically on `willResignActive`.
-    /// Replaces the role Rx's `disposeOnDeactivate` plays in upstream RIBs.
-    public func task(_ work: @Sendable @escaping () async -> Void) { … }
-
-    isolated deinit { … }   // Swift 6.2 / iOS 26
+    public var isActive: Bool { get async { … } }      // mutex-read
+    public nonisolated var isActiveStream: AsyncStream<Bool> { … }
+    public func activate(invoking didBecomeActive: () async -> Void) async { … }
+    public func deactivate(invoking willResignActive: () async -> Void) async { … }
+    @discardableResult
+    public func register(
+        priority: TaskPriority?,
+        _ work: @Sendable @escaping () async -> Void
+    ) -> Task<Void, Never> { … }
 }
 ```
 
-- `isActive` is `get async` (actor isolation).
-- `isActiveStream` is `nonisolated` and exposes lifecycle as an `AsyncStream<Bool>` for off-main consumers (the framework itself does not consume it; see "Lifecycle cascade").
-- `task(_:)` is the lifecycle-binding helper. Tasks registered through it are stored in a `Set<Task<Void, Never>>` on the actor; `willResignActive` cancels all of them. This is the `Observations { }`-friendly replacement for `disposeOnDeactivate`.
-
-### `PresentableInteractor`
+User code shape:
 
 ```swift
-open actor PresentableInteractor<PresenterType>: Interactor {
-    public let presenter: PresenterType   // typically `@MainActor` Presentable
-    public init(presenter: PresenterType) { … }
+final actor HomeInteractor: Interactable {
+    nonisolated let lifecycle = InteractorLifecycle()
+
+    private let userService: UserService
+    weak var listener: HomeListener?
+
+    init(userService: UserService) { self.userService = userService }
+
+    func didBecomeActive() async {
+        task {
+            for await user in self.userService.userStream {
+                await self.handle(user)
+            }
+        }
+    }
 }
 ```
 
-Calls from `PresentableInteractor` into `presenter` cross from `actor` to `@MainActor` and use `await`.
+The user-visible delta from current napkin: `final class HomeInteractor: Interactor` becomes `final actor HomeInteractor: Interactable` plus one line declaring `lifecycle`. Everything else is the same.
+
+### `PresentableInteractable`
+
+```swift
+public protocol PresentableInteractable: Interactable {
+    associatedtype PresenterType
+    nonisolated var presenter: PresenterType { get }
+}
+```
+
+User code:
+
+```swift
+final actor HomeInteractor: PresentableInteractable {
+    nonisolated let lifecycle = InteractorLifecycle()
+    nonisolated let presenter: HomePresentable
+
+    init(presenter: HomePresentable) { self.presenter = presenter }
+}
+```
+
+Calls from a `PresentableInteractable` into its `presenter` cross from `actor` to `@MainActor` and use `await`.
 
 ### `Router`
 
@@ -323,8 +395,9 @@ No Presenter, no `@MainActor` machinery, business logic stays in the Interactor.
 
 ## Files touched
 
-- `Sources/napkin/Interactor.swift` — rewritten as `actor`, Combine removed, `task(_:)` helper added, `isolated deinit`.
-- `Sources/napkin/PresentableInteractor.swift` — actor subclass.
+- `Sources/napkin/Interactor.swift` — replaced with `Interactable` protocol + protocol extension default impls + `PresentableInteractable` refinement. Combine removed. (No more `class Interactor`; the file is renamed conceptually but kept at the same path for git history.)
+- `Sources/napkin/InteractorLifecycle.swift` — **new file**. Contains the `final class InteractorLifecycle` helper with `Mutex`-synchronized state, the `task(_:)` storage, and `AsyncStream` continuation management.
+- `Sources/napkin/PresentableInteractor.swift` — file deleted; `PresentableInteractable` now lives in `Interactor.swift` next to `Interactable`.
 - `Sources/napkin/Router.swift` — `@MainActor`, locks removed, async attach/detach, cascade simplified, Combine removed, `isolated deinit`.
 - `Sources/napkin/ViewableRouter.swift` — `@MainActor`, no `Task { @MainActor in }` patterns.
 - `Sources/napkin/LaunchRouter.swift` — `@MainActor`, async launch path.
