@@ -1,323 +1,114 @@
 //
 //  Copyright (c) 2017. Uber Technologies
-//
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
+//  Licensed under the Apache License, Version 2.0
 //
 
 import Foundation
-import Combine
 
 /// A protocol that defines the active state scope of an interactor.
-///
-/// `InteractorScope` provides properties for checking and observing the active state
-/// of an interactor. Use this protocol when you need to observe lifecycle changes
-/// without access to the full ``Interactable`` interface.
-///
-/// - SeeAlso: ``Interactable``
-/// - SeeAlso: ``Interactor``
-public protocol InteractorScope: AnyObject {
+public protocol InteractorScope: AnyObject, Sendable {
+    /// Whether the interactor is currently active.
+    var isActive: Bool { get async }
 
-    // The following properties must be declared in the base protocol, since `Router` internally invokes these methods.
-    // In order to unit test router with a mock interactor, the mocked interactor first needs to conform to the custom
-    // subclass interactor protocol, and also this base protocol to allow the `Router` implementation to execute base
-    // class logic without error.
-
-    /// A Boolean value indicating whether the interactor is currently active.
-    ///
-    /// An interactor is active when its parent router is attached to the router tree.
-    /// Business logic should only execute when this value is `true`.
-    var isActive: Bool { get }
-
-    /// A publisher that emits the current active state and subsequent changes.
-    ///
-    /// This publisher uses `CurrentValueSubject` behavior, meaning new subscribers
-    /// immediately receive the current active state. The publisher completes when
-    /// the interactor is deallocated.
-    ///
-    /// ```swift
-    /// interactor.isActiveStream
-    ///     .filter { $0 }  // Only when active
-    ///     .sink { _ in
-    ///         print("Interactor became active")
-    ///     }
-    ///     .store(in: &cancellables)
-    /// ```
-    var isActiveStream: AnyPublisher<Bool, Never> { get }
+    /// A fresh `AsyncStream` that yields the current and subsequent
+    /// active-state values. New subscribers receive the current state
+    /// immediately.
+    nonisolated var isActiveStream: AsyncStream<Bool> { get }
 }
 
-/// The base protocol for all interactors in the napkin architecture.
+/// The base protocol for all napkin interactors.
 ///
-/// `Interactable` extends ``InteractorScope`` to add lifecycle management methods.
-/// The ``Router`` uses this protocol to activate and deactivate interactors as
-/// they are attached and detached from the router tree.
+/// Business logic for a feature lives in a `final actor` conforming to
+/// `Interactable`. Default implementations of lifecycle plumbing are provided
+/// here; the conforming actor needs only to:
+///   1. Declare `nonisolated let lifecycle = InteractorLifecycle()`
+///   2. Optionally override `didBecomeActive()` / `willResignActive()`
 ///
-/// ## Implementing Custom Interactor Protocols
-///
-/// Define a custom protocol that extends `Interactable` for your feature:
-///
-/// ```swift
-/// protocol MyFeatureInteractable: Interactable {
-///     var router: MyFeatureRouting? { get set }
-///     var listener: MyFeatureListener? { get set }
-/// }
-/// ```
-///
-/// - Important: The ``activate()`` and ``deactivate()`` methods are called by the
-///   framework. Application code should never call these methods directly.
-///
-/// - SeeAlso: ``Interactor``
-/// - SeeAlso: ``InteractorScope``
-public protocol Interactable: InteractorScope {
-
-    // The following methods must be declared in the base protocol, since `Router` internally invokes these methods.
-    // In order to unit test router with a mock interactor, the mocked interactor first needs to conform to the custom
-    // subclass interactor protocol, and also this base protocol to allow the `Router` implementation to execute base
-    // class logic without error.
-
-    /// Activates the interactor.
-    ///
-    /// This method is called by the router when it is attached to its parent.
-    /// It triggers the ``Interactor/didBecomeActive()`` callback.
-    ///
-    /// - Important: Do not call this method directly. The framework manages activation.
-    func activate()
-
-    /// Deactivates the interactor.
-    ///
-    /// This method is called by the router when it is detached from its parent.
-    /// It triggers the ``Interactor/willResignActive()`` callback.
-    ///
-    /// - Important: Do not call this method directly. The framework manages deactivation.
-    func deactivate()
-}
-
-/// The base class for all interactors in the napkin architecture.
-///
-/// An `Interactor` contains the business logic for a napkin unit. It has a lifecycle
-/// driven by its owning ``Router``: when the router is attached, the interactor becomes
-/// active; when detached, it becomes inactive.
-///
-/// ## Overview
-///
-/// The interactor is responsible for:
-/// - Containing all business logic for a feature
-/// - Managing subscriptions to data streams
-/// - Responding to user actions (via presenter or view)
-/// - Communicating with parent napkins via listener protocols
-/// - Requesting navigation changes via the router
-///
-/// ## Swift 6 Concurrency
-///
-/// `Interactor` is **not** isolated to `@MainActor`. Business logic runs on
-/// whatever thread the caller is on. The interactor's internal state is protected
-/// by a lock, making `activate()` and `deactivate()` thread-safe.
-///
-/// To update UI from an interactor, send data through a ``Presenter`` which
-/// dispatches to `@MainActor` before passing to the view. For routing,
-/// call async router methods that `await` `@MainActor` view controller access.
-///
-/// ## Lifecycle
-///
-/// Override these methods to respond to lifecycle changes:
-/// - ``didBecomeActive()``: Called when the interactor is activated
-/// - ``willResignActive()``: Called when the interactor is about to deactivate
-///
-/// ## Usage
+/// Example:
 ///
 /// ```swift
-/// protocol MyFeatureListener: AnyObject {
-///     func didFinishMyFeature(with result: String)
-/// }
+/// final actor HomeInteractor: Interactable {
+///     nonisolated let lifecycle = InteractorLifecycle()
+///     private let userService: UserService
+///     init(userService: UserService) { self.userService = userService }
 ///
-/// final class MyFeatureInteractor: Interactor, MyFeatureInteractable {
-///
-///     weak var router: MyFeatureRouting?
-///     weak var listener: MyFeatureListener?
-///
-///     private let service: MyServiceProtocol
-///     private var cancellables = Set<AnyCancellable>()
-///
-///     init(service: MyServiceProtocol) {
-///         self.service = service
-///         super.init()
-///     }
-///
-///     override func didBecomeActive() {
-///         super.didBecomeActive()
-///         // Setup subscriptions
-///         service.dataPublisher
-///             .sink { [weak self] data in
-///                 self?.handleData(data)
+///     func didBecomeActive() async {
+///         task {
+///             for await user in self.userService.userStream {
+///                 await self.handle(user)
 ///             }
-///             .store(in: &cancellables)
-///     }
-///
-///     override func willResignActive() {
-///         super.willResignActive()
-///         // Cleanup
-///         cancellables.removeAll()
-///     }
-///
-///     func userDidTapDone() {
-///         listener?.didFinishMyFeature(with: "completed")
+///         }
 ///     }
 /// }
 /// ```
-///
-/// ## Topics
-///
-/// ### Lifecycle
-///
-/// - ``didBecomeActive()``
-/// - ``willResignActive()``
-/// - ``isActive``
-/// - ``isActiveStream``
-///
-/// ### Initialization
-///
-/// - ``init()``
-///
-/// - SeeAlso: ``Interactable``
-/// - SeeAlso: ``PresentableInteractor``
-/// - SeeAlso: ``Router``
-open class Interactor: Interactable, @unchecked Sendable {
+public protocol Interactable: Actor, InteractorScope {
 
-    /// A Boolean value indicating whether the interactor is currently active.
-    ///
-    /// Check this property before performing business logic to ensure the interactor
-    /// is in the correct state. This property returns `true` after ``didBecomeActive()``
-    /// is called and `false` after ``willResignActive()`` completes.
-    ///
-    /// - Note: This property is thread-safe.
-    public final var isActive: Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        return isActiveSubject.value
-    }
+    /// The lifecycle helper that this interactor delegates state and
+    /// lifecycle plumbing to. Conforming actors declare:
+    /// `nonisolated let lifecycle = InteractorLifecycle()`.
+    nonisolated var lifecycle: InteractorLifecycle { get }
 
-    /// A publisher that emits the current and future active states.
-    ///
-    /// Subscribe to this publisher to react to lifecycle changes. New subscriptions
-    /// immediately receive the current state.
-    public final var isActiveStream: AnyPublisher<Bool, Never> {
-        return isActiveSubject.eraseToAnyPublisher()
-    }
+    /// Activates the interactor. Idempotent. Invokes ``didBecomeActive()``.
+    func activate() async
 
-    /// Creates a new interactor.
-    ///
-    /// Override this initializer to inject dependencies:
-    ///
-    /// ```swift
-    /// init(service: MyServiceProtocol) {
-    ///     self.service = service
-    ///     super.init()
-    /// }
-    /// ```
-    public init() {
-        // No-op
-    }
+    /// Deactivates the interactor. Idempotent. Invokes ``willResignActive()``,
+    /// then cancels lifecycle-bound tasks.
+    func deactivate() async
 
-    /// Activates the interactor.
-    ///
-    /// This method is called internally by the router when attached.
-    /// It sets ``isActive`` to `true` and calls ``didBecomeActive()``.
-    ///
-    /// - Important: Do not call this method directly.
-    public final func activate() {
-        lock.lock()
-        guard !isActiveSubject.value else {
-            lock.unlock()
-            return
-        }
-        isActiveSubject.send(true)
-        lock.unlock()
+    /// Override to perform setup when the interactor becomes active.
+    func didBecomeActive() async
 
-        didBecomeActive()
-    }
-
-    /// Called when the interactor becomes active.
-    ///
-    /// Override this method to:
-    /// - Set up Combine subscriptions
-    /// - Start observing data sources
-    /// - Initialize state that depends on being active
-    ///
-    /// Always call `super.didBecomeActive()` when overriding.
-    ///
-    /// ```swift
-    /// override func didBecomeActive() {
-    ///     super.didBecomeActive()
-    ///     service.fetchData()
-    ///         .sink { [weak self] data in
-    ///             self?.process(data)
-    ///         }
-    ///         .store(in: &cancellables)
-    /// }
-    /// ```
-    open func didBecomeActive() {
-        // No-op
-    }
-
-    /// Deactivates the interactor.
-    ///
-    /// This method is called internally by the router when detached.
-    /// It calls ``willResignActive()`` and then sets ``isActive`` to `false`.
-    ///
-    /// - Important: Do not call this method directly.
-    public final func deactivate() {
-        lock.lock()
-        guard isActiveSubject.value else {
-            lock.unlock()
-            return
-        }
-        lock.unlock()
-
-        willResignActive()
-
-        lock.lock()
-        isActiveSubject.send(false)
-        lock.unlock()
-    }
-
-    /// Called when the interactor is about to become inactive.
-    ///
-    /// Override this method to:
-    /// - Cancel Combine subscriptions
-    /// - Release resources
-    /// - Save state if needed
-    ///
-    /// Always call `super.willResignActive()` when overriding.
-    ///
-    /// ```swift
-    /// override func willResignActive() {
-    ///     super.willResignActive()
-    ///     cancellables.removeAll()
-    /// }
-    /// ```
-    open func willResignActive() {
-        // No-op
-    }
-
-    // MARK: - Private
-
-    private let isActiveSubject = CurrentValueSubject<Bool, Never>(false)
-    private let lock = NSRecursiveLock()
-
-    deinit {
-        if isActiveSubject.value {
-            deactivate()
-        }
-        isActiveSubject.send(completion: .finished)
-    }
+    /// Override to perform teardown before the interactor becomes inactive.
+    func willResignActive() async
 }
 
+extension Interactable {
+    public var isActive: Bool {
+        get async { await lifecycle.isActive }
+    }
+
+    public nonisolated var isActiveStream: AsyncStream<Bool> {
+        lifecycle.isActiveStream
+    }
+
+    public func activate() async {
+        await lifecycle.activate { @Sendable [self] in await self.didBecomeActive() }
+    }
+
+    public func deactivate() async {
+        await lifecycle.deactivate { @Sendable [self] in await self.willResignActive() }
+    }
+
+    /// Spawn a `Task` whose lifetime is bound to the active scope.
+    /// Cancelled automatically in ``deactivate()``. Replaces the role of
+    /// `disposeOnDeactivate` in upstream RIBs.
+    @discardableResult
+    public func task(
+        priority: TaskPriority? = nil,
+        _ work: @Sendable @escaping () async -> Void
+    ) -> Task<Void, Never> {
+        lifecycle.register(priority: priority, work)
+    }
+
+    public func didBecomeActive() async {}
+    public func willResignActive() async {}
+}
+
+/// An `Interactable` that owns a presenter.
+///
+/// The `presenter` is typically a `@MainActor`-isolated type; calls into it
+/// from this actor cross isolation domains and are `await`-required.
+///
+/// Example:
+///
+/// ```swift
+/// final actor HomeInteractor: PresentableInteractable {
+///     nonisolated let lifecycle = InteractorLifecycle()
+///     nonisolated let presenter: HomePresentable
+///     init(presenter: HomePresentable) { self.presenter = presenter }
+/// }
+/// ```
+public protocol PresentableInteractable: Interactable {
+    associatedtype PresenterType
+    nonisolated var presenter: PresenterType { get }
+}
