@@ -7,7 +7,7 @@ protocol ___VARIABLE_productName___Dependency: Dependency {
     // created by this napkin.
 }
 
-final class ___VARIABLE_productName___Component: Component<___VARIABLE_productName___Dependency> {
+final class ___VARIABLE_productName___Component: Component<___VARIABLE_productName___Dependency>, @unchecked Sendable {
 
     // TODO: Declare 'fileprivate' dependencies that are only used by this napkin.
 }
@@ -18,7 +18,7 @@ protocol ___VARIABLE_productName___Buildable: Buildable {
     @MainActor func build(withListener listener: ___VARIABLE_productName___Listener) async -> ___VARIABLE_productName___Routing
 }
 
-final class ___VARIABLE_productName___Builder: Builder<___VARIABLE_productName___Dependency>, ___VARIABLE_productName___Buildable {
+final class ___VARIABLE_productName___Builder: Builder<___VARIABLE_productName___Dependency>, ___VARIABLE_productName___Buildable, @unchecked Sendable {
 
     override init(dependency: ___VARIABLE_productName___Dependency) {
         super.init(dependency: dependency)
