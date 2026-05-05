@@ -1,24 +1,37 @@
 //___FILEHEADER___
 
+import Testing
 @testable import ___PROJECTNAME___
-import XCTest
 
-final class ___VARIABLE_productName___InteractorTests: XCTestCase {
+@Suite("___VARIABLE_productName___Interactor")
+struct ___VARIABLE_productName___InteractorTests {
 
-    private var interactor: ___VARIABLE_productName___Interactor!
+    // TODO: Declare mocks for the router, presenter, listener, and any services.
 
-    // TODO: declare other objects and mocks you need as private vars
+    @Test func activate_makesInteractorActive() async {
+        // Example: build the interactor with mock collaborators, activate, and assert
+        // it transitioned to the active state and invoked the expected setup work.
+        //
+        //   let presenter = ___VARIABLE_productName___PresentableMock()
+        //   let interactor = ___VARIABLE_productName___Interactor(presenter: presenter)
+        //   await interactor.activate()
+        //   #expect(await interactor.isActive == true)
+    }
 
-    override func setUp() {
-        super.setUp()
-
-        // TODO: instantiate objects and mocks
+    @Test func deactivate_makesInteractorInactive() async {
+        // Example:
+        //   let presenter = ___VARIABLE_productName___PresentableMock()
+        //   let interactor = ___VARIABLE_productName___Interactor(presenter: presenter)
+        //   await interactor.activate()
+        //   await interactor.deactivate()
+        //   #expect(await interactor.isActive == false)
     }
 
     // MARK: - Tests
-
-    func test_exampleObservable_callsRouterOrListener_exampleProtocol() {
-        // This is an example of an interactor test case.
-        // Test your interactor binds observables and sends messages to router or listener.
-    }
+    //
+    // Test that the interactor:
+    //   - Invokes the listener for cross-napkin communication
+    //   - Drives the router to attach/detach children
+    //   - Calls the presenter to update the view
+    //   - Cancels lifecycle-bound tasks on deactivate
 }

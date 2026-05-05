@@ -1,24 +1,37 @@
 //___FILEHEADER___
 
+import Testing
 @testable import ___PROJECTNAME___
-import XCTest
 
-final class ___VARIABLE_productName___RouterTests: XCTestCase {
+@Suite("___VARIABLE_productName___Router")
+@MainActor
+struct ___VARIABLE_productName___RouterTests {
 
-    private var router: ___VARIABLE_productName___Router!
+    // TODO: Declare mocks for the interactor, view controller, and child builders.
 
-    // TODO: declare other objects and mocks you need as private vars
+    @Test func loadCallsDidLoad() async {
+        // Example: build the router and assert that calling `load()` triggers any
+        // permanent child attachment performed in `didLoad()`.
+        //
+        //   let interactor = ___VARIABLE_productName___Interactor(presenter: presenter)
+        //   let viewController = ___VARIABLE_productName___ViewControllableMock()
+        //   let router = ___VARIABLE_productName___Router(interactor: interactor, viewController: viewController)
+        //   await router.load()
+        //   #expect(router.children.isEmpty == false)
+    }
 
-    override func setUp() {
-        super.setUp()
-
-        // TODO: instantiate objects and mocks
+    @Test func attachChild_activatesChildInteractor() async {
+        // Example:
+        //   let router = makeRouter()
+        //   let child = ChildRouterMock()
+        //   await router.attachChild(child)
+        //   #expect(child.attachCount == 1)
     }
 
     // MARK: - Tests
-
-    func test_routeToExample_invokesToExampleResult() {
-        // This is an example of a router test case.
-        // Test your router functions invokes the corresponding builder, attachesChild, presents VC, etc.
-    }
+    //
+    // Test that the router:
+    //   - Builds and attaches the correct child napkin in response to interactor calls
+    //   - Detaches and cleans up child napkins
+    //   - Manipulates the view hierarchy on the view controller
 }
