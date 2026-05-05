@@ -671,7 +671,9 @@ bash napkin/Tools/InstallXcodeTemplates.sh
 
 ## Versioning
 
-napkin releases [new versions on GitHub](https://github.com/WikipediaBrown/napkin/releases) automatically when a pull request is merged from `develop` to `main`.
+napkin releases [new versions on GitHub](https://github.com/WikipediaBrown/napkin/releases) automatically when a pull request is merged from `develop` to `main`. The default is a patch bump; for a minor or major release, trigger the **Release** workflow manually from the Actions tab and choose the bump type.
+
+Notable changes are documented in [CHANGELOG.md](CHANGELOG.md). The current major version is `2.x` (Swift 6.2 native concurrency); see the changelog for migration notes from `0.x` / `1.x`.
 
 ## Contributing
 
