@@ -3,11 +3,15 @@
 import napkin
 
 /// The public API for the ___FILEBASENAME___Manager.
-protocol ___VARIABLE_productName___Managing {
-    // TODO: Declare properties and methods needed to access the manager.
+protocol ___VARIABLE_productName___Managing: Sendable {
+    // TODO: Declare properties and methods needed to access the manager. Methods that
+    // perform I/O or mutate state should be `async`.
 }
 
-class ___VARIABLE_productName___Manager: ___VARIABLE_productName___Managing {
+actor ___VARIABLE_productName___Manager: ___VARIABLE_productName___Managing {
 
-    // TODO: Implement properties to provide for ___VARIABLE_productName___ scope.
+    init() {}
+
+    // TODO: Implement actor-isolated state and async methods. Use ___VARIABLE_productName___Service
+    // factory methods to construct the value types this manager owns.
 }
