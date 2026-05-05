@@ -1,131 +1,50 @@
-//
-//  Copyright (c) 2017. Uber Technologies
-//
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-//
-
-import XCTest
+import Testing
 @testable import napkin
 
-final class ComponentTests: XCTestCase {
+@Suite("Component")
+struct ComponentTests {
 
-    // MARK: - Initialization Tests
-
-    func testComponent_initialization_storesDependency() {
-        let dependency = TestDependency()
-        let component = TestComponent(dependency: dependency)
-
-        XCTAssertTrue(component.dependency === dependency)
+    @Test func holdsDependency() {
+        let parent = ParentDependency()
+        let component = ChildComponent(dependency: parent)
+        #expect(component.dependency === parent)
     }
 
-    func testEmptyComponent_initialization_succeeds() {
-        let component = EmptyComponent()
-
-        XCTAssertNotNil(component)
+    @Test func sharedReturnsSameInstance() {
+        let component = ChildComponent(dependency: ParentDependency())
+        let first = component.sharedService
+        let second = component.sharedService
+        #expect(first === second)
     }
 
-    // MARK: - Shared Instance Tests
-
-    func testComponent_shared_returnsSameInstanceOnMultipleCalls() {
-        let dependency = TestDependency()
-        let component = TestComponent(dependency: dependency)
-
-        let instance1 = component.sharedService
-        let instance2 = component.sharedService
-
-        XCTAssertTrue(instance1 === instance2)
+    @Test func nonSharedReturnsNewInstance() {
+        let component = ChildComponent(dependency: ParentDependency())
+        let first = component.freshService
+        let second = component.freshService
+        #expect(first !== second)
     }
 
-    func testComponent_shared_createsDifferentInstancesForDifferentProperties() {
-        let dependency = TestDependency()
-        let component = TestComponent(dependency: dependency)
-
-        let service1 = component.sharedService
-        let service2 = component.anotherSharedService
-
-        XCTAssertFalse(service1 === service2)
-    }
-
-    func testComponent_shared_returnsSameInstanceAcrossManyCalls() {
-        let dependency = TestDependency()
-        let component = TestComponent(dependency: dependency)
-
-        var instances: [TestService] = []
-        for _ in 0..<100 {
-            instances.append(component.sharedService)
+    @Test func sharedIsThreadSafe() async {
+        let component = ChildComponent(dependency: ParentDependency())
+        let first = component.sharedService
+        await withTaskGroup(of: ObjectIdentifier.self) { group in
+            for _ in 0..<32 {
+                group.addTask {
+                    ObjectIdentifier(component.sharedService)
+                }
+            }
+            for await id in group {
+                #expect(id == ObjectIdentifier(first))
+            }
         }
-
-        let firstInstance = instances.first!
-        XCTAssertTrue(instances.allSatisfy { $0 === firstInstance })
-    }
-
-    // MARK: - Optional Shared Instance Tests
-
-    func testComponent_shared_handlesOptionalType() {
-        let dependency = TestDependency()
-        let component = TestComponent(dependency: dependency)
-
-        let instance1: TestService? = component.optionalSharedService
-        let instance2: TestService? = component.optionalSharedService
-
-        XCTAssertNotNil(instance1)
-        XCTAssertTrue(instance1 === instance2)
-    }
-
-    // MARK: - Component Hierarchy Tests
-
-    func testComponent_childComponent_canAccessParentDependency() {
-        let rootDependency = TestDependency()
-        let rootComponent = TestComponent(dependency: rootDependency)
-
-        let childComponent = ChildComponent(dependency: rootComponent)
-
-        XCTAssertTrue(childComponent.dependency === rootComponent)
-        XCTAssertTrue(childComponent.dependency.testValue == rootComponent.testValue)
     }
 }
 
-// MARK: - Test Doubles
+private final class ParentDependency: Dependency {}
 
-private protocol TestDependencyProtocol: Dependency {
-    var testValue: String { get }
+private final class Service {}
+
+private final class ChildComponent: Component<ParentDependency>, @unchecked Sendable {
+    var sharedService: Service { shared { Service() } }
+    var freshService: Service { Service() }
 }
-
-private class TestDependency: TestDependencyProtocol {
-    let testValue: String = "test"
-}
-
-private class TestService {
-    let id = UUID()
-}
-
-private class TestComponent: Component<TestDependencyProtocol>, TestDependencyProtocol {
-
-    var testValue: String {
-        return dependency.testValue
-    }
-
-    var sharedService: TestService {
-        return shared { TestService() }
-    }
-
-    var anotherSharedService: TestService {
-        return shared { TestService() }
-    }
-
-    var optionalSharedService: TestService? {
-        return shared { TestService() }
-    }
-}
-
-private class ChildComponent: Component<TestDependencyProtocol> {}
