@@ -81,15 +81,15 @@ platform :ios do
   desc "Create tag with version written in file"
   lane :create_next_version do
     git_pull(only_tags: true)
-    new_version = increment_version
+    new_version = increment_version(ENV["BUMP"] || "")
     add_git_tag(tag: new_version, message: "This is version #{new_version}.")
     push_to_git_remote(tags: true, remote_branch: "refs/tags/#{new_version}")
     new_version
   end
 
-  # Increments and returns version of last tag. Pass the string `major
-  # or `minor` to increment major or minor version. Otherwise a the
-  # patch is incremented.
+  # Increments and returns version of last tag. Pass `major` or `minor` (or
+  # set the BUMP env var to one of those) to bump those components; anything
+  # else (or no value) increments patch.
   def increment_version(bump="")
     major, minor, patch = last_git_tag.split('.').map(&:to_i)
 

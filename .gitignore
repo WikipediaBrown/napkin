@@ -69,3 +69,6 @@ fastlane/screenshots
 #
 # This file records the visual position of the images of the files in the finder window. You don't need this.
 .DS_Store
+
+# XcodeGen-generated project
+Examples/LaunchNapkinApp/*.xcodeproj

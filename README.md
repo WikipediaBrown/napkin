@@ -8,7 +8,7 @@
 [![Swift Versions](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FWikipediaBrown%2Fnapkin%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/WikipediaBrown/napkin)
 [![Platforms Supported](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FWikipediaBrown%2Fnapkin%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/WikipediaBrown/napkin)
 
-napkin is a fork of Uber's [RIBs](https://github.com/uber/RIBs) with RxSwift replaced by Combine. It structures iOS and macOS applications as a tree of modular units using the Router-Interactor-Builder pattern.
+napkin is a fork of Uber's [RIBs](https://github.com/uber/RIBs) rebuilt on Swift 6.2 native concurrency. It structures iOS and macOS applications as a tree of modular units using the Router-Interactor-Builder pattern, with business logic running off the main actor and routing/presentation pinned to it.
 
 ## Table of Contents
 
@@ -35,8 +35,8 @@ napkin is a fork of Uber's [RIBs](https://github.com/uber/RIBs) with RxSwift rep
 
 ## Supported Platforms
 
-- iOS 13.0+
-- macOS 10.15+
+- iOS 26.0+
+- macOS 26.0+
 
 ## Installation
 
@@ -81,45 +81,40 @@ Data flows down the tree. Events flow up via listener protocols.
 
 ## Concurrency Model
 
-napkin is built with Swift 6 strict concurrency. Business logic runs off the main thread. Only view controllers are `@MainActor`.
+napkin uses Swift 6.2 native concurrency. Business logic in the Interactor runs **off the main actor by construction**; routing and presentation run on the main actor.
 
-| Layer | Isolation | Sendable |
-|-------|-----------|----------|
-| `Interactor` | Non-isolated | `@unchecked Sendable` (lock-protected) |
-| `Router` | Non-isolated | `@unchecked Sendable` (lock-protected) |
-| `Builder` | Non-isolated | — |
-| `Component` | Non-isolated | — (lock-protected `shared()`) |
-| `Presenter` | Non-isolated | — |
-| **`ViewControllable`** | **`@MainActor`** | — |
+| Layer | Isolation |
+|-------|-----------|
+| `Interactable` (protocol) + per-feature `final actor` | `actor` |
+| `InteractorLifecycle` (helper) | `final class @unchecked Sendable` (Mutex-protected) |
+| `Router` / `ViewableRouter` / `LaunchRouter` | `@MainActor` |
+| `Presenter` (`@Observable`) | `@MainActor` |
+| `ViewControllable` | `@MainActor` |
+| `Builder` / `Component` | non-isolated, `Sendable` |
 
-`ViewControllable` is the **enforcement boundary**. The compiler requires `@MainActor` context to access any view controller. Everything else — interactors, routers, builders, components — runs on whatever thread the caller is on.
+Crossings between layers are explicit `await` points:
 
-On `ViewableRouter` and `Presenter`, the `viewController` property is `@MainActor`-isolated. To access it from a non-isolated context, use `Task { @MainActor in }`:
+- Interactor → Router: `await router?.routeToProfile()`
+- Interactor → Presenter: `await presenter.presentUser(user)`
+- View → Interactor (events): `dispatch { await listener?.didTapLogout() }`
 
-```swift
-// Inside a router method (non-isolated)
-func routeToDetails() {
-    guard detailsRouter == nil else { return }
+Combine has been removed. View-state changes flow through `@Observable` properties on the Presenter; lifecycle-bound subscriptions use `Interactor.task { for await … in Observations { … } }`.
 
-    Task { @MainActor in
-        let router = detailsBuilder.build(withListener: interactor)
-        detailsRouter = router
-        attachChild(router)
-        viewController.uiviewController.present(
-            router.viewControllable.uiviewController,
-            animated: true
-        )
-    }
-}
-```
+### Why protocol composition instead of class inheritance?
+
+Swift actors do not support inheritance (SE-0306). Rather than fall back to `@MainActor open class` (which would pin business logic to the main actor) or a custom `@globalActor` (which would serialize all interactors on one executor), napkin uses **protocol composition**: each feature's interactor is its own `final actor` conforming to `Interactable`. A small `InteractorLifecycle` helper class — the only `@unchecked Sendable` type in the framework — holds the mutex-protected state. Default implementations of `activate` / `deactivate` / `task(_:)` / `isActive` / `isActiveStream` come from a protocol extension that delegates to `lifecycle`.
+
+### Divergence from Uber RIBs-iOS
+
+Uber's `RIBs-iOS` PR #49 unifies the framework on `@MainActor` (Interactor included). napkin deliberately keeps the Interactor off the main actor so business logic is not pinned to the main thread. The cost is `await` at every cross-layer call; the benefit is enforced clean-architecture isolation.
 
 ## Core Components
 
 ### Builder
 
-The **Builder** constructs a napkin and wires its dependencies. It receives a `Dependency` from its parent and returns a `Router`.
+The **Builder** constructs a napkin and wires its dependencies. It receives a `Dependency` from its parent and returns a `Router`. `Builder` is `Sendable` and non-isolated.
 
-When the napkin has a view, mark `build()` as `@MainActor` because `UIViewController` initialization requires the main thread:
+When the napkin has a view, mark `build()` as `@MainActor async` — `@MainActor` because `UIViewController` initialization requires the main actor; `async` because wiring the actor-based interactor (e.g. setting the listener and router) requires `await`:
 
 ```swift
 protocol HomeDependency: Dependency {
@@ -127,20 +122,23 @@ protocol HomeDependency: Dependency {
 }
 
 protocol HomeBuildable: Buildable {
-    @MainActor func build(withListener listener: HomeListener) -> HomeRouting
+    @MainActor func build(withListener listener: HomeListener) async -> HomeRouting
 }
 
 final class HomeBuilder: Builder<HomeDependency>, HomeBuildable {
 
-    @MainActor func build(withListener listener: HomeListener) -> HomeRouting {
+    @MainActor
+    func build(withListener listener: HomeListener) async -> HomeRouting {
         let component = HomeComponent(dependency: dependency)
         let viewController = HomeViewController()
         let interactor = HomeInteractor(
             presenter: viewController,
             userService: component.userService
         )
-        interactor.listener = listener
-        return HomeRouter(interactor: interactor, viewController: viewController)
+        await interactor.set(listener: listener)
+        let router = HomeRouter(interactor: interactor, viewController: viewController)
+        await interactor.set(router: router)
+        return router
     }
 }
 ```
@@ -149,7 +147,7 @@ For napkins without views, `build()` does not need `@MainActor`:
 
 ```swift
 protocol AnalyticsBuildable: Buildable {
-    func build(withListener listener: AnalyticsListener) -> AnalyticsRouting
+    func build(withListener listener: AnalyticsListener) async -> AnalyticsRouting
 }
 ```
 
@@ -199,152 +197,160 @@ final class AppComponent: Component<EmptyDependency>, HomeDependency {
 
 ### Interactor
 
-The **Interactor** contains all business logic. It has a lifecycle driven by its parent router: `didBecomeActive()` when attached, `willResignActive()` when detached.
+The **Interactor** contains all business logic. It is a `final actor` conforming to `Interactable` (or `PresentableInteractable` when paired with a view), and holds an `InteractorLifecycle` helper. Lifecycle is driven by its parent router: `didBecomeActive()` when attached, `willResignActive()` when detached. Both are `async`.
 
 Interactors communicate:
-- **Up** to parent napkins via `weak var listener` (a protocol the parent implements)
-- **Down** to navigation via `weak var router` (a routing protocol the router implements)
+- **Up** to parent napkins via `weak var listener` (a `Sendable` protocol the parent implements)
+- **Down** to navigation via `weak var router` (an `@MainActor` routing protocol the router implements)
+
+Listener and routing methods are `async` because they cross isolation boundaries.
 
 ```swift
-protocol HomeListener: AnyObject {
-    func homeDidRequestLogout()
+protocol HomeListener: AnyObject, Sendable {
+    func homeDidRequestLogout() async
 }
 
-protocol HomeInteractable: Interactable {
-    var router: HomeRouting? { get set }
-    var listener: HomeListener? { get set }
+@MainActor
+protocol HomeRouting: ViewableRouting {
+    func routeToProfile() async
 }
 
-final class HomeInteractor: PresentableInteractor<HomePresentable>,
-                            HomeInteractable,
-                            HomePresentableListener {
+protocol HomePresentable: Presentable, Sendable {
+    @MainActor var listener: HomePresentableListener? { get set }
+    func presentUser(_ user: User) async
+}
+
+final actor HomeInteractor: PresentableInteractable, HomePresentableListener {
+
+    nonisolated let lifecycle = InteractorLifecycle()
+    nonisolated let presenter: HomePresentable
 
     weak var router: HomeRouting?
     weak var listener: HomeListener?
 
     private let userService: UserServiceProtocol
-    private var cancellables = Set<AnyCancellable>()
 
     init(presenter: HomePresentable, userService: UserServiceProtocol) {
+        self.presenter = presenter
         self.userService = userService
-        super.init(presenter: presenter)
     }
 
-    override func didBecomeActive() {
-        super.didBecomeActive()
-        userService.currentUser
-            .sink { [weak self] user in
-                self?.presenter.presentUser(user)
+    func set(router: HomeRouting?) { self.router = router }
+    func set(listener: HomeListener?) { self.listener = listener }
+
+    func didBecomeActive() async {
+        // Lifecycle-bound subscription: cancelled automatically on willResignActive.
+        task {
+            for await user in Observations({ userService.currentUser }) {
+                await presenter.presentUser(user)
             }
-            .store(in: &cancellables)
+        }
     }
 
-    override func willResignActive() {
-        super.willResignActive()
-        cancellables.removeAll()
+    func willResignActive() async {
+        // Tasks started via `task { }` are cancelled automatically here.
     }
 
     // MARK: - HomePresentableListener
 
-    func didTapProfile() {
-        router?.routeToProfile()
+    func didTapProfile() async {
+        await router?.routeToProfile()
     }
 
-    func didTapLogout() {
-        listener?.homeDidRequestLogout()
+    func didTapLogout() async {
+        await listener?.homeDidRequestLogout()
     }
 }
 ```
 
-Use `PresentableInteractor<T>` when the interactor communicates with a view through a presentable protocol. Use plain `Interactor` for napkins without views.
+`didBecomeActive` / `willResignActive` are protocol default-implementation methods, so there is no `override` and no `super` call. Subscriptions started with `task { }` on the lifecycle are cancelled automatically when the interactor deactivates.
+
+Use `PresentableInteractable` when the interactor communicates with a view through a presentable protocol. Use plain `Interactable` for napkins without views.
 
 ### Router
 
-The **Router** manages the napkin tree. It owns the interactor, maintains a list of children, and coordinates navigation.
+The **Router** is `@MainActor`, manages the napkin tree, owns the interactor, maintains a list of children, and coordinates navigation.
 
-- `attachChild(_:)` — adds a child router, activates its interactor, and loads it
-- `detachChild(_:)` — deactivates the child's interactor and removes it
-- `didLoad()` — called once when the router is first loaded; attach permanent children here
+- `attachChild(_:)` `async` — adds a child router, activates its interactor, and loads it
+- `detachChild(_:)` `async` — deactivates the child's interactor and removes it
+- `didLoad()` `async open` — called once when the router is first loaded; attach permanent children here
 
 Use `Router<InteractorType>` for napkins without views. Use `ViewableRouter<InteractorType, ViewControllerType>` when the napkin has a view controller.
 
 ```swift
+@MainActor
 protocol HomeRouting: ViewableRouting {
-    func routeToProfile()
-    func routeBackFromProfile()
+    func routeToProfile() async
+    func routeBackFromProfile() async
 }
 
-final class HomeRouter: ViewableRouter<HomeInteractable, HomeViewControllable>,
+@MainActor
+final class HomeRouter: ViewableRouter<HomeInteractor, HomeViewControllable>,
                         HomeRouting {
 
     private let profileBuilder: ProfileBuildable
     private var profileRouter: ProfileRouting?
 
-    init(interactor: HomeInteractable,
+    init(interactor: HomeInteractor,
          viewController: HomeViewControllable,
          profileBuilder: ProfileBuildable) {
         self.profileBuilder = profileBuilder
         super.init(interactor: interactor, viewController: viewController)
-        interactor.router = self
     }
 
-    func routeToProfile() {
+    func routeToProfile() async {
         guard profileRouter == nil else { return }
 
-        Task { @MainActor in
-            let router = profileBuilder.build(withListener: interactor)
-            profileRouter = router
-            attachChild(router)
-            viewController.uiviewController.present(
-                router.viewControllable.uiviewController,
-                animated: true
-            )
-        }
+        let router = await profileBuilder.build(withListener: interactor)
+        profileRouter = router
+        await attachChild(router)
+        viewController.uiviewController.present(
+            router.viewControllable.uiviewController,
+            animated: true
+        )
     }
 
-    func routeBackFromProfile() {
+    func routeBackFromProfile() async {
         guard let router = profileRouter else { return }
         profileRouter = nil
 
-        Task { @MainActor in
-            viewController.uiviewController.dismiss(animated: true)
-        }
-        detachChild(router)
+        viewController.uiviewController.dismiss(animated: true)
+        await detachChild(router)
     }
 }
 ```
 
-The `Task { @MainActor in }` block is the boundary crossing: `attachChild` and `detachChild` are thread-safe and non-isolated, but accessing `viewController` or `viewControllable` requires `@MainActor`. The pattern is:
+Because the router is already on the main actor, there are no `Task { @MainActor in }` hops. `attachChild` / `detachChild` are `async` and serialize with the interactor's actor when activating / deactivating. The pattern is:
 
-1. Build the child (`@MainActor` if it creates a view controller)
-2. Attach — activates the interactor, loads the router
-3. Present — manipulates the view hierarchy on `@MainActor`
+1. Build the child (`async @MainActor` for view-owning napkins)
+2. `await attachChild(router)` — activates the interactor on its own actor, loads the router on the main actor
+3. Present — manipulates the view hierarchy directly on `@MainActor`
 
-For detaching, the order is reversed: dismiss the view, then detach the child.
+For detaching, the order is reversed: dismiss the view, then `await detachChild(router)`.
 
 ### Presenter (Optional)
 
-The **Presenter** transforms business data into view-friendly formats. It sits between the interactor and the view controller.
-
-The `Presenter<ViewControllerType>` class stores the view controller, but its `viewController` property is `@MainActor`. Use `Task { @MainActor in }` to update the view:
+The **Presenter** transforms business data into view-friendly formats. It sits between the interactor and the view controller. `Presenter` is `@MainActor` and `@Observable`, so SwiftUI views can read its stored properties directly via `@Bindable`:
 
 ```swift
-protocol HomePresentable: Presentable {
-    func presentUser(_ user: User)
+protocol HomePresentable: Presentable, Sendable {
+    func presentUser(_ user: User) async
 }
 
+@MainActor
 final class HomePresenter: Presenter<HomeViewControllable>, HomePresentable {
 
-    func presentUser(_ user: User) {
-        let displayName = "\(user.firstName) \(user.lastName)"
-        Task { @MainActor in
-            viewController.displayUserName(displayName)
-        }
+    var displayName: String = ""
+
+    func presentUser(_ user: User) async {
+        displayName = "\(user.firstName) \(user.lastName)"
     }
 }
 ```
 
-In many cases you won't need a separate `Presenter` class. The simpler pattern — used by the included templates — is to make the view controller conform to the `Presentable` protocol directly. The interactor uses `PresentableInteractor<MyPresentable>`, where the view controller is the presentable. The interactor calls methods on `presenter` to send data, and the view controller forwards user events back to the interactor via a `PresentableListener` protocol.
+The interactor calls `await presenter.presentUser(user)` from its actor; the await is the boundary crossing onto the main actor.
+
+In many cases you won't need a separate `Presenter` class. The simpler pattern — used by the included templates — is to make the view controller conform to the feature-specific `Presentable` protocol directly. The interactor declares `nonisolated let presenter: HomePresentable`, calls `await presenter.presentUser(user)` to send data, and the view controller forwards user events back to the interactor via a `PresentableListener` protocol whose methods are `async`.
 
 ### ViewControllable
 
@@ -378,80 +384,72 @@ Define a feature-specific protocol extending `ViewControllable` for methods the 
 
 ## Routing & Navigation
 
-Routing separates the **logical tree** (attach/detach) from the **visual tree** (present/dismiss).
-
-Attach/detach are non-isolated and manage the napkin tree and interactor lifecycle. Present/dismiss require `@MainActor` because they touch UIKit.
+Routing separates the **logical tree** (attach/detach) from the **visual tree** (present/dismiss). The router is `@MainActor`, so view manipulation runs inline; `attachChild` / `detachChild` are `async` because they activate or deactivate the child interactor on its own actor.
 
 **Modal presentation:**
 
 ```swift
-func routeToSettings() {
+func routeToSettings() async {
     guard settingsRouter == nil else { return }
 
-    Task { @MainActor in
-        let router = settingsBuilder.build(withListener: interactor)
-        settingsRouter = router
-        attachChild(router)
-        viewController.uiviewController.present(
-            router.viewControllable.uiviewController,
-            animated: true
-        )
-    }
+    let router = await settingsBuilder.build(withListener: interactor)
+    settingsRouter = router
+    await attachChild(router)
+    viewController.uiviewController.present(
+        router.viewControllable.uiviewController,
+        animated: true
+    )
 }
 ```
 
 **Push onto a navigation stack:**
 
 ```swift
-func routeToDetail(id: String) {
+func routeToDetail(id: String) async {
     guard detailRouter == nil else { return }
 
-    Task { @MainActor in
-        let router = detailBuilder.build(withListener: interactor, id: id)
-        detailRouter = router
-        attachChild(router)
+    let router = await detailBuilder.build(withListener: interactor, id: id)
+    detailRouter = router
+    await attachChild(router)
 
-        let nav = viewController.uiviewController as! UINavigationController
-        nav.pushViewController(
-            router.viewControllable.uiviewController,
-            animated: true
-        )
-    }
+    let nav = viewController.uiviewController as! UINavigationController
+    nav.pushViewController(
+        router.viewControllable.uiviewController,
+        animated: true
+    )
 }
 ```
 
 **Embed a child view:**
 
 ```swift
-func attachDashboard() {
-    Task { @MainActor in
-        let router = dashboardBuilder.build(withListener: interactor)
-        dashboardRouter = router
-        attachChild(router)
+func attachDashboard() async {
+    let router = await dashboardBuilder.build(withListener: interactor)
+    dashboardRouter = router
+    await attachChild(router)
 
-        let parent = viewController.uiviewController
-        let child = router.viewControllable.uiviewController
-        parent.addChild(child)
-        parent.view.addSubview(child.view)
-        child.didMove(toParent: parent)
-    }
+    let parent = viewController.uiviewController
+    let child = router.viewControllable.uiviewController
+    parent.addChild(child)
+    parent.view.addSubview(child.view)
+    child.didMove(toParent: parent)
 }
 ```
 
 **Viewless napkin (no UI):**
 
 ```swift
-func attachAnalytics() {
+func attachAnalytics() async {
     guard analyticsRouter == nil else { return }
-    let router = analyticsBuilder.build(withListener: interactor)
+    let router = await analyticsBuilder.build(withListener: interactor)
     analyticsRouter = router
-    attachChild(router)  // No @MainActor needed
+    await attachChild(router)
 }
 ```
 
 ## Launching the App
 
-Use `LaunchRouter` as the root of the napkin tree. Its `launch(from:)` method sets the root view controller on the window and activates the tree:
+Use `LaunchRouter` as the root of the napkin tree. Its `launch(from:)` method is `async`: it sets the root view controller on the window, activates the interactor, and `await`s `load()`. Hop into a `Task { @MainActor in }` from the synchronous scene callback:
 
 ```swift
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
@@ -469,10 +467,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         let component = AppComponent()
         let builder = RootBuilder(dependency: component)
-        let router = builder.build()
-        self.launchRouter = router
 
-        router.launch(from: window)
+        Task { @MainActor in
+            let router = await builder.build(withListener: AppListener())
+            self.launchRouter = router
+            await router.launch(from: window)
+        }
     }
 }
 ```
@@ -480,88 +480,105 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 The root router subclasses `LaunchRouter`:
 
 ```swift
-final class RootRouter: LaunchRouter<RootInteractable, RootViewControllable>,
+@MainActor
+final class RootRouter: LaunchRouter<RootInteractor, RootViewControllable>,
                         RootRouting {
 
     private let homeBuilder: HomeBuildable
 
-    init(interactor: RootInteractable,
+    init(interactor: RootInteractor,
          viewController: RootViewControllable,
          homeBuilder: HomeBuildable) {
         self.homeBuilder = homeBuilder
         super.init(interactor: interactor, viewController: viewController)
-        interactor.router = self
     }
 
-    override func didLoad() {
-        super.didLoad()
-        routeToHome()
+    override func didLoad() async {
+        await super.didLoad()
+        await routeToHome()
     }
 
-    func routeToHome() {
-        Task { @MainActor in
-            let router = homeBuilder.build(withListener: interactor)
-            attachChild(router)
-        }
+    func routeToHome() async {
+        let router = await homeBuilder.build(withListener: interactor)
+        await attachChild(router)
     }
 }
 ```
 
 ## SwiftUI Integration
 
-Wrap SwiftUI views in a `UIHostingController` that conforms to `ViewControllable`:
+Wrap SwiftUI views in a `UIHostingController` that conforms to `ViewControllable`. Use `@Observable` (not `ObservableObject`) on the presenter, and `@Bindable` to read it from the view:
 
 ```swift
+@Observable
+@MainActor
+final class HomePresenter: Presenter<HomeViewController>, HomePresentable {
+    var userName: String = ""
+    func presentUser(_ user: User) async {
+        userName = "\(user.firstName) \(user.lastName)"
+    }
+}
+
 struct HomeView: View {
-    @ObservedObject var viewModel: HomeViewModel
+    @Bindable var presenter: HomePresenter
+    weak var listener: HomePresentableListener?
 
     var body: some View {
-        Text(viewModel.userName)
+        VStack {
+            Text(presenter.userName)
+            Button("Profile") {
+                dispatch { await listener?.didTapProfile() }
+            }
+        }
     }
 }
 
 @MainActor protocol HomeViewControllable: ViewControllable {}
 
+@MainActor
 final class HomeViewController: UIHostingController<HomeView>,
                                 HomeViewControllable {
 
-    init(viewModel: HomeViewModel) {
-        super.init(rootView: HomeView(viewModel: viewModel))
+    init(presenter: HomePresenter) {
+        super.init(rootView: HomeView(presenter: presenter))
     }
 
-    required init?(coder: NSCoder) {
+    @MainActor required dynamic init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 }
 ```
 
-To pass data from the interactor to the SwiftUI view, share an `ObservableObject` view model. The builder creates it and passes it to both the view controller and the interactor:
+The builder creates the presenter and view controller and wires them to the interactor:
 
 ```swift
-@MainActor func build(withListener listener: HomeListener) -> HomeRouting {
+@MainActor
+func build(withListener listener: HomeListener) async -> HomeRouting {
     let component = HomeComponent(dependency: dependency)
-    let viewModel = HomeViewModel()
-    let viewController = HomeViewController(viewModel: viewModel)
-    let interactor = HomeInteractor(viewModel: viewModel, userService: component.userService)
-    interactor.listener = listener
-    return HomeRouter(interactor: interactor, viewController: viewController)
+    let presenter = HomePresenter(viewController: /* placeholder */ HomeViewController(presenter: stub))
+    let viewController = HomeViewController(presenter: presenter)
+    let interactor = HomeInteractor(presenter: presenter, userService: component.userService)
+    await interactor.set(listener: listener)
+    let router = HomeRouter(interactor: interactor, viewController: viewController)
+    await interactor.set(router: router)
+    return router
 }
 ```
 
-To forward user actions from SwiftUI back to the interactor, use a listener protocol on the view:
+Forward user actions to the interactor with `dispatch { await listener?.didTapX() }`. The `dispatch` helper is `@MainActor` and spawns an unstructured `Task` to call the actor-isolated listener — it's the bridge from a synchronous SwiftUI button handler to the async listener method:
 
 ```swift
-protocol HomePresentableListener: AnyObject {
-    func didTapProfile()
+protocol HomePresentableListener: AnyObject, Sendable {
+    func didTapProfile() async
 }
 
 struct HomeView: View {
-    @ObservedObject var viewModel: HomeViewModel
+    @Bindable var presenter: HomePresenter
     weak var listener: HomePresentableListener?
 
     var body: some View {
         Button("Profile") {
-            listener?.didTapProfile()
+            dispatch { [listener] in await listener?.didTapProfile() }
         }
     }
 }
@@ -569,46 +586,65 @@ struct HomeView: View {
 
 ## Testing
 
-napkin's non-isolated design makes testing straightforward. No `@MainActor` annotations are needed on test classes or mocks for interactors and routers:
+napkin uses Swift Testing. Interactor tests are `async`; assertions about actor-isolated state require `await`. Mocks for `Sendable` listener and `@MainActor` presentable protocols can be plain `final class`es with the appropriate isolation:
 
 ```swift
 import Testing
 @testable import YourApp
 
+@Suite("HomeInteractor")
 struct HomeInteractorTests {
 
-    @Test func didTapLogout_notifiesListener() {
+    @Test func didTapLogout_notifiesListener() async {
         let listener = MockHomeListener()
-        let presenter = MockHomePresentable()
+        let presenter = await MockHomePresentable()
         let interactor = HomeInteractor(presenter: presenter, userService: MockUserService())
-        interactor.listener = listener
-        interactor.activate()
+        await interactor.set(listener: listener)
+        await interactor.activate()
 
-        interactor.didTapLogout()
+        await interactor.didTapLogout()
 
-        #expect(listener.logoutCalled)
+        #expect(await listener.logoutCalled)
     }
 }
 
-final class MockHomeListener: HomeListener {
-    var logoutCalled = false
-    func homeDidRequestLogout() { logoutCalled = true }
+final actor MockHomeListener: HomeListener {
+    private(set) var logoutCalled = false
+    func homeDidRequestLogout() async { logoutCalled = true }
 }
 
+@MainActor
 final class MockHomePresentable: HomePresentable {
-    var listener: HomePresentableListener?
+    weak var listener: HomePresentableListener?
     var lastUser: User?
-    func presentUser(_ user: User) { lastUser = user }
+    func presentUser(_ user: User) async { lastUser = user }
 }
 ```
 
-Run tests with `Command+U` in Xcode, or via fastlane:
+Run tests via SwiftPM:
 
 ```bash
-cd napkin
+swift test
+```
+
+Or via Xcode (Command+U after opening `Package.swift`), or via fastlane:
+
+```bash
 bundle install
 bundle exec fastlane unit_test
 ```
+
+### Runnable example app
+
+A minimal iOS app under [`Examples/LaunchNapkinApp`](Examples/) demonstrates the framework end-to-end. It is verified working on iPhone 17 / iOS 26.4 simulator. Requires [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`):
+
+```bash
+cd Examples/LaunchNapkinApp
+xcodegen
+open LaunchNapkinApp.xcodeproj
+```
+
+See [`Examples/README.md`](Examples/README.md) for details.
 
 ## Tooling
 
@@ -635,7 +671,9 @@ bash napkin/Tools/InstallXcodeTemplates.sh
 
 ## Versioning
 
-napkin releases [new versions on GitHub](https://github.com/WikipediaBrown/napkin/releases) automatically when a pull request is merged from `develop` to `main`.
+napkin releases [new versions on GitHub](https://github.com/WikipediaBrown/napkin/releases) automatically when a pull request is merged from `develop` to `main`. The default is a patch bump; for a minor or major release, trigger the **Release** workflow manually from the Actions tab and choose the bump type.
+
+Notable changes are documented in [CHANGELOG.md](CHANGELOG.md). The current major version is `2.x` (Swift 6.2 native concurrency); see the changelog for migration notes from `0.x` / `1.x`.
 
 ## Contributing
 

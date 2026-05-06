@@ -1,137 +1,39 @@
-//
-//  Copyright (c) 2017. Uber Technologies
-//
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-//
-
-import XCTest
-#if canImport(UIKit)
-import UIKit
-#elseif canImport(AppKit)
-import AppKit
-#endif
+import Testing
 @testable import napkin
 
+#if canImport(UIKit)
+import UIKit
+
+@Suite("LaunchRouter")
 @MainActor
-final class LaunchRouterTests: XCTestCase {
+struct LaunchRouterTests {
 
-    // MARK: - Initialization Tests
-
-    func testLaunchRouter_initialization_storesInteractor() {
-        let interactor = TestInteractor()
-        let viewController = TestViewController()
-        let router = TestLaunchRouter(interactor: interactor, viewController: viewController)
-
-        XCTAssertTrue(router.interactable === interactor)
-    }
-
-    func testLaunchRouter_initialization_storesViewController() {
-        let interactor = TestInteractor()
-        let viewController = TestViewController()
-        let router = TestLaunchRouter(interactor: interactor, viewController: viewController)
-
-        XCTAssertTrue(router.viewController === viewController)
-    }
-
-    // MARK: - Launch Tests
-
-    func testLaunchRouter_launch_setsRootViewController() {
-        let interactor = TestInteractor()
-        let viewController = TestViewController()
-        let router = TestLaunchRouter(interactor: interactor, viewController: viewController)
-        #if canImport(UIKit)
+    @Test func launchActivatesAndLoads() async {
+        let interactor = StubInteractor()
+        let vc = StubViewController()
+        let router = StubLaunchRouter(interactor: interactor, viewController: vc)
         let window = UIWindow()
-        #elseif canImport(AppKit)
-        let window = NSWindow()
-        #endif
+        await router.launch(from: window)
 
-        router.launch(from: window)
-
-        #if canImport(UIKit)
-        XCTAssertTrue(window.rootViewController === viewController)
-        #elseif canImport(AppKit)
-        XCTAssertTrue(window.contentViewController === viewController)
-        #endif
-    }
-
-    func testLaunchRouter_launch_activatesInteractor() {
-        let interactor = TestInteractor()
-        let viewController = TestViewController()
-        let router = TestLaunchRouter(interactor: interactor, viewController: viewController)
-        #if canImport(UIKit)
-        let window = UIWindow()
-        #elseif canImport(AppKit)
-        let window = NSWindow()
-        #endif
-
-        router.launch(from: window)
-
-        XCTAssertTrue(interactor.isActive)
-    }
-
-    func testLaunchRouter_launch_callsDidLoad() {
-        let interactor = TestInteractor()
-        let viewController = TestViewController()
-        let router = TestLaunchRouter(interactor: interactor, viewController: viewController)
-        #if canImport(UIKit)
-        let window = UIWindow()
-        #elseif canImport(AppKit)
-        let window = NSWindow()
-        #endif
-
-        router.launch(from: window)
-
-        XCTAssertTrue(router.didLoadCalled)
-    }
-
-    // MARK: - LaunchRouting Protocol Tests
-
-    func testLaunchRouter_conformsToLaunchRouting() {
-        let interactor = TestInteractor()
-        let viewController = TestViewController()
-        let router = TestLaunchRouter(interactor: interactor, viewController: viewController)
-
-        XCTAssertTrue((router as Any) is LaunchRouting)
-    }
-
-    func testLaunchRouter_conformsToViewableRouting() {
-        let interactor = TestInteractor()
-        let viewController = TestViewController()
-        let router = TestLaunchRouter(interactor: interactor, viewController: viewController)
-
-        XCTAssertTrue((router as Any) is ViewableRouting)
+        #expect(window.rootViewController === vc)
+        #expect(await interactor.isActive == true)
+        #expect(router.didLoadCallCount == 1)
     }
 }
 
-// MARK: - Test Doubles
+private final class StubViewController: UIViewController, ViewControllable {}
 
-private class TestInteractor: Interactor, @unchecked Sendable {}
+@MainActor
+private final class StubLaunchRouter:
+    napkin.LaunchRouter<StubInteractor, StubViewController> {
+    private(set) var didLoadCallCount = 0
+    override func didLoad() async {
+        await super.didLoad()
+        didLoadCallCount += 1
+    }
+}
 
-#if canImport(UIKit)
-@MainActor
-private class TestViewController: UIViewController, ViewControllable {}
-#elseif canImport(AppKit)
-@MainActor
-private class TestViewController: NSViewController, ViewControllable {
-    override func loadView() { self.view = NSView() }
+private final actor StubInteractor: Interactable {
+    nonisolated let lifecycle = InteractorLifecycle()
 }
 #endif
-
-private class TestLaunchRouter: LaunchRouter<TestInteractor, TestViewController>, @unchecked Sendable {
-    var didLoadCalled = false
-
-    override func didLoad() {
-        super.didLoad()
-        didLoadCalled = true
-    }
-}

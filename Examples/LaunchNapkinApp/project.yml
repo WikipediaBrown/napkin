@@ -1,0 +1,44 @@
+name: LaunchNapkinApp
+options:
+  bundleIdPrefix: com.napkin.example
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+packages:
+  napkin:
+    path: ../..
+targets:
+  LaunchNapkinApp:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      - path: ../LaunchNapkin
+    dependencies:
+      - package: napkin
+    info:
+      path: Sources/Info.plist
+      properties:
+        UILaunchScreen:
+          UIColorName: ""
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+          UISceneConfigurations:
+            UIWindowSceneSessionRoleApplication:
+              - UISceneConfigurationName: Default Configuration
+                UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).SceneDelegate
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+    settings:
+      base:
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+        SWIFT_VERSION: "6.2"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ENABLE_PREVIEWS: "YES"
+        GENERATE_INFOPLIST_FILE: "NO"
+        PRODUCT_BUNDLE_IDENTIFIER: com.napkin.example.LaunchNapkinApp

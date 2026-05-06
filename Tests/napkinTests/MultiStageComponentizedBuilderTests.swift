@@ -1,130 +1,96 @@
-//
-//  Copyright (c) 2017. Uber Technologies
-//
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-//
-
-import XCTest
+import Testing
 @testable import napkin
 
-final class MultiStageComponentizedBuilderTests: XCTestCase {
+@Suite("MultiStageComponentizedBuilder")
+struct MultiStageComponentizedBuilderTests {
 
     // MARK: - MultiStageComponentizedBuilder Tests
 
-    func testMultiStageComponentizedBuilder_componentForCurrentBuildPass_returnsSameComponentWithinPass() {
+    @Test func componentForCurrentBuildPassReturnsSameComponentWithinPass() {
         let builder = TestMultiStageBuilder()
-
         let component1 = builder.componentForCurrentBuildPass
         let component2 = builder.componentForCurrentBuildPass
-
-        XCTAssertTrue(component1 === component2)
+        #expect(component1 === component2)
     }
 
-    func testMultiStageComponentizedBuilder_finalStageBuild_returnsRouter() {
+    @Test func finalStageBuildReturnsRouter() {
         let builder = TestMultiStageBuilder()
-
         let router = builder.finalStageBuild(withDynamicDependency: "dependency")
-
-        XCTAssertNotNil(router)
+        #expect(router.dependency == "dependency")
     }
 
-    func testMultiStageComponentizedBuilder_finalStageBuild_clearsCurrentPassComponent() {
+    @Test func finalStageBuildClearsCurrentPassComponent() {
         let builder = TestMultiStageBuilder()
-
         let component1 = builder.componentForCurrentBuildPass
         _ = builder.finalStageBuild(withDynamicDependency: "dependency")
         let component2 = builder.componentForCurrentBuildPass
-
-        XCTAssertFalse(component1 === component2)
+        #expect(component1 !== component2)
     }
 
-    func testMultiStageComponentizedBuilder_multipleBuildPasses_createNewComponents() {
+    @Test func multipleBuildPassesCreateNewComponents() {
         let builder = TestMultiStageBuilder()
-
         let component1 = builder.componentForCurrentBuildPass
         _ = builder.finalStageBuild(withDynamicDependency: "dep1")
 
         let component2 = builder.componentForCurrentBuildPass
         _ = builder.finalStageBuild(withDynamicDependency: "dep2")
 
-        XCTAssertFalse(component1 === component2)
+        #expect(component1 !== component2)
     }
 
-    func testMultiStageComponentizedBuilder_finalStageBuild_passesDynamicDependency() {
+    @Test func finalStageBuildPassesDynamicDependency() {
         let builder = TestMultiStageBuilder()
-
         let router = builder.finalStageBuild(withDynamicDependency: "myDependency")
-
-        XCTAssertEqual(router.dependency, "myDependency")
+        #expect(router.dependency == "myDependency")
     }
 
     // MARK: - SimpleMultiStageComponentizedBuilder Tests
 
-    func testSimpleMultiStageComponentizedBuilder_componentForCurrentBuildPass_returnsSameComponentWithinPass() {
+    @Test func simpleComponentForCurrentBuildPassReturnsSameComponentWithinPass() {
         let builder = TestSimpleMultiStageBuilder()
-
         let component1 = builder.componentForCurrentBuildPass
         let component2 = builder.componentForCurrentBuildPass
-
-        XCTAssertTrue(component1 === component2)
+        #expect(component1 === component2)
     }
 
-    func testSimpleMultiStageComponentizedBuilder_finalStageBuild_returnsRouter() {
+    @Test func simpleFinalStageBuildReturnsRouter() {
         let builder = TestSimpleMultiStageBuilder()
-
         let router = builder.finalStageBuild()
-
-        XCTAssertNotNil(router)
+        _ = router
     }
 
-    func testSimpleMultiStageComponentizedBuilder_finalStageBuild_clearsCurrentPassComponent() {
+    @Test func simpleFinalStageBuildClearsCurrentPassComponent() {
         let builder = TestSimpleMultiStageBuilder()
-
         let component1 = builder.componentForCurrentBuildPass
         _ = builder.finalStageBuild()
         let component2 = builder.componentForCurrentBuildPass
-
-        XCTAssertFalse(component1 === component2)
+        #expect(component1 !== component2)
     }
 
     // MARK: - Buildable Protocol Tests
 
-    func testMultiStageComponentizedBuilder_conformsToBuildable() {
+    @Test func conformsToBuildable() {
         let builder = TestMultiStageBuilder()
-
-        XCTAssertTrue((builder as Any) is Buildable)
+        #expect((builder as Any) is Buildable)
     }
 
-    func testSimpleMultiStageComponentizedBuilder_conformsToBuildable() {
+    @Test func simpleConformsToBuildable() {
         let builder = TestSimpleMultiStageBuilder()
-
-        XCTAssertTrue((builder as Any) is Buildable)
+        #expect((builder as Any) is Buildable)
     }
 }
 
 // MARK: - Test Doubles
 
-private class TestComponent {}
+private final class TestComponent: @unchecked Sendable {}
 
-private class TestRouter {
+private final class TestRouter: @unchecked Sendable {
     let dependency: String
-
-    init(dependency: String) {
-        self.dependency = dependency
-    }
+    init(dependency: String) { self.dependency = dependency }
 }
 
-private class TestMultiStageBuilder: MultiStageComponentizedBuilder<TestComponent, TestRouter, String> {
+private final class TestMultiStageBuilder:
+    MultiStageComponentizedBuilder<TestComponent, TestRouter, String>, @unchecked Sendable {
 
     init() {
         super.init {
@@ -137,11 +103,12 @@ private class TestMultiStageBuilder: MultiStageComponentizedBuilder<TestComponen
     }
 }
 
-private class SimpleTestComponent {}
+private final class SimpleTestComponent: @unchecked Sendable {}
 
-private class SimpleTestRouter {}
+private final class SimpleTestRouter: @unchecked Sendable {}
 
-private class TestSimpleMultiStageBuilder: SimpleMultiStageComponentizedBuilder<SimpleTestComponent, SimpleTestRouter> {
+private final class TestSimpleMultiStageBuilder:
+    SimpleMultiStageComponentizedBuilder<SimpleTestComponent, SimpleTestRouter>, @unchecked Sendable {
 
     init() {
         super.init {

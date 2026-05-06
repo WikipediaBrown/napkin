@@ -2,16 +2,22 @@
 
 import napkin
 
+@MainActor
 protocol ___VARIABLE_productName___Routing: Routing {
-    func cleanupViews()
+    func cleanupViews() async
     // TODO: Declare methods the interactor can invoke to manage sub-tree via the router.
+    // Routing methods are async because the router is @MainActor and is called from the
+    // interactor actor.
 }
 
-protocol ___VARIABLE_productName___Listener: AnyObject {
+protocol ___VARIABLE_productName___Listener: AnyObject, Sendable {
     // TODO: Declare methods the interactor can invoke to communicate with other napkins.
+    // Listener methods are async because the parent's interactor is an actor.
 }
 
-final class ___VARIABLE_productName___Interactor: Interactor, ___VARIABLE_productName___Interactable {
+final actor ___VARIABLE_productName___Interactor: Interactable {
+
+    nonisolated let lifecycle = InteractorLifecycle()
 
     weak var router: ___VARIABLE_productName___Routing?
     weak var listener: ___VARIABLE_productName___Listener?
@@ -20,15 +26,20 @@ final class ___VARIABLE_productName___Interactor: Interactor, ___VARIABLE_produc
     // in constructor.
     init() {}
 
-    override func didBecomeActive() {
-        super.didBecomeActive()
+    func set(router: ___VARIABLE_productName___Routing?) {
+        self.router = router
+    }
+
+    func set(listener: ___VARIABLE_productName___Listener?) {
+        self.listener = listener
+    }
+
+    func didBecomeActive() async {
         // TODO: Implement business logic here.
     }
 
-    override func willResignActive() {
-        super.willResignActive()
-
-        router?.cleanupViews()
+    func willResignActive() async {
+        await router?.cleanupViews()
         // TODO: Pause any business logic.
     }
 }

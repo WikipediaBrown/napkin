@@ -1,11 +1,11 @@
-// swift-tools-version:6.0
+// swift-tools-version:6.2
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
     name: "napkin",
-    platforms: [.iOS(.v13), .macOS(.v10_15)],
+    platforms: [.iOS(.v26), .macOS(.v26)],
     products: [
         .library(
             name: "napkin",
@@ -15,7 +15,13 @@ let package = Package(
     targets: [
         .target(
             name: "napkin",
-            dependencies: []),
+            dependencies: [],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+                .enableUpcomingFeature("IsolatedDefaultValues"),
+                .enableUpcomingFeature("RegionBasedIsolation")
+            ]
+        ),
         .testTarget(
             name: "napkinTests",
             dependencies: ["napkin"]),

@@ -53,7 +53,7 @@ import Foundation
 /// - SeeAlso: ``SimpleComponentizedBuilder``
 /// - SeeAlso: ``Builder``
 /// - SeeAlso: ``MultiStageComponentizedBuilder``
-open class ComponentizedBuilder<Component, Router, DynamicBuildDependency, DynamicComponentDependency>: Buildable {
+open class ComponentizedBuilder<Component, Router, DynamicBuildDependency, DynamicComponentDependency>: Buildable, @unchecked Sendable {
 
     // Builder should not directly retain an instance of the component.
     // That would make the component's lifecycle longer than the built
@@ -65,7 +65,7 @@ open class ComponentizedBuilder<Component, Router, DynamicBuildDependency, Dynam
     /// - Parameter componentBuilder: A closure that creates a new component instance.
     ///   This closure is called each time ``build(withDynamicBuildDependency:dynamicComponentDependency:)-4t8bp``
     ///   is invoked.
-    public init(componentBuilder: @escaping (DynamicComponentDependency) -> Component) {
+    public init(componentBuilder: @escaping @Sendable (DynamicComponentDependency) -> Component) {
         self.componentBuilder = componentBuilder
     }
 
@@ -119,7 +119,7 @@ open class ComponentizedBuilder<Component, Router, DynamicBuildDependency, Dynam
 
     // MARK: - Private
 
-    private let componentBuilder: (DynamicComponentDependency) -> Component
+    private let componentBuilder: @Sendable (DynamicComponentDependency) -> Component
     private weak var lastComponent: AnyObject?
 }
 
@@ -161,12 +161,12 @@ open class ComponentizedBuilder<Component, Router, DynamicBuildDependency, Dynam
 ///
 /// - SeeAlso: ``ComponentizedBuilder``
 /// - SeeAlso: ``Builder``
-open class SimpleComponentizedBuilder<Component, Router>: ComponentizedBuilder<Component, Router, (), ()> {
+open class SimpleComponentizedBuilder<Component, Router>: ComponentizedBuilder<Component, Router, (), ()>, @unchecked Sendable {
 
     /// Creates a builder with the specified component factory.
     ///
     /// - Parameter componentBuilder: A closure that creates a new component instance.
-    public init(componentBuilder: @escaping () -> Component) {
+    public init(componentBuilder: @escaping @Sendable () -> Component) {
         super.init(componentBuilder: componentBuilder)
     }
 

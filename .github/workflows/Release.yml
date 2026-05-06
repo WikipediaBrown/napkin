@@ -4,6 +4,17 @@ on:
   push:
     branches:
     - main
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump type. Defaults to patch when triggered by a push.'
+        required: false
+        default: 'patch'
+        type: choice
+        options:
+        - patch
+        - minor
+        - major
 jobs:
   release:
     name: Release napkin
@@ -12,6 +23,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       REPOSITORY_NAME: ${{ github.repository }}
       DANGER_GITHUB_API_TOKEN: ${{secrets.GITHUB_TOKEN }}
+      BUMP: ${{ inputs.bump || 'patch' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
