@@ -24,7 +24,7 @@ import Synchronization
 ///   ``dependency`` and conforms to its own children's `Dependency`
 ///   protocols, which lets it satisfy each child's required services.
 /// - The component creates instances of services that this napkin owns,
-///   typically using ``shared(_:)`` so that multiple consumers see the same
+///   typically using ``shared(forCallerKey:_:)`` so that multiple consumers see the same
 ///   instance.
 ///
 /// ## Creating a Component
@@ -59,7 +59,7 @@ import Synchronization
 ///
 /// ## Shared vs Non-Shared Dependencies
 ///
-/// Use ``shared(_:)`` for instances that should be reused across consumers
+/// Use ``shared(forCallerKey:_:)`` for instances that should be reused across consumers
 /// — services, caches, anything stateful that you want to live as long as
 /// the napkin does:
 ///
@@ -79,15 +79,15 @@ import Synchronization
 /// }
 /// ```
 ///
-/// `shared(_:)` keys cached instances by `#function`, so each computed
+/// `shared` keys cached instances by `#function`, so each computed
 /// property in your component gets its own slot automatically — no manual
 /// keying required.
 ///
 /// ## Concurrency
 ///
-/// `Component` is `Sendable`. Shared instances created via ``shared(_:)``
+/// `Component` is `Sendable`. Shared instances created via ``shared(forCallerKey:_:)``
 /// are stored under a `Mutex` from the `Synchronization` module, so they
-/// may be retrieved from any actor or thread safely. ``shared(_:)`` is
+/// may be retrieved from any actor or thread safely. ``shared(forCallerKey:_:)`` is
 /// safe to call concurrently; the framework guarantees the factory runs at
 /// most once per call site.
 ///
@@ -103,6 +103,10 @@ import Synchronization
 /// `sharedInstances` is a `Mutex`) is genuinely safe; the subclass
 /// obligation is on you.
 ///
+/// - SeeAlso: ``Dependency``
+/// - SeeAlso: ``EmptyComponent``
+/// - SeeAlso: ``Builder``
+///
 /// ## Topics
 ///
 /// ### Creating a Component
@@ -112,11 +116,8 @@ import Synchronization
 ///
 /// ### Sharing Instances
 ///
-/// - ``shared(__function:_:)``
+/// - ``shared(forCallerKey:_:)``
 ///
-/// - SeeAlso: ``Dependency``
-/// - SeeAlso: ``EmptyComponent``
-/// - SeeAlso: ``Builder``
 open class Component<DependencyType>: Dependency, @unchecked Sendable {
 
     /// The dependency object provided by the parent component.
@@ -154,30 +155,31 @@ open class Component<DependencyType>: Dependency, @unchecked Sendable {
     /// ```
     ///
     /// - Parameters:
-    ///   - __function: Implicit cache key. Defaults to `#function` so each
-    ///     computed property yields a stable, unique key. Do not pass an
-    ///     explicit value unless you have a deliberate reason to share or
-    ///     separate slots.
+    ///   - forCallerKey: Implicit cache key. Defaults to `#function` so each
+    ///     computed property yields a stable, unique key. Callers should
+    ///     write `shared { Factory() }` and let the default supply the key;
+    ///     pass an explicit value only if you have a deliberate reason to
+    ///     share or separate slots beyond per-property keying.
     ///   - factory: A closure that creates the instance the first time
     ///     this call site is hit.
     /// - Returns: The cached instance, or a freshly created one if this is
     ///   the first call at this site.
     /// - Important: The factory is invoked while `sharedInstances` is
-    ///   locked. Do not transitively call `shared(_:)` on the same
-    ///   component from inside a factory — `Mutex` is non-recursive and you
-    ///   will deadlock.
-    public final func shared<T>(__function: String = #function, _ factory: () -> T) -> T {
+    ///   locked. Do not transitively call ``shared(forCallerKey:_:)`` on the
+    ///   same component from inside a factory — `Mutex` is non-recursive and
+    ///   you will deadlock.
+    public final func shared<T>(forCallerKey: String = #function, _ factory: () -> T) -> T {
         sharedInstances.withLock { storage in
             // The double-optional cast is load-bearing: when `T` is itself an
             // `Optional`, this preserves a previously cached `nil` factory
             // result instead of re-running the factory each call. Simplifying
             // to `as? T` would silently change semantics for optional-typed
             // shared dependencies.
-            if let existing = (storage[__function] as? T?) ?? nil {
+            if let existing = (storage[forCallerKey] as? T?) ?? nil {
                 return existing
             }
             let instance = factory()
-            storage[__function] = instance
+            storage[forCallerKey] = instance
             return instance
         }
     }

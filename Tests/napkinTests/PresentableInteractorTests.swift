@@ -22,9 +22,9 @@ struct PresentableInteractableTests {
 // MARK: - Helpers
 
 @MainActor
-final class StubPresenter {}
+private final class StubPresenter {}
 
-final actor StubPresentableInteractor: PresentableInteractable {
+private final actor StubPresentableInteractor: PresentableInteractable {
     nonisolated let lifecycle = InteractorLifecycle()
     nonisolated let presenter: StubPresenter
     init(presenter: StubPresenter) { self.presenter = presenter }

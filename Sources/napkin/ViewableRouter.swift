@@ -10,15 +10,16 @@
 /// controller. Parent routers use this property to present, push, embed, or
 /// otherwise reach the child's view in the UIKit / AppKit hierarchy.
 ///
+/// - SeeAlso: ``Routing``
+/// - SeeAlso: ``ViewableRouter``
+/// - SeeAlso: ``LaunchRouting``
+///
 /// ## Topics
 ///
 /// ### Accessing the View
 ///
 /// - ``viewControllable``
 ///
-/// - SeeAlso: ``Routing``
-/// - SeeAlso: ``ViewableRouter``
-/// - SeeAlso: ``LaunchRouting``
 @MainActor
 public protocol ViewableRouting: Routing {
 
@@ -99,6 +100,10 @@ public protocol ViewableRouting: Routing {
 /// }
 /// ```
 ///
+/// - SeeAlso: ``ViewableRouting``
+/// - SeeAlso: ``Router``
+/// - SeeAlso: ``ViewControllable``
+///
 /// ## Topics
 ///
 /// ### Creating a ViewableRouter
@@ -110,9 +115,6 @@ public protocol ViewableRouting: Routing {
 /// - ``viewController``
 /// - ``viewControllable``
 ///
-/// - SeeAlso: ``ViewableRouting``
-/// - SeeAlso: ``Router``
-/// - SeeAlso: ``ViewControllable``
 @MainActor
 open class ViewableRouter<InteractorType, ViewControllerType>:
     Router<InteractorType>, ViewableRouting {
