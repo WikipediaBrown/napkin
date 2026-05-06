@@ -63,8 +63,11 @@ import Synchronization
 /// You generally do not call `InteractorLifecycle`'s methods directly.
 /// `Interactable`'s default-implementation extension forwards
 /// ``Interactable/activate()``, ``Interactable/deactivate()``,
-/// ``Interactable/task(priority:_:)``, ``Interactable/isActive``, and
-/// ``Interactable/isActiveStream`` here.
+/// ``Interactable/task(priority:_:)``, ``InteractorScope/isActive``, and
+/// ``InteractorScope/isActiveStream`` here.
+///
+/// - SeeAlso: ``Interactable``
+/// - SeeAlso: ``InteractorScope``
 ///
 /// ## Topics
 ///
@@ -86,8 +89,6 @@ import Synchronization
 ///
 /// - ``register(priority:_:)``
 ///
-/// - SeeAlso: ``Interactable``
-/// - SeeAlso: ``InteractorScope``
 public final class InteractorLifecycle: @unchecked Sendable {
 
     /// Creates a new lifecycle in the inactive state with no registered tasks

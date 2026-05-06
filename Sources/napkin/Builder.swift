@@ -24,7 +24,7 @@ import Foundation
 /// ## Overview
 ///
 /// In the napkin architecture, builders serve as factories that:
-/// - Create the ``Router``, ``Interactor``, and optionally ``Presenter`` for a napkin unit
+/// - Create the ``Router``, ``Interactable``, and optionally ``Presenter`` for a napkin unit
 /// - Wire up dependencies using a ``Component``
 /// - Return a router that represents the fully constructed napkin
 ///
@@ -52,7 +52,7 @@ public protocol Buildable: AnyObject, Sendable {}
 /// The builder is responsible for:
 /// 1. Receiving dependencies from the parent napkin via the ``dependency`` property
 /// 2. Creating a ``Component`` to provide dependencies to child napkins
-/// 3. Instantiating the ``Interactor`` with required services
+/// 3. Instantiating the ``Interactable`` with required services
 /// 4. Creating the ``Router`` and wiring it to the interactor
 /// 5. Returning the router as the public interface to the napkin
 ///
@@ -72,6 +72,10 @@ public protocol Buildable: AnyObject, Sendable {}
 /// }
 /// ```
 ///
+/// - SeeAlso: ``Buildable``
+/// - SeeAlso: ``Component``
+/// - SeeAlso: ``Router``
+///
 /// ## Topics
 ///
 /// ### Creating a Builder
@@ -79,9 +83,6 @@ public protocol Buildable: AnyObject, Sendable {}
 /// - ``init(dependency:)``
 /// - ``dependency``
 ///
-/// - SeeAlso: ``Buildable``
-/// - SeeAlso: ``Component``
-/// - SeeAlso: ``Router``
 open class Builder<DependencyType>: Buildable, @unchecked Sendable {
 
     /// The dependency provided by the parent napkin.
@@ -92,7 +93,7 @@ open class Builder<DependencyType>: Buildable, @unchecked Sendable {
     /// Use this dependency to:
     /// - Pass services to the ``Component`` initializer
     /// - Access shared instances from the parent scope
-    /// - Provide required dependencies to the ``Interactor``
+    /// - Provide required dependencies to the ``Interactable``
     public let dependency: DependencyType
 
     /// Creates a new builder with the specified dependency.

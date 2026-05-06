@@ -131,6 +131,9 @@ public protocol Presentable: AnyObject {}
 /// }
 /// ```
 ///
+/// - SeeAlso: ``Presentable``
+/// - SeeAlso: ``ViewControllable``
+///
 /// ## Topics
 ///
 /// ### Creating a Presenter
@@ -141,8 +144,6 @@ public protocol Presentable: AnyObject {}
 ///
 /// - ``viewController``
 ///
-/// - SeeAlso: ``Presentable``
-/// - SeeAlso: ``ViewControllable``
 @MainActor
 @Observable
 open class Presenter<ViewControllerType: ViewControllable>: Presentable {
