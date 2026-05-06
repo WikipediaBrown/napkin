@@ -65,6 +65,9 @@ import Foundation
 /// }
 /// ```
 ///
+/// - SeeAlso: ``SimpleMultiStageComponentizedBuilder``
+/// - SeeAlso: ``ComponentizedBuilder``
+///
 /// ## Topics
 ///
 /// ### Accessing the Component
@@ -76,8 +79,6 @@ import Foundation
 /// - ``finalStageBuild(withDynamicDependency:)``
 /// - ``finalStageBuild(with:_:)``
 ///
-/// - SeeAlso: ``SimpleMultiStageComponentizedBuilder``
-/// - SeeAlso: ``ComponentizedBuilder``
 open class MultiStageComponentizedBuilder<Component, Router, DynamicBuildDependency>: Buildable, @unchecked Sendable {
 
     // Builder should not directly retain an instance of the component.

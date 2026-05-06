@@ -25,6 +25,10 @@ import Foundation
 /// child's interactor activation/deactivation in the right order. Routers
 /// should not append to ``children`` directly.
 ///
+/// - SeeAlso: ``Router``
+/// - SeeAlso: ``ViewableRouting``
+/// - SeeAlso: ``LaunchRouting``
+///
 /// ## Topics
 ///
 /// ### Accessing the Subtree
@@ -42,9 +46,6 @@ import Foundation
 /// - ``attachChild(_:)``
 /// - ``detachChild(_:)``
 ///
-/// - SeeAlso: ``Router``
-/// - SeeAlso: ``ViewableRouting``
-/// - SeeAlso: ``LaunchRouting``
 @MainActor
 public protocol Routing: AnyObject {
 
@@ -150,6 +151,9 @@ public protocol Routing: AnyObject {
 /// }
 /// ```
 ///
+/// - SeeAlso: ``Routing``
+/// - SeeAlso: ``ViewableRouter``
+///
 /// ## Topics
 ///
 /// ### Creating a Router
@@ -173,8 +177,6 @@ public protocol Routing: AnyObject {
 /// - ``attachChild(_:)``
 /// - ``detachChild(_:)``
 ///
-/// - SeeAlso: ``Routing``
-/// - SeeAlso: ``ViewableRouter``
 @MainActor
 open class Router<InteractorType>: Routing {
 

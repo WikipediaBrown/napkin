@@ -24,15 +24,16 @@ import AppKit
 /// to. After ``launch(from:)`` returns, the root interactor is active and
 /// the router is `loaded()`.
 ///
+/// - SeeAlso: ``ViewableRouting``
+/// - SeeAlso: ``Routing``
+/// - SeeAlso: ``LaunchRouter``
+///
 /// ## Topics
 ///
 /// ### Launching
 ///
 /// - ``launch(from:)``
 ///
-/// - SeeAlso: ``ViewableRouting``
-/// - SeeAlso: ``Routing``
-/// - SeeAlso: ``LaunchRouter``
 @MainActor
 public protocol LaunchRouting: ViewableRouting {
 #if canImport(UIKit)
@@ -124,6 +125,9 @@ public protocol LaunchRouting: ViewableRouting {
 /// }
 /// ```
 ///
+/// - SeeAlso: ``LaunchRouting``
+/// - SeeAlso: ``ViewableRouter``
+///
 /// ## Topics
 ///
 /// ### Creating a LaunchRouter
@@ -134,8 +138,6 @@ public protocol LaunchRouting: ViewableRouting {
 ///
 /// - ``launch(from:)``
 ///
-/// - SeeAlso: ``LaunchRouting``
-/// - SeeAlso: ``ViewableRouter``
 @MainActor
 open class LaunchRouter<InteractorType, ViewControllerType>:
     ViewableRouter<InteractorType, ViewControllerType>, LaunchRouting {

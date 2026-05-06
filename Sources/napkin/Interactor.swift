@@ -23,6 +23,9 @@ import Foundation
 /// Both members are safe to read from any actor or thread; ``isActiveStream``
 /// is `nonisolated`, and ``isActive`` reads under the lifecycle's lock.
 ///
+/// - SeeAlso: ``Interactable``
+/// - SeeAlso: ``InteractorLifecycle``
+///
 /// ## Topics
 ///
 /// ### Reading State
@@ -30,8 +33,6 @@ import Foundation
 /// - ``isActive``
 /// - ``isActiveStream``
 ///
-/// - SeeAlso: ``Interactable``
-/// - SeeAlso: ``InteractorLifecycle``
 public protocol InteractorScope: AnyObject, Sendable {
 
     /// Whether the interactor is currently active.
@@ -109,6 +110,10 @@ public protocol InteractorScope: AnyObject, Sendable {
 /// }
 /// ```
 ///
+/// - SeeAlso: ``InteractorLifecycle``
+/// - SeeAlso: ``InteractorScope``
+/// - SeeAlso: ``PresentableInteractable``
+///
 /// ## Topics
 ///
 /// ### Lifecycle
@@ -128,9 +133,6 @@ public protocol InteractorScope: AnyObject, Sendable {
 ///
 /// - ``task(priority:_:)``
 ///
-/// - SeeAlso: ``InteractorLifecycle``
-/// - SeeAlso: ``InteractorScope``
-/// - SeeAlso: ``PresentableInteractable``
 public protocol Interactable: Actor, InteractorScope {
 
     /// The lifecycle helper that this interactor delegates state and
@@ -295,14 +297,15 @@ extension Interactable {
 /// }
 /// ```
 ///
+/// - SeeAlso: ``Interactable``
+/// - SeeAlso: ``Presentable``
+///
 /// ## Topics
 ///
 /// ### Owning a Presenter
 ///
 /// - ``presenter``
 ///
-/// - SeeAlso: ``Interactable``
-/// - SeeAlso: ``Presentable``
 public protocol PresentableInteractable: Interactable {
 
     /// The associated presenter type, typically a feature-specific

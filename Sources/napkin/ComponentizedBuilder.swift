@@ -38,6 +38,10 @@ import Foundation
 ///
 /// For simpler cases, use ``SimpleComponentizedBuilder`` or the standard ``Builder``.
 ///
+/// - SeeAlso: ``SimpleComponentizedBuilder``
+/// - SeeAlso: ``Builder``
+/// - SeeAlso: ``MultiStageComponentizedBuilder``
+///
 /// ## Topics
 ///
 /// ### Creating a Builder
@@ -46,13 +50,10 @@ import Foundation
 ///
 /// ### Building
 ///
-/// - ``build(withDynamicBuildDependency:dynamicComponentDependency:)-4t8bp``
-/// - ``build(withDynamicBuildDependency:dynamicComponentDependency:)-3vxfl``
+/// - ``build(withDynamicBuildDependency:dynamicComponentDependency:)->_``
+/// - ``build(withDynamicBuildDependency:dynamicComponentDependency:)->(_,_)``
 /// - ``build(with:_:)``
 ///
-/// - SeeAlso: ``SimpleComponentizedBuilder``
-/// - SeeAlso: ``Builder``
-/// - SeeAlso: ``MultiStageComponentizedBuilder``
 open class ComponentizedBuilder<Component, Router, DynamicBuildDependency, DynamicComponentDependency>: Buildable, @unchecked Sendable {
 
     // Builder should not directly retain an instance of the component.
@@ -63,7 +64,7 @@ open class ComponentizedBuilder<Component, Router, DynamicBuildDependency, Dynam
     /// Creates a builder with the specified component factory.
     ///
     /// - Parameter componentBuilder: A closure that creates a new component instance.
-    ///   This closure is called each time ``build(withDynamicBuildDependency:dynamicComponentDependency:)-4t8bp``
+    ///   This closure is called each time ``build(withDynamicBuildDependency:dynamicComponentDependency:)->_``
     ///   is invoked.
     public init(componentBuilder: @escaping @Sendable (DynamicComponentDependency) -> Component) {
         self.componentBuilder = componentBuilder
@@ -107,7 +108,7 @@ open class ComponentizedBuilder<Component, Router, DynamicBuildDependency, Dynam
     /// Override this method to implement the napkin building logic.
     ///
     /// - Important: Do not call this method directly. Use
-    ///   ``build(withDynamicBuildDependency:dynamicComponentDependency:)-4t8bp`` instead.
+    ///   ``build(withDynamicBuildDependency:dynamicComponentDependency:)->_`` instead.
     ///
     /// - Parameters:
     ///   - component: The freshly created component to use for dependency injection.
@@ -148,6 +149,9 @@ open class ComponentizedBuilder<Component, Router, DynamicBuildDependency, Dynam
 /// }
 /// ```
 ///
+/// - SeeAlso: ``ComponentizedBuilder``
+/// - SeeAlso: ``Builder``
+///
 /// ## Topics
 ///
 /// ### Creating a Builder
@@ -159,8 +163,6 @@ open class ComponentizedBuilder<Component, Router, DynamicBuildDependency, Dynam
 /// - ``build()``
 /// - ``build(with:)``
 ///
-/// - SeeAlso: ``ComponentizedBuilder``
-/// - SeeAlso: ``Builder``
 open class SimpleComponentizedBuilder<Component, Router>: ComponentizedBuilder<Component, Router, (), ()>, @unchecked Sendable {
 
     /// Creates a builder with the specified component factory.
