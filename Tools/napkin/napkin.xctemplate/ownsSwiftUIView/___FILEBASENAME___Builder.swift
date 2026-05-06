@@ -7,7 +7,7 @@ protocol ___VARIABLE_productName___Dependency: Dependency {
     // created by this napkin.
 }
 
-final class ___VARIABLE_productName___Component: Component<___VARIABLE_productName___Dependency> {
+final class ___VARIABLE_productName___Component: Component<___VARIABLE_productName___Dependency>, @unchecked Sendable {
 
     // TODO: Declare 'fileprivate' dependencies that are only used by this napkin.
 }
@@ -15,20 +15,24 @@ final class ___VARIABLE_productName___Component: Component<___VARIABLE_productNa
 // MARK: - Builder
 
 protocol ___VARIABLE_productName___Buildable: Buildable {
-    @MainActor func build(withListener listener: ___VARIABLE_productName___Listener) -> ___VARIABLE_productName___Routing
+    @MainActor func build(withListener listener: ___VARIABLE_productName___Listener) async -> ___VARIABLE_productName___Routing
 }
 
-final class ___VARIABLE_productName___Builder: Builder<___VARIABLE_productName___Dependency>, ___VARIABLE_productName___Buildable {
+final class ___VARIABLE_productName___Builder: Builder<___VARIABLE_productName___Dependency>, ___VARIABLE_productName___Buildable, @unchecked Sendable {
 
-    init(dependency: ___VARIABLE_productName___Dependency) {
+    override init(dependency: ___VARIABLE_productName___Dependency) {
         super.init(dependency: dependency)
     }
 
-    @MainActor func build(withListener listener: ___VARIABLE_productName___Listener) -> ___VARIABLE_productName___Routing {
+    @MainActor
+    func build(withListener listener: ___VARIABLE_productName___Listener) async -> ___VARIABLE_productName___Routing {
         let component = ___VARIABLE_productName___Component(dependency: dependency)
+        _ = component
         let viewController = ___VARIABLE_productName___ViewController()
         let interactor = ___VARIABLE_productName___Interactor(presenter: viewController)
-        interactor.listener = listener
-        return ___VARIABLE_productName___Router(interactor: interactor, viewController: viewController)
+        await interactor.set(listener: listener)
+        let router = ___VARIABLE_productName___Router(interactor: interactor, viewController: viewController)
+        await interactor.set(router: router)
+        return router
     }
 }

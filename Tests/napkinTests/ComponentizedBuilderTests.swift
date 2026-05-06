@@ -1,122 +1,103 @@
-//
-//  Copyright (c) 2017. Uber Technologies
-//
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-//
-
-import XCTest
+import Testing
 @testable import napkin
 
-final class ComponentizedBuilderTests: XCTestCase {
+@Suite("ComponentizedBuilder")
+struct ComponentizedBuilderTests {
 
     // MARK: - ComponentizedBuilder Tests
 
-    func testComponentizedBuilder_build_returnsRouter() {
+    @Test func buildReturnsRouter() {
         let builder = TestComponentizedBuilder()
-
-        let router: TestRouter = builder.build(withDynamicBuildDependency: "buildDep", dynamicComponentDependency: "componentDep")
-
-        XCTAssertNotNil(router)
+        let router: TestRouter = builder.build(
+            withDynamicBuildDependency: "buildDep",
+            dynamicComponentDependency: "componentDep"
+        )
+        #expect(router.buildDependency == "buildDep")
     }
 
-    func testComponentizedBuilder_build_createsNewComponentEachTime() {
+    @Test func buildCreatesNewComponentEachTime() {
         let builder = TestComponentizedBuilder()
-
-        let (component1, _) = builder.build(withDynamicBuildDependency: "dep1", dynamicComponentDependency: "compDep1") as (TestComponent, TestRouter)
-        let (component2, _) = builder.build(withDynamicBuildDependency: "dep2", dynamicComponentDependency: "compDep2") as (TestComponent, TestRouter)
-
-        XCTAssertFalse(component1 === component2)
+        let (component1, _): (TestComponent, TestRouter) = builder.build(
+            withDynamicBuildDependency: "dep1",
+            dynamicComponentDependency: "compDep1"
+        )
+        let (component2, _): (TestComponent, TestRouter) = builder.build(
+            withDynamicBuildDependency: "dep2",
+            dynamicComponentDependency: "compDep2"
+        )
+        #expect(component1 !== component2)
     }
 
-    func testComponentizedBuilder_build_passesComponentDependencyToComponentBuilder() {
+    @Test func buildPassesComponentDependencyToComponentBuilder() {
         let builder = TestComponentizedBuilder()
-
-        let (component, _) = builder.build(withDynamicBuildDependency: "buildDep", dynamicComponentDependency: "myComponentDep") as (TestComponent, TestRouter)
-
-        XCTAssertEqual(component.componentDependency, "myComponentDep")
+        let (component, _): (TestComponent, TestRouter) = builder.build(
+            withDynamicBuildDependency: "buildDep",
+            dynamicComponentDependency: "myComponentDep"
+        )
+        #expect(component.componentDependency == "myComponentDep")
     }
 
-    func testComponentizedBuilder_build_passesDynamicBuildDependency() {
+    @Test func buildPassesDynamicBuildDependency() {
         let builder = TestComponentizedBuilder()
-
-        let router: TestRouter = builder.build(withDynamicBuildDependency: "myBuildDep", dynamicComponentDependency: "compDep")
-
-        XCTAssertEqual(router.buildDependency, "myBuildDep")
+        let router: TestRouter = builder.build(
+            withDynamicBuildDependency: "myBuildDep",
+            dynamicComponentDependency: "compDep"
+        )
+        #expect(router.buildDependency == "myBuildDep")
     }
 
-    func testComponentizedBuilder_buildWithTuple_returnsComponentAndRouter() {
+    @Test func buildWithTupleReturnsComponentAndRouter() {
         let builder = TestComponentizedBuilder()
-
-        let result: (TestComponent, TestRouter) = builder.build(withDynamicBuildDependency: "buildDep", dynamicComponentDependency: "compDep")
-
-        XCTAssertNotNil(result.0)
-        XCTAssertNotNil(result.1)
+        let result: (TestComponent, TestRouter) = builder.build(
+            withDynamicBuildDependency: "buildDep",
+            dynamicComponentDependency: "compDep"
+        )
+        _ = result.0
+        _ = result.1
     }
 
     // MARK: - SimpleComponentizedBuilder Tests
 
-    func testSimpleComponentizedBuilder_build_returnsRouter() {
+    @Test func simpleBuildReturnsRouter() {
         let builder = TestSimpleComponentizedBuilder()
-
         let router = builder.build()
-
-        XCTAssertNotNil(router)
+        _ = router
     }
 
-    func testSimpleComponentizedBuilder_build_createsNewComponentEachTime() {
+    @Test func simpleBuildCreatesNewRouterEachTime() {
         let builder = TestSimpleComponentizedBuilder()
-
         let router1 = builder.build()
         let router2 = builder.build()
-
-        // Each build creates a new component, so routers should be different instances
-        XCTAssertFalse(router1 === router2)
+        #expect(router1 !== router2)
     }
 
     // MARK: - Buildable Protocol Tests
 
-    func testComponentizedBuilder_conformsToBuildable() {
+    @Test func conformsToBuildable() {
         let builder = TestComponentizedBuilder()
-
-        XCTAssertTrue((builder as Any) is Buildable)
+        #expect((builder as Any) is Buildable)
     }
 
-    func testSimpleComponentizedBuilder_conformsToBuildable() {
+    @Test func simpleConformsToBuildable() {
         let builder = TestSimpleComponentizedBuilder()
-
-        XCTAssertTrue((builder as Any) is Buildable)
+        #expect((builder as Any) is Buildable)
     }
 }
 
 // MARK: - Test Doubles
 
-private class TestComponent {
+private final class TestComponent: @unchecked Sendable {
     let componentDependency: String
-
-    init(dependency: String) {
-        self.componentDependency = dependency
-    }
+    init(dependency: String) { self.componentDependency = dependency }
 }
 
-private class TestRouter {
+private final class TestRouter: @unchecked Sendable {
     let buildDependency: String
-
-    init(buildDependency: String) {
-        self.buildDependency = buildDependency
-    }
+    init(buildDependency: String) { self.buildDependency = buildDependency }
 }
 
-private class TestComponentizedBuilder: ComponentizedBuilder<TestComponent, TestRouter, String, String> {
+private final class TestComponentizedBuilder:
+    ComponentizedBuilder<TestComponent, TestRouter, String, String>, @unchecked Sendable {
 
     init() {
         super.init { dependency in
@@ -129,11 +110,12 @@ private class TestComponentizedBuilder: ComponentizedBuilder<TestComponent, Test
     }
 }
 
-private class SimpleTestComponent {}
+private final class SimpleTestComponent: @unchecked Sendable {}
 
-private class SimpleTestRouter {}
+private final class SimpleTestRouter: @unchecked Sendable {}
 
-private class TestSimpleComponentizedBuilder: SimpleComponentizedBuilder<SimpleTestComponent, SimpleTestRouter> {
+private final class TestSimpleComponentizedBuilder:
+    SimpleComponentizedBuilder<SimpleTestComponent, SimpleTestRouter>, @unchecked Sendable {
 
     init() {
         super.init {

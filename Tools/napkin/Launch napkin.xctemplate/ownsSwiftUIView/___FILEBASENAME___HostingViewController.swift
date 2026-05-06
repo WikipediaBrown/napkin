@@ -3,16 +3,18 @@
 import napkin
 import SwiftUI
 
-protocol ___VARIABLE_productName___PresentableListener: AnyObject {
+protocol ___VARIABLE_productName___PresentableListener: AnyObject, Sendable {
     // TODO: Declare properties and methods that the view controller can invoke to perform
     // business logic, such as signIn(). This protocol is implemented by the corresponding
-    // interactor class.
+    // interactor actor; methods are async.
 }
 
 #if canImport(UIKit)
 @MainActor final class ___VARIABLE_productName___ViewController: UIHostingController<___VARIABLE_productName___View>, ___VARIABLE_productName___Presentable {
 
-    weak var listener: ___VARIABLE_productName___PresentableListener?
+    weak var listener: ___VARIABLE_productName___PresentableListener? {
+        didSet { rootView.listener = listener }
+    }
 
     init() {
         super.init(rootView: ___VARIABLE_productName___View())
@@ -25,7 +27,9 @@ protocol ___VARIABLE_productName___PresentableListener: AnyObject {
 #elseif canImport(AppKit)
 @MainActor final class ___VARIABLE_productName___ViewController: NSHostingController<___VARIABLE_productName___View>, ___VARIABLE_productName___Presentable {
 
-    weak var listener: ___VARIABLE_productName___PresentableListener?
+    weak var listener: ___VARIABLE_productName___PresentableListener? {
+        didSet { rootView.listener = listener }
+    }
 
     init() {
         super.init(rootView: ___VARIABLE_productName___View())

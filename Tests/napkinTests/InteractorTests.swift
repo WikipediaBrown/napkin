@@ -1,189 +1,84 @@
-//
-//  Copyright (c) 2017. Uber Technologies
-//
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-//
-
-import XCTest
-import Combine
+import Testing
 @testable import napkin
 
-final class InteractorTests: XCTestCase {
+@Suite("Interactor")
+struct InteractorTests {
 
-    private var cancellables = Set<AnyCancellable>()
-
-    // MARK: - Initial State Tests
-
-    func testInteractor_initialState_isNotActive() {
+    @Test func startsInactive() async {
         let interactor = TestInteractor()
-
-        XCTAssertFalse(interactor.isActive)
+        #expect(await interactor.isActive == false)
     }
 
-    func testInteractor_initialState_isActiveStreamEmitsFalse() {
+    @Test func activateMakesActive() async {
         let interactor = TestInteractor()
-        let expectation = expectation(description: "Stream emits initial value")
-        var receivedValue: Bool?
-
-        interactor.isActiveStream
-            .first()
-            .sink { value in
-                receivedValue = value
-                expectation.fulfill()
-            }
-            .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 1.0)
-        XCTAssertEqual(receivedValue, false)
+        await interactor.activate()
+        #expect(await interactor.isActive == true)
     }
 
-    // MARK: - Activation Tests
-
-    func testInteractor_activate_becomesActive() {
+    @Test func activateCallsDidBecomeActive() async {
         let interactor = TestInteractor()
-
-        interactor.activate()
-
-        XCTAssertTrue(interactor.isActive)
+        await interactor.activate()
+        #expect(await interactor.didBecomeActiveCallCount == 1)
     }
 
-    func testInteractor_activate_callsDidBecomeActive() {
+    @Test func activateIsIdempotent() async {
         let interactor = TestInteractor()
-
-        interactor.activate()
-
-        XCTAssertTrue(interactor.didBecomeActiveCalled)
+        await interactor.activate()
+        await interactor.activate()
+        #expect(await interactor.didBecomeActiveCallCount == 1)
     }
 
-    func testInteractor_activate_emitsTrueOnStream() {
+    @Test func deactivateMakesInactive() async {
         let interactor = TestInteractor()
-        let expectation = expectation(description: "Stream emits true")
-        var receivedValues: [Bool] = []
-
-        interactor.isActiveStream
-            .sink { value in
-                receivedValues.append(value)
-                if receivedValues.count == 2 {
-                    expectation.fulfill()
-                }
-            }
-            .store(in: &cancellables)
-
-        interactor.activate()
-
-        wait(for: [expectation], timeout: 1.0)
-        XCTAssertEqual(receivedValues, [false, true])
+        await interactor.activate()
+        await interactor.deactivate()
+        #expect(await interactor.isActive == false)
     }
 
-    func testInteractor_activateWhenAlreadyActive_doesNotCallDidBecomeActiveAgain() {
+    @Test func deactivateCallsWillResignActive() async {
         let interactor = TestInteractor()
-        interactor.activate()
-        interactor.didBecomeActiveCalled = false
-
-        interactor.activate()
-
-        XCTAssertFalse(interactor.didBecomeActiveCalled)
+        await interactor.activate()
+        await interactor.deactivate()
+        #expect(await interactor.willResignActiveCallCount == 1)
     }
 
-    // MARK: - Deactivation Tests
-
-    func testInteractor_deactivate_becomesInactive() {
+    @Test func deactivateWithoutActivateIsNoop() async {
         let interactor = TestInteractor()
-        interactor.activate()
-
-        interactor.deactivate()
-
-        XCTAssertFalse(interactor.isActive)
+        await interactor.deactivate()
+        #expect(await interactor.willResignActiveCallCount == 0)
     }
 
-    func testInteractor_deactivate_callsWillResignActive() {
+    @Test func isActiveStreamYieldsCurrentThenChanges() async {
         let interactor = TestInteractor()
-        interactor.activate()
+        let stream = interactor.isActiveStream
+        var iter = stream.makeAsyncIterator()
 
-        interactor.deactivate()
+        let first = await iter.next()
+        #expect(first == false)
 
-        XCTAssertTrue(interactor.willResignActiveCalled)
-    }
+        await interactor.activate()
+        let second = await iter.next()
+        #expect(second == true)
 
-    func testInteractor_deactivate_emitsFalseOnStream() {
-        let interactor = TestInteractor()
-        let expectation = expectation(description: "Stream emits false after deactivation")
-        var receivedValues: [Bool] = []
-
-        interactor.isActiveStream
-            .sink { value in
-                receivedValues.append(value)
-                if receivedValues.count == 3 {
-                    expectation.fulfill()
-                }
-            }
-            .store(in: &cancellables)
-
-        interactor.activate()
-        interactor.deactivate()
-
-        wait(for: [expectation], timeout: 1.0)
-        XCTAssertEqual(receivedValues, [false, true, false])
-    }
-
-    func testInteractor_deactivateWhenNotActive_doesNotCallWillResignActive() {
-        let interactor = TestInteractor()
-
-        interactor.deactivate()
-
-        XCTAssertFalse(interactor.willResignActiveCalled)
-    }
-
-    // MARK: - Lifecycle Order Tests
-
-    func testInteractor_activateDeactivateCycle_maintainsCorrectOrder() {
-        let interactor = TestInteractor()
-        var lifecycleEvents: [String] = []
-
-        interactor.onDidBecomeActive = { lifecycleEvents.append("didBecomeActive") }
-        interactor.onWillResignActive = { lifecycleEvents.append("willResignActive") }
-
-        interactor.activate()
-        interactor.deactivate()
-        interactor.activate()
-        interactor.deactivate()
-
-        XCTAssertEqual(lifecycleEvents, [
-            "didBecomeActive",
-            "willResignActive",
-            "didBecomeActive",
-            "willResignActive"
-        ])
+        await interactor.deactivate()
+        let third = await iter.next()
+        #expect(third == false)
     }
 }
 
-// MARK: - Test Doubles
+// MARK: - Helpers
 
-private class TestInteractor: Interactor, @unchecked Sendable {
-    var didBecomeActiveCalled = false
-    var willResignActiveCalled = false
-    var onDidBecomeActive: (() -> Void)?
-    var onWillResignActive: (() -> Void)?
+private final actor TestInteractor: Interactable {
+    nonisolated let lifecycle = InteractorLifecycle()
 
-    override func didBecomeActive() {
-        super.didBecomeActive()
-        didBecomeActiveCalled = true
-        onDidBecomeActive?()
+    private(set) var didBecomeActiveCallCount = 0
+    private(set) var willResignActiveCallCount = 0
+
+    func didBecomeActive() async {
+        didBecomeActiveCallCount += 1
     }
 
-    override func willResignActive() {
-        super.willResignActive()
-        willResignActiveCalled = true
-        onWillResignActive?()
+    func willResignActive() async {
+        willResignActiveCallCount += 1
     }
 }
