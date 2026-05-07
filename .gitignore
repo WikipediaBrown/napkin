@@ -72,3 +72,13 @@ fastlane/screenshots
 
 # XcodeGen-generated project
 Examples/LaunchNapkinApp/*.xcodeproj
+
+# fastlane auto-generated docs
+fastlane/README.md
+
+# Coverage / xcresult artifacts
+docs/iOS-Coverage/
+docs/macOS-Coverage/
+
+# SwiftPM resolved manifest (library; consumers pin their own)
+Package.resolved
