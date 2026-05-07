@@ -15,9 +15,15 @@ struct LaunchNapkinView: View {
     var body: some View {
         VStack(spacing: 16) {
             Text("Hello, World!")
-            Button("Tap") {
-                dispatch { [listener] in await listener?.didTap() }
+                .font(.title2)
+            Button("Show Counter") {
+                dispatch { [listener] in await listener?.didTapShowCounter() }
             }
+            .buttonStyle(.borderedProminent)
+            Button("Show Quote") {
+                dispatch { [listener] in await listener?.didTapShowQuote() }
+            }
+            .buttonStyle(.borderedProminent)
         }
     }
 }

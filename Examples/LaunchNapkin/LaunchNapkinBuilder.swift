@@ -17,6 +17,10 @@ final class LaunchNapkinComponent: Component<LaunchNapkinDependency>, @unchecked
     // Declare 'fileprivate' dependencies that are only used by this napkin.
 }
 
+// The LaunchNapkin's component bridges its child napkins' (empty) dependency
+// requirements; both child Dependency protocols are empty so this is trivial.
+extension LaunchNapkinComponent: CounterNapkinDependency, QuoteNapkinDependency {}
+
 // MARK: - Builder
 
 protocol LaunchNapkinBuildable: Buildable {
@@ -32,11 +36,17 @@ final class LaunchNapkinBuilder: Builder<LaunchNapkinDependency>, LaunchNapkinBu
     @MainActor
     func build(withListener listener: LaunchNapkinListener) async -> LaunchNapkinRouting {
         let component = LaunchNapkinComponent(dependency: dependency)
-        _ = component
+        let counterBuilder = CounterNapkinBuilder(dependency: component)
+        let quoteBuilder = QuoteNapkinBuilder(dependency: component)
         let viewController = LaunchNapkinViewController()
         let interactor = LaunchNapkinInteractor(presenter: viewController)
         await interactor.set(listener: listener)
-        let router = LaunchNapkinRouter(interactor: interactor, viewController: viewController)
+        let router = LaunchNapkinRouter(
+            interactor: interactor,
+            viewController: viewController,
+            counterBuilder: counterBuilder,
+            quoteBuilder: quoteBuilder
+        )
         await interactor.set(router: router)
         return router
     }

@@ -8,10 +8,14 @@
 import napkin
 
 @MainActor
-protocol LaunchNapkinRouting: LaunchRouting {
+protocol LaunchNapkinRouting: LaunchRouting, Sendable {
     // Declare methods the interactor can invoke to manage sub-tree via the router.
     // Routing methods are async because the router is @MainActor and is called from
     // the interactor actor.
+    func routeToCounter() async
+    func routeBackFromCounter() async
+    func routeToQuote() async
+    func routeBackFromQuote() async
 }
 
 protocol LaunchNapkinPresentable: Presentable, Sendable {
@@ -25,7 +29,12 @@ protocol LaunchNapkinListener: AnyObject, Sendable {
     // Listener methods are async because the parent's interactor is an actor.
 }
 
-final actor LaunchNapkinInteractor: PresentableInteractable, LaunchNapkinPresentableListener {
+final actor LaunchNapkinInteractor:
+    PresentableInteractable,
+    LaunchNapkinPresentableListener,
+    CounterNapkinListener,
+    QuoteNapkinListener
+{
 
     nonisolated let lifecycle = InteractorLifecycle()
     nonisolated let presenter: LaunchNapkinPresentable
@@ -48,16 +57,38 @@ final actor LaunchNapkinInteractor: PresentableInteractable, LaunchNapkinPresent
     }
 
     func didBecomeActive() async {
-        // Implement business logic here.
+        let presenter = self.presenter
+        await MainActor.run {
+            presenter.listener = self
+        }
     }
 
     func willResignActive() async {
-        // Pause any business logic.
+        let presenter = self.presenter
+        await MainActor.run {
+            presenter.listener = nil
+        }
     }
 
     // MARK: - LaunchNapkinPresentableListener
 
-    func didTap() async {
-        // Handle the view's tap event.
+    func didTapShowCounter() async {
+        await router?.routeToCounter()
+    }
+
+    func didTapShowQuote() async {
+        await router?.routeToQuote()
+    }
+
+    // MARK: - CounterNapkinListener
+
+    func counterDidFinish() async {
+        await router?.routeBackFromCounter()
+    }
+
+    // MARK: - QuoteNapkinListener
+
+    func quoteDidFinish() async {
+        await router?.routeBackFromQuote()
     }
 }
