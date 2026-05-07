@@ -1,0 +1,21 @@
+{
+    "features": {
+        "docs": {
+            "quickNavigation": {
+                "enable": true
+            }
+        }
+    },
+    "theme": {
+        "color": {
+            "documentation-intro-accent": {
+                "light": "#0058a3",
+                "dark": "#5ea0ff"
+            },
+            "link": {
+                "light": "#0058a3",
+                "dark": "#5ea0ff"
+            }
+        }
+    }
+}

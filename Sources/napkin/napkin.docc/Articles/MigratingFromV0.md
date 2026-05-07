@@ -12,191 +12,203 @@ v2.0.0 is a Swift 6.2 / iOS 26 rearchitecture. The major moves are:
 - Lifecycle methods no longer call `super.didBecomeActive()`. The default protocol implementation is a no-op; you simply implement the method and your code is the body.
 - `attachChild` and `detachChild` are `async` and `@MainActor`-isolated. Wrapping them in `Task { @MainActor in ... }` from inside the interactor is replaced by `await router?.attachX()` — the router does the work.
 
-## Before: a v0.x feature
+## Side-by-side migration
 
-A typical v0.x file set might look like this. Treat each block as one file.
+A typical v0.x file set on the left, the v2.0.0 equivalent on the right. Treat each row as one file.
 
-### v0.x `HomeInteractor.swift`
+### `HomeInteractor.swift`
 
-```swift
-// v0.x — DO NOT WRITE NEW CODE THIS WAY
-import RIBs
-import Combine
+@Row {
+    @Column {
+        **Before (v0.x)**
 
-protocol HomeRouting: ViewableRouting {
-    func routeToProfile()
-}
+        ```swift
+        // v0.x — DO NOT WRITE NEW CODE THIS WAY
+        import RIBs
+        import Combine
 
-protocol HomePresentable: Presentable {
-    var listener: HomePresentableListener? { get set }
-    func update(user: User)
-}
+        protocol HomeRouting: ViewableRouting {
+            func routeToProfile()
+        }
 
-protocol HomeListener: AnyObject {
-    func homeDidLogout()
-}
+        protocol HomePresentable: Presentable {
+            var listener: HomePresentableListener? { get set }
+            func update(user: User)
+        }
 
-final class HomeInteractor: PresentableInteractor<HomePresentable>,
-                            HomeInteractable,
-                            HomePresentableListener {
+        protocol HomeListener: AnyObject {
+            func homeDidLogout()
+        }
 
-    weak var router: HomeRouting?
-    weak var listener: HomeListener?
+        final class HomeInteractor: PresentableInteractor<HomePresentable>,
+                                    HomeInteractable,
+                                    HomePresentableListener {
 
-    private let userService: UserService
-    private var cancellables = Set<AnyCancellable>()
+            weak var router: HomeRouting?
+            weak var listener: HomeListener?
 
-    init(presenter: HomePresentable, userService: UserService) {
-        self.userService = userService
-        super.init(presenter: presenter)
-        presenter.listener = self
-    }
+            private let userService: UserService
+            private var cancellables = Set<AnyCancellable>()
 
-    override func didBecomeActive() {
-        super.didBecomeActive()
-        userService.userPublisher
-            .sink { [weak self] user in
-                self?.presenter.update(user: user)
+            init(presenter: HomePresentable, userService: UserService) {
+                self.userService = userService
+                super.init(presenter: presenter)
+                presenter.listener = self
             }
-            .store(in: &cancellables)
-    }
 
-    override func willResignActive() {
-        super.willResignActive()
-        cancellables.removeAll()
-    }
+            override func didBecomeActive() {
+                super.didBecomeActive()
+                userService.userPublisher
+                    .sink { [weak self] user in
+                        self?.presenter.update(user: user)
+                    }
+                    .store(in: &cancellables)
+            }
 
-    func didTapProfile() {
-        router?.routeToProfile()
-    }
+            override func willResignActive() {
+                super.willResignActive()
+                cancellables.removeAll()
+            }
 
-    func didTapLogout() {
-        listener?.homeDidLogout()
-    }
-}
-```
+            func didTapProfile() {
+                router?.routeToProfile()
+            }
 
-### v0.x `HomeRouter.swift`
-
-```swift
-// v0.x
-final class HomeRouter: ViewableRouter<HomeInteractable, HomeViewControllable>, HomeRouting {
-
-    private let profileBuilder: ProfileBuildable
-    private var profileRouter: ViewableRouting?
-
-    init(interactor: HomeInteractable,
-         viewController: HomeViewControllable,
-         profileBuilder: ProfileBuildable) {
-        self.profileBuilder = profileBuilder
-        super.init(interactor: interactor, viewController: viewController)
-    }
-
-    func routeToProfile() {
-        let r = profileBuilder.build(withListener: interactor)
-        attachChild(r)
-        viewController.present(r.viewControllable.uiviewController, animated: true)
-        profileRouter = r
-    }
-}
-```
-
-## After: v2.0.0
-
-### v2.0.0 `HomeInteractor.swift`
-
-```swift
-import napkin
-
-@MainActor
-protocol HomeRouting: ViewableRouting, Sendable {
-    func routeToProfile() async
-}
-
-protocol HomePresentable: Presentable, Sendable {
-    @MainActor var listener: HomePresentableListener? { get set }
-    func update(user: User) async
-}
-
-protocol HomeListener: AnyObject, Sendable {
-    func homeDidLogout() async
-}
-
-final actor HomeInteractor: PresentableInteractable, HomePresentableListener {
-
-    nonisolated let lifecycle = InteractorLifecycle()
-    nonisolated let presenter: HomePresentable
-
-    weak var router: HomeRouting?
-    weak var listener: HomeListener?
-
-    private let userService: UserService
-
-    init(presenter: HomePresentable, userService: UserService) {
-        self.presenter = presenter
-        self.userService = userService
-    }
-
-    func set(router: HomeRouting?) { self.router = router }
-    func set(listener: HomeListener?) { self.listener = listener }
-
-    func didBecomeActive() async {
-        await MainActor.run { presenter.listener = self }
-
-        task {
-            for await user in self.userService.userStream {
-                await self.presenter.update(user: user)
+            func didTapLogout() {
+                listener?.homeDidLogout()
             }
         }
+        ```
     }
+    @Column {
+        **After (v2.0.0)**
 
-    func willResignActive() async {
-        await MainActor.run { presenter.listener = nil }
-        // No manual task cancellation — the lifecycle cancels bound tasks
-        // for us after this method returns.
-    }
+        ```swift
+        import napkin
 
-    func didTapProfile() async {
-        await router?.routeToProfile()
-    }
+        @MainActor
+        protocol HomeRouting: ViewableRouting, Sendable {
+            func routeToProfile() async
+        }
 
-    func didTapLogout() async {
-        await listener?.homeDidLogout()
+        protocol HomePresentable: Presentable, Sendable {
+            @MainActor var listener: HomePresentableListener? { get set }
+            func update(user: User) async
+        }
+
+        protocol HomeListener: AnyObject, Sendable {
+            func homeDidLogout() async
+        }
+
+        final actor HomeInteractor: PresentableInteractable, HomePresentableListener {
+
+            nonisolated let lifecycle = InteractorLifecycle()
+            nonisolated let presenter: HomePresentable
+
+            weak var router: HomeRouting?
+            weak var listener: HomeListener?
+
+            private let userService: UserService
+
+            init(presenter: HomePresentable, userService: UserService) {
+                self.presenter = presenter
+                self.userService = userService
+            }
+
+            func set(router: HomeRouting?) { self.router = router }
+            func set(listener: HomeListener?) { self.listener = listener }
+
+            func didBecomeActive() async {
+                await MainActor.run { presenter.listener = self }
+
+                task {
+                    for await user in self.userService.userStream {
+                        await self.presenter.update(user: user)
+                    }
+                }
+            }
+
+            func willResignActive() async {
+                await MainActor.run { presenter.listener = nil }
+                // No manual task cancellation — the lifecycle cancels bound
+                // tasks for us after this method returns.
+            }
+
+            func didTapProfile() async {
+                await router?.routeToProfile()
+            }
+
+            func didTapLogout() async {
+                await listener?.homeDidLogout()
+            }
+        }
+        ```
     }
 }
-```
 
-### v2.0.0 `HomeRouter.swift`
+### `HomeRouter.swift`
 
-```swift
-import napkin
+@Row {
+    @Column {
+        **Before (v0.x)**
 
-@MainActor
-final class HomeRouter: ViewableRouter<HomeInteractor, HomeViewControllable>, HomeRouting {
+        ```swift
+        // v0.x
+        final class HomeRouter: ViewableRouter<HomeInteractable, HomeViewControllable>, HomeRouting {
 
-    private let profileBuilder: ProfileBuildable
-    private var profileRouter: ProfileRouting?
+            private let profileBuilder: ProfileBuildable
+            private var profileRouter: ViewableRouting?
 
-    init(
-        interactor: HomeInteractor,
-        viewController: HomeViewControllable,
-        profileBuilder: ProfileBuildable
-    ) {
-        self.profileBuilder = profileBuilder
-        super.init(interactor: interactor, viewController: viewController)
+            init(interactor: HomeInteractable,
+                 viewController: HomeViewControllable,
+                 profileBuilder: ProfileBuildable) {
+                self.profileBuilder = profileBuilder
+                super.init(interactor: interactor, viewController: viewController)
+            }
+
+            func routeToProfile() {
+                let r = profileBuilder.build(withListener: interactor)
+                attachChild(r)
+                viewController.present(r.viewControllable.uiviewController, animated: true)
+                profileRouter = r
+            }
+        }
+        ```
     }
+    @Column {
+        **After (v2.0.0)**
 
-    func routeToProfile() async {
-        let r = await profileBuilder.build(withListener: interactor)
-        await attachChild(r)
-        viewController.uiviewController.present(
-            r.viewControllable.uiviewController,
-            animated: true
-        )
-        profileRouter = r
+        ```swift
+        import napkin
+
+        @MainActor
+        final class HomeRouter: ViewableRouter<HomeInteractor, HomeViewControllable>, HomeRouting {
+
+            private let profileBuilder: ProfileBuildable
+            private var profileRouter: ProfileRouting?
+
+            init(
+                interactor: HomeInteractor,
+                viewController: HomeViewControllable,
+                profileBuilder: ProfileBuildable
+            ) {
+                self.profileBuilder = profileBuilder
+                super.init(interactor: interactor, viewController: viewController)
+            }
+
+            func routeToProfile() async {
+                let r = await profileBuilder.build(withListener: interactor)
+                await attachChild(r)
+                viewController.uiviewController.present(
+                    r.viewControllable.uiviewController,
+                    animated: true
+                )
+                profileRouter = r
+            }
+        }
+        ```
     }
 }
-```
 
 ## Diff, line by line
 
