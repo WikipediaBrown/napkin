@@ -42,3 +42,20 @@ targets:
         ENABLE_PREVIEWS: "YES"
         GENERATE_INFOPLIST_FILE: "NO"
         PRODUCT_BUNDLE_IDENTIFIER: com.napkin.example.LaunchNapkinApp
+
+  LaunchNapkinAppUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: UITests
+      - path: ../LaunchNapkin/AccessibilityIdentifiers.swift
+    dependencies:
+      - target: LaunchNapkinApp
+    settings:
+      base:
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+        SWIFT_VERSION: "6.2"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: "YES"
+        PRODUCT_BUNDLE_IDENTIFIER: com.napkin.example.LaunchNapkinAppUITests
+        TEST_TARGET_NAME: LaunchNapkinApp

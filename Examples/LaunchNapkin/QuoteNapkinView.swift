@@ -20,10 +20,12 @@ struct QuoteNapkinView: View {
                     .font(.title3)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
+                    .accessibilityIdentifier(NapkinAccessibility.Quote.quoteLabel)
                 Button("New Quote") {
                     dispatch { [listener] in await listener?.didTapNewQuote() }
                 }
                 .buttonStyle(.borderedProminent)
+                .accessibilityIdentifier(NapkinAccessibility.Quote.newQuoteButton)
                 Spacer()
             }
             .navigationTitle("Quote")
@@ -32,6 +34,7 @@ struct QuoteNapkinView: View {
                     Button("Done") {
                         dispatch { [listener] in await listener?.didTapDone() }
                     }
+                    .accessibilityIdentifier(NapkinAccessibility.Quote.doneButton)
                 }
             }
         }

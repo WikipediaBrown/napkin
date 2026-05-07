@@ -19,6 +19,7 @@ struct CounterNapkinView: View {
                     .font(.system(size: 80, weight: .semibold, design: .rounded))
                     .monospacedDigit()
                     .padding(.top, 60)
+                    .accessibilityIdentifier(NapkinAccessibility.Counter.countLabel)
 
                 HStack(spacing: 16) {
                     Button("-") {
@@ -26,12 +27,14 @@ struct CounterNapkinView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
+                    .accessibilityIdentifier(NapkinAccessibility.Counter.decrementButton)
 
                     Button("+") {
                         dispatch { [listener] in await listener?.didTapIncrement() }
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
+                    .accessibilityIdentifier(NapkinAccessibility.Counter.incrementButton)
                 }
                 Spacer()
             }
@@ -41,6 +44,7 @@ struct CounterNapkinView: View {
                     Button("Done") {
                         dispatch { [listener] in await listener?.didTapDone() }
                     }
+                    .accessibilityIdentifier(NapkinAccessibility.Counter.doneButton)
                 }
             }
         }
