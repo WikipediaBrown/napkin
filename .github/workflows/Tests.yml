@@ -5,15 +5,11 @@ on:
     branches:
     - develop
 jobs:
-  tests:
+  unit-tests:
     name: Unit Tests
     # macos-26 image ships Xcode 26 (Swift 6.2 / iOS 26 / macOS 26 SDKs).
     # Falls back to macos-latest if the labelled image is unavailable.
     runs-on: macos-26
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      REPOSITORY_NAME: ${{ github.event.repository.name }}
-      DANGER_GITHUB_API_TOKEN: ${{secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,10 +17,36 @@ jobs:
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: '26'
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.2'
-          bundler-cache: true
+      # `swift test` runs the swift-testing suite on macOS host, no simulator
+      # required. UIKit-gated tests skip on macOS (canImport(UIKit) is false);
+      # they are exercised end-to-end by the ui-tests job below on iPhone 17
+      # simulator. Bypassing fastlane here avoids a known fastlane 2.232.1
+      # parsing bug against Xcode 26's `xcrun simctl runtime` output.
       - name: Unit Tests
-        run: bundle exec fastlane unit_test
+        run: swift test
+
+  ui-tests:
+    name: Example App UI Tests
+    # Same runner image / Xcode toolchain as unit-tests; exercises the
+    # LaunchNapkinApp end-to-end (3 napkins) via XCUITest on iPhone 17 sim.
+    runs-on: macos-26
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26'
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate example app Xcode project
+        working-directory: Examples/LaunchNapkinApp
+        run: xcodegen
+      - name: Example app UI tests
+        working-directory: Examples/LaunchNapkinApp
+        run: |
+          xcodebuild \
+            -project LaunchNapkinApp.xcodeproj \
+            -scheme LaunchNapkinApp \
+            -destination "platform=iOS Simulator,name=iPhone 17,OS=latest" \
+            test
