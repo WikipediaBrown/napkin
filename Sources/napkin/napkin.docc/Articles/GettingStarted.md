@@ -1,0 +1,55 @@
+# Getting Started
+
+A 30,000ft tour of napkin: what a napkin is, the rings each one is built from, and the direction data and events flow through the tree.
+
+## Overview
+
+napkin is an architecture framework for Apple-platform apps written in Swift 6.2. An app built with napkin is a **tree of napkins**, rooted at a single ``LaunchRouter`` and grown one feature at a time as the user navigates deeper. Each napkin is a self-contained slice of the application — login, home, profile, settings, an analytics worker, a deep-link handler — built from the same five (or six) rings.
+
+A napkin is the smallest unit of feature in the app. If a piece of the UI has its own state, its own routing decisions, or its own listener contract with its parent, it is a napkin.
+
+## The Five Rings
+
+Every viewable napkin is composed of these files:
+
+- **Builder.** A ``Builder`` (or ``ComponentizedBuilder``) subclass. The builder is the only thing the parent knows about. Its job is to take a parent's ``Dependency`` and produce a fully wired ``Routing``.
+- **Component.** A ``Component`` subclass. Pure dependency injection. Knows how to produce every service this napkin and its children need.
+- **Interactor.** A `final actor` conforming to ``Interactable`` or ``PresentableInteractable``. The brain. Owns business state. Talks to the presenter, talks to the router, listens to its parent through a `listener: ParentListener?` weak reference, and exposes its own listener protocol that its children call into.
+- **Router.** A ``ViewableRouter`` (for napkins with a view) or ``Router`` (for headless ones). `@MainActor`. Holds the view controller, attaches and detaches child napkins.
+- **Presenter** *(optional)*. A ``Presenter`` subclass conforming to a feature-specific `Presentable` protocol. `@Observable`-friendly view state. When there's no view-state worth holding, the view controller conforms to the presentable protocol directly and you skip the presenter object.
+- **View.** A `UIViewController`, `NSViewController`, or — most commonly — a `UIHostingController` / `NSHostingController` wrapping a SwiftUI `View`. Conforms to ``ViewControllable``.
+
+A *headless napkin* (analytics, deep-link routing, auth gate) skips the presenter and view rings entirely and uses ``Router`` directly. See <doc:HeadlessNapkins>.
+
+## The Dependency Direction
+
+> **Data flows down. Events flow up.**
+
+- A parent napkin's ``Component`` provides the services its children need. Children declare what they need via a ``Dependency`` protocol; the parent's component conforms to that protocol. This is the only way data is shared between napkins.
+- A child napkin's ``Interactable`` exposes a `Listener` protocol. The parent's interactor conforms to that protocol. When the child needs to tell its parent something happened ("user dismissed this screen", "this flow is done"), it calls `await listener?.someEventOccurred()`.
+- Children never reach into siblings. Children never reach into ancestors except through the listener. This keeps each napkin testable in isolation and replaceable without touching its neighbors.
+
+## The Lifecycle
+
+The napkin lifecycle is asynchronous from end to end:
+
+1. The parent's router calls `await childBuilder.build(withListener: interactor)` inside `routeToChild()`.
+2. The parent calls `await attachChild(childRouter)`. This:
+   - Activates the child's ``Interactable`` (calls ``Interactable/activate()``, which fires ``Interactable/didBecomeActive()``).
+   - Calls `await childRouter.load()`, which fires ``Router/didLoad()``.
+3. The child runs. Tasks spawned via ``Interactable/task(priority:_:)`` are bound to the active scope and cancelled automatically on detach.
+4. To unwind, the parent calls `await detachChild(childRouter)`, which deactivates the interactor (firing ``Interactable/willResignActive()``), cancels every bound task, and detaches the subtree.
+
+## What "a napkin" is
+
+The name comes from the idea that you should be able to sketch one on the back of a napkin — a single feature, fully described by its builder, interactor, router, and (sometimes) presenter and view. A napkin tree is just napkins all the way down.
+
+## A runnable example
+
+The repository ships a working example app at `Examples/LaunchNapkinApp/`. It demonstrates a root napkin (`LaunchNapkin`) that hosts a child counter napkin (`CounterNapkin`) and a child quote napkin (`QuoteNapkin`), each with its own builder, interactor, router, presenter, and SwiftUI view. Read the example top-down starting from `LaunchNapkinBuilder.swift` to see how a real tree fits together.
+
+## Next
+
+- <doc:DefiningAFeature> walks through building a feature file by file.
+- <doc:CrossIsolationPatterns> covers the four cross-isolation flows you'll write daily.
+- <doc:ProtocolCompositionOverInheritance> explains why the framework is shaped the way it is.
