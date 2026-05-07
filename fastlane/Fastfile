@@ -34,7 +34,7 @@ platform :ios do
     run_tests(
       package_path: ".",
       scheme: "#{project_name}",
-      destination: 'platform=iOS Simulator,name=iPhone 17,OS=latest',
+      device: 'iPhone 17',
       code_coverage: true,
       output_directory: COVERAGE_OUTPUT_PATH,
       output_types: 'html',
