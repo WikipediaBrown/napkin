@@ -1,0 +1,59 @@
+name: Documentation
+on:
+  push:
+    branches:
+    - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deploy at a time. New deploys cancel in-flight ones.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: macos-26
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26'
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Build DocC
+        # --hosting-base-path is just the repo name; the resulting URL is
+        # https://wikipediabrown.github.io/napkin/documentation/napkin/
+        # The index.html redirect lets the bare /napkin/ URL land on the
+        # module page (DocC's static-hosting transform doesn't generate one).
+        run: |
+          swift package --allow-writing-to-directory ./docs \
+            generate-documentation \
+            --target napkin \
+            --disable-indexing \
+            --transform-for-static-hosting \
+            --hosting-base-path napkin \
+            --output-path ./docs
+          echo '<script>window.location.href += "/documentation/napkin"</script>' > docs/index.html
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
