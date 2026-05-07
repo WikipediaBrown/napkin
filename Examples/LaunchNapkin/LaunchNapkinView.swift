@@ -16,14 +16,17 @@ struct LaunchNapkinView: View {
         VStack(spacing: 16) {
             Text("Hello, World!")
                 .font(.title2)
+                .accessibilityIdentifier(NapkinAccessibility.Launch.greeting)
             Button("Show Counter") {
                 dispatch { [listener] in await listener?.didTapShowCounter() }
             }
             .buttonStyle(.borderedProminent)
+            .accessibilityIdentifier(NapkinAccessibility.Launch.showCounterButton)
             Button("Show Quote") {
                 dispatch { [listener] in await listener?.didTapShowQuote() }
             }
             .buttonStyle(.borderedProminent)
+            .accessibilityIdentifier(NapkinAccessibility.Launch.showQuoteButton)
         }
     }
 }
