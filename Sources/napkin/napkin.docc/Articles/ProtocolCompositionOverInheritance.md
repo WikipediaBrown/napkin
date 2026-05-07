@@ -62,26 +62,62 @@ A protocol that refines `Actor`, plus a default-implementation extension, plus a
 
 ### What that gives you
 
-```swift
-final actor ProfileInteractor: PresentableInteractable {
+@Row {
+    @Column {
+        **Rejected: `@MainActor open class` base**
 
-    nonisolated let lifecycle = InteractorLifecycle()
-    nonisolated let presenter: ProfilePresentable
+        ```swift
+        // Compiles, but business logic is now bound
+        // to UIKit's executor — the dependency rule
+        // inversion this architecture exists to prevent.
+        @MainActor
+        open class PresentableInteractor<P> {
 
-    init(presenter: ProfilePresentable) {
-        self.presenter = presenter
-    }
+            public let presenter: P
+            public init(presenter: P) {
+                self.presenter = presenter
+            }
 
-    func didBecomeActive() async {
-        // No `super.didBecomeActive()` — it's a default protocol impl, not inherited code.
-        task {
-            for await event in someStream {
-                await self.handle(event)
+            open func didBecomeActive() {}
+            open func willResignActive() {}
+        }
+
+        final class ProfileInteractor:
+            PresentableInteractor<ProfilePresentable>
+        {
+            override func didBecomeActive() {
+                super.didBecomeActive()
+                // ...all of this on the main actor
             }
         }
+        ```
+    }
+    @Column {
+        **Chosen: `final actor` + protocol composition**
+
+        ```swift
+        final actor ProfileInteractor: PresentableInteractable {
+
+            nonisolated let lifecycle = InteractorLifecycle()
+            nonisolated let presenter: ProfilePresentable
+
+            init(presenter: ProfilePresentable) {
+                self.presenter = presenter
+            }
+
+            func didBecomeActive() async {
+                // No `super.didBecomeActive()` — it's a
+                // default protocol impl, not inherited code.
+                task {
+                    for await event in someStream {
+                        await self.handle(event)
+                    }
+                }
+            }
+        }
+        ```
     }
 }
-```
 
 The shape *behaves* like inheritance: ``Interactable/didBecomeActive()`` has a default no-op implementation; you "override" by simply implementing it; ``Interactable/activate()`` and ``Interactable/deactivate()`` are provided for free; ``Interactable/task(priority:_:)`` registers a task for automatic cancellation on deactivation; and ``InteractorScope/isActiveStream`` gives you an `AsyncStream` of transitions.
 

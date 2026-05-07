@@ -1,5 +1,14 @@
 # ``napkin``
 
+@Metadata {
+    @PageImage(purpose: icon, source: "napkin-icon", alt: "napkin logo")
+    @PageColor(blue)
+    @CallToAction(
+        url: "https://github.com/WikipediaBrown/napkin",
+        purpose: link,
+        label: "View on GitHub")
+}
+
 A Swift 6.2 framework for building app architecture as a tree of small, isolated, composable units — *napkins* — modeled on Uber's RIBs but rebuilt from the ground up around Swift Concurrency.
 
 ## Overview
