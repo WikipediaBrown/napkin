@@ -36,24 +36,7 @@ See <doc:ProtocolCompositionOverInheritance> for the full reasoning, including t
 
 Each ring lives in a specific isolation domain, and crossings are explicit:
 
-```
-                 ┌─────────────────────────────────────────────┐
-                 │  Builder           Sendable class            │
-                 │     │ creates                                │
-                 │     ▼                                        │
-   @MainActor    │  Component         Sendable class            │
-                 │     │ injects                                │
-                 ▼     ▼                                        │
-              Router  ◀───── owns ─────▶  Interactor (final actor)
-            (@MainActor)                       │
-                 │ owns                        │ awaits
-                 ▼                             ▼
-            ViewController            Presenter (@MainActor)
-            (@MainActor)                       ▲
-                 │ dispatch { … }              │ await
-                 │                             │
-                 └────── View → Interactor ────┘
-```
+![The napkin actor-isolation map: Sendable Builder/Component, @MainActor Router/Presenter/ViewController, and final actor Interactor with arrows showing creates/injects/owns/await/dispatch crossings.](isolation-map)
 
 - **Interactor → Presenter** crosses `actor → @MainActor`: `await presenter.update(...)`.
 - **Interactor → Router** crosses `actor → @MainActor`: `await router?.routeToProfile()`.
