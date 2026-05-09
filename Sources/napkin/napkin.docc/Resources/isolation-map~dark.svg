@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 540" role="img" aria-label="napkin actor-isolation map">
+  <title>napkin actor-isolation map</title>
+  <desc>Three isolation regions — Sendable, @MainActor, and final actor — connected by labeled arrows showing creates, injects, owns, await, and dispatch crossings.</desc>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerUnits="strokeWidth" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#e6e6e6"/>
+    </marker>
+  </defs>
+
+  <style>
+    .region-fill   { fill: #1c1c1e; }
+    .region-stroke { stroke: #999; stroke-width: 1; stroke-dasharray: 5 4; fill: none; }
+    .region-label  { fill: #aaa; font-size: 13px; font-weight: 600; letter-spacing: 0.5px; }
+    .box-fill      { fill: #2c2c2e; }
+    .box-stroke    { stroke: #e6e6e6; stroke-width: 1.25; fill: none; }
+    .box-name      { fill: #e6e6e6; font-size: 15px; font-weight: 600; }
+    .box-kind      { fill: #aaa; font-size: 11px; }
+    .arrow         { stroke: #e6e6e6; stroke-width: 1.25; fill: none; }
+    .arrow-label-bg { fill: #1c1c1e; }
+    .arrow-label    { fill: #e6e6e6; font-size: 11px; font-style: italic; }
+    text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  </style>
+
+  <!-- ===================== Regions ===================== -->
+
+  <!-- Sendable region: top -->
+  <rect class="region-fill"   x="40"  y="30"  width="380" height="170" rx="12" ry="12"/>
+  <rect class="region-stroke" x="40"  y="30"  width="380" height="170" rx="12" ry="12"/>
+  <text class="region-label"  x="60"  y="52">SENDABLE</text>
+
+  <!-- @MainActor region: lower-left -->
+  <rect class="region-fill"   x="40"  y="240" width="380" height="280" rx="12" ry="12"/>
+  <rect class="region-stroke" x="40"  y="240" width="380" height="280" rx="12" ry="12"/>
+  <text class="region-label"  x="60"  y="262">@MAINACTOR</text>
+
+  <!-- actor region: right column -->
+  <rect class="region-fill"   x="470" y="30"  width="210" height="490" rx="12" ry="12"/>
+  <rect class="region-stroke" x="470" y="30"  width="210" height="490" rx="12" ry="12"/>
+  <text class="region-label"  x="490" y="52">FINAL ACTOR</text>
+
+  <!-- ===================== Boxes ===================== -->
+
+  <!-- Builder -->
+  <rect class="box-fill"   x="120" y="70" width="220" height="48" rx="4" ry="4"/>
+  <rect class="box-stroke" x="120" y="70" width="220" height="48" rx="4" ry="4"/>
+  <text class="box-name"   x="230" y="90"  text-anchor="middle">Builder</text>
+  <text class="box-kind"   x="230" y="106" text-anchor="middle">Sendable class</text>
+
+  <!-- Component -->
+  <rect class="box-fill"   x="120" y="148" width="220" height="48" rx="4" ry="4"/>
+  <rect class="box-stroke" x="120" y="148" width="220" height="48" rx="4" ry="4"/>
+  <text class="box-name"   x="230" y="168" text-anchor="middle">Component</text>
+  <text class="box-kind"   x="230" y="184" text-anchor="middle">Sendable class · DI container</text>
+
+  <!-- Router -->
+  <rect class="box-fill"   x="80"  y="280" width="200" height="48" rx="4" ry="4"/>
+  <rect class="box-stroke" x="80"  y="280" width="200" height="48" rx="4" ry="4"/>
+  <text class="box-name"   x="180" y="300" text-anchor="middle">Router</text>
+  <text class="box-kind"   x="180" y="316" text-anchor="middle">@MainActor class</text>
+
+  <!-- ViewController -->
+  <rect class="box-fill"   x="80"  y="380" width="200" height="48" rx="4" ry="4"/>
+  <rect class="box-stroke" x="80"  y="380" width="200" height="48" rx="4" ry="4"/>
+  <text class="box-name"   x="180" y="400" text-anchor="middle">ViewController</text>
+  <text class="box-kind"   x="180" y="416" text-anchor="middle">@MainActor class · hosts View</text>
+
+  <!-- Presenter -->
+  <rect class="box-fill"   x="80"  y="455" width="200" height="48" rx="4" ry="4"/>
+  <rect class="box-stroke" x="80"  y="455" width="200" height="48" rx="4" ry="4"/>
+  <text class="box-name"   x="180" y="475" text-anchor="middle">Presenter</text>
+  <text class="box-kind"   x="180" y="491" text-anchor="middle">@MainActor class</text>
+
+  <!-- Interactor -->
+  <rect class="box-fill"   x="495" y="270" width="160" height="60" rx="4" ry="4"/>
+  <rect class="box-stroke" x="495" y="270" width="160" height="60" rx="4" ry="4"/>
+  <text class="box-name"   x="575" y="294" text-anchor="middle">Interactor</text>
+  <text class="box-kind"   x="575" y="312" text-anchor="middle">final actor</text>
+
+  <!-- ===================== Arrows ===================== -->
+
+  <!-- Builder -> Component (creates) -->
+  <line class="arrow" x1="230" y1="118" x2="230" y2="146" marker-end="url(#arrow)"/>
+  <rect class="arrow-label-bg" x="240" y="123" width="48" height="14"/>
+  <text class="arrow-label" x="264" y="134" text-anchor="middle">creates</text>
+
+  <!-- Component -> Router (injects) -->
+  <line class="arrow" x1="200" y1="196" x2="180" y2="278" marker-end="url(#arrow)"/>
+  <rect class="arrow-label-bg" x="105" y="225" width="50" height="14"/>
+  <text class="arrow-label" x="130" y="236" text-anchor="middle">injects</text>
+
+  <!-- Component -> Interactor (injects), goes around top-right corner -->
+  <path class="arrow" d="M 300 196 C 360 196, 460 260, 510 268" marker-end="url(#arrow)"/>
+  <rect class="arrow-label-bg" x="395" y="215" width="50" height="14"/>
+  <text class="arrow-label" x="420" y="226" text-anchor="middle">injects</text>
+
+  <!-- Router -> Interactor (owns) -->
+  <line class="arrow" x1="280" y1="298" x2="493" y2="296" marker-end="url(#arrow)"/>
+  <rect class="arrow-label-bg" x="365" y="282" width="40" height="14"/>
+  <text class="arrow-label" x="385" y="293" text-anchor="middle">owns</text>
+
+  <!-- Router -> ViewController (owns) -->
+  <line class="arrow" x1="180" y1="328" x2="180" y2="378" marker-end="url(#arrow)"/>
+  <rect class="arrow-label-bg" x="190" y="346" width="40" height="14"/>
+  <text class="arrow-label" x="210" y="357" text-anchor="middle">owns</text>
+
+  <!-- Interactor -> Presenter (await update) -->
+  <path class="arrow" d="M 575 330 L 575 478 L 282 478" marker-end="url(#arrow)"/>
+  <rect class="arrow-label-bg" x="540" y="395" width="80" height="14"/>
+  <text class="arrow-label" x="580" y="406" text-anchor="middle">await update</text>
+
+  <!-- ViewController -> Interactor (dispatch { ... }) -->
+  <path class="arrow" d="M 280 404 C 360 404, 430 350, 495 320" marker-end="url(#arrow)"/>
+  <rect class="arrow-label-bg" x="350" y="368" width="80" height="14"/>
+  <text class="arrow-label" x="390" y="379" text-anchor="middle">dispatch { ... }</text>
+</svg>
