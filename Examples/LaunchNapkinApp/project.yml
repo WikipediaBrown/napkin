@@ -13,7 +13,6 @@ targets:
     platform: iOS
     sources:
       - path: Sources
-      - path: ../LaunchNapkin
     dependencies:
       - package: napkin
     info:
@@ -48,7 +47,7 @@ targets:
     platform: iOS
     sources:
       - path: UITests
-      - path: ../LaunchNapkin/AccessibilityIdentifiers.swift
+      - path: Sources/AccessibilityIdentifiers.swift
     dependencies:
       - target: LaunchNapkinApp
     settings:

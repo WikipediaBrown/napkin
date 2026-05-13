@@ -691,4 +691,4 @@ Wikipedia Brown
 
 napkin is available under the Apache 2.0 license. See the LICENSE file for more info.
 
-<p align="center">Made with cascadian love</p>
+<p align="center">Made with 🌲🌲🌲 in Cascadia</p>
