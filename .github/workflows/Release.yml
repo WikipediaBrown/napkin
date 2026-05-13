@@ -34,7 +34,7 @@ jobs:
         # Xcode 26.x.y installed on the runner so a runner-image refresh
         # bumping the patch version doesn't break the workflow.
         run: |
-          sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
+          sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app 2>/dev/null | grep -v -i beta | sort -V | tail -1)"
           xcodebuild -version
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
