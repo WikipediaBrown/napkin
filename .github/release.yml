@@ -1,0 +1,33 @@
+changelog:
+  exclude:
+    labels:
+      - "skip-changelog"
+      - "dependencies"
+    authors:
+      - dependabot
+  categories:
+    - title: "💥 Breaking changes"
+      labels:
+        - "kind: breaking"
+    - title: "🚀 Enhancements"
+      labels:
+        - "kind: enhancement"
+        - "kind: feature"
+    - title: "🐛 Bug fixes"
+      labels:
+        - "kind: bug"
+    - title: "📚 Documentation"
+      labels:
+        - "area: docs"
+        - "kind: docs"
+    - title: "🔧 Internal"
+      labels:
+        - "kind: chore"
+        - "kind: refactor"
+        - "area: ci"
+    - title: "📦 Dependencies"
+      labels:
+        - "dependencies"
+    - title: "✨ Other"
+      labels:
+        - "*"

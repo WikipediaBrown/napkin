@@ -1,0 +1,45 @@
+name: Feature request
+description: Suggest a new feature or enhancement for napkin.
+title: "[feature] "
+labels:
+  - "kind: enhancement"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing an idea! For larger or open-ended changes, please
+        consider starting a [Discussion](https://github.com/WikipediaBrown/napkin/discussions)
+        first so the design can be hashed out before code is written.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A short, clear description of the feature.
+      placeholder: "Add a built-in helper for..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem being solved
+      description: What problem does this feature solve? What workflow is currently painful or impossible?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How would you like it to work? API sketches, code snippets, and screenshots are welcome.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches did you consider, and why did you reject them?
+    validations:
+      required: false
