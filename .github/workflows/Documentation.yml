@@ -46,6 +46,10 @@ jobs:
         # https://wikipediabrown.github.io/napkin/documentation/napkin/
         # --experimental-enable-custom-templates picks up header.html from
         # the napkin.docc catalog so every docs page gets the same top nav.
+        # --source-service / --source-service-base-url / --checkout-path wire
+        # up "View source on GitHub" buttons on each symbol page. (Note:
+        # source-link buttons render on symbol pages only, not on articles —
+        # that's a DocC limitation.)
         run: |
           swift package --allow-writing-to-directory ./docs \
             generate-documentation \
@@ -54,7 +58,10 @@ jobs:
             --transform-for-static-hosting \
             --hosting-base-path napkin \
             --output-path ./docs \
-            --experimental-enable-custom-templates
+            --experimental-enable-custom-templates \
+            --source-service github \
+            --source-service-base-url https://github.com/WikipediaBrown/napkin/blob/main \
+            --checkout-path ${{ github.workspace }}
 
       - name: Copy homepage
         # Hand-crafted homepage replaces DocC's missing root index.html with
