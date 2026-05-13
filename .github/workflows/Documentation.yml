@@ -25,6 +25,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Need tags so we can stamp the homepage footer with the latest release.
+          fetch-depth: 0
 
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
@@ -53,11 +56,16 @@ jobs:
         # Hand-crafted homepage replaces DocC's missing root index.html with
         # a real landing page (nav bar, hero, feature grid, footer). The
         # nav links into /napkin/documentation/napkin/ where DocC lives.
+        # __NAPKIN_VERSION__ placeholders in index.html get stamped with the
+        # latest git tag at deploy time so the footer always reflects the
+        # currently-shipping release.
         run: |
-          cp Tools/site/index.html docs/index.html
           cp Tools/site/styles.css docs/styles.css
           cp Tools/site/napkin-icon.png docs/napkin-icon.png
           cp Tools/site/napkin-icon@2x.png docs/napkin-icon@2x.png
+
+          VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "main")
+          sed "s/__NAPKIN_VERSION__/${VERSION}/g" Tools/site/index.html > docs/index.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
