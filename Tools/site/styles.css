@@ -225,14 +225,9 @@ code {
     color: var(--text-muted);
     font-size: 0.9rem;
 }
-.site-footer__links {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    gap: 16px;
+.site-footer__line--right {
+    text-align: right;
 }
-.site-footer__links a { font-size: 0.9rem; }
 
 @media (max-width: 540px) {
     .hero { padding: 48px 20px 32px; }
@@ -240,4 +235,6 @@ code {
     .hero__tagline { font-size: 1.05rem; }
     .site-nav__inner { padding: 0 16px; }
     .site-nav__links a { padding: 8px 10px; font-size: 0.9rem; }
+    .site-footer__inner { flex-direction: column; gap: 6px; align-items: flex-start; }
+    .site-footer__line--right { text-align: left; }
 }
