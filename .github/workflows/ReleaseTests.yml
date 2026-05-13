@@ -22,18 +22,25 @@ jobs:
         # Xcode 26.x.y installed on the runner so a runner-image refresh
         # bumping the patch version doesn't break the workflow.
         run: |
-          sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
+          sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app 2>/dev/null | grep -v -i beta | sort -V | tail -1)"
           xcodebuild -version
       - name: Ensure iOS simulator runtime
-        # See Tests.yml unit-tests for context. macos-26 runners occasionally
-        # ship an Xcode whose default iOS runtime isn't preinstalled; this
-        # downloads it if needed.
+        # See Tests.yml unit-tests for rationale; same retry shape.
         run: |
-          if xcrun simctl list runtimes iOS 2>&1 | grep -qE "iOS 2[0-9]"; then
-            xcrun simctl list runtimes iOS | grep -E "iOS 2[0-9]"
-          else
-            sudo xcodebuild -downloadPlatform iOS 2>&1 | tail -10
-          fi
+          for attempt in 1 2 3; do
+            echo "::group::downloadPlatform attempt $attempt"
+            if sudo xcodebuild -downloadPlatform iOS; then
+              echo "::endgroup::"
+              echo "downloadPlatform succeeded on attempt $attempt"
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "Attempt $attempt failed; sleeping 20s..."
+            sleep 20
+            xcrun simctl list devices 2>&1 | head -5 || true
+          done
+          echo "::error::downloadPlatform failed after 3 attempts"
+          exit 1
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:

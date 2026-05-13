@@ -106,3 +106,10 @@ Package.resolved
 
 # Claude Code session metadata
 .claude/
+
+# iCloud Drive sync duplicates (working in an iCloud-synced directory
+# creates "filename 2.ext" / "filename 3.ext" siblings on conflict).
+* 2.*
+* 3.*
+* 4.*
+* [0-9]/
