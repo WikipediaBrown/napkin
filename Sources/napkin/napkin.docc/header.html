@@ -1,0 +1,83 @@
+<nav class="napkin-site-nav" aria-label="Site">
+    <div class="napkin-site-nav__inner">
+        <a class="napkin-site-nav__brand" href="/napkin/">
+            <span class="napkin-site-nav__chip" aria-hidden="true"></span>
+            <span>napkin</span>
+        </a>
+        <ul class="napkin-site-nav__links">
+            <li><a href="/napkin/documentation/napkin/">Docs</a></li>
+            <li><a href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/LaunchNapkinApp">Examples</a></li>
+            <li><a href="https://github.com/WikipediaBrown/napkin">GitHub</a></li>
+        </ul>
+    </div>
+</nav>
+<style>
+    .napkin-site-nav {
+        background: #0f1f3a;
+        color: #ffffff;
+        border-bottom: 1px solid #21304a;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-size: 15px;
+        line-height: 1.4;
+    }
+    .napkin-site-nav__inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 24px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+    }
+    .napkin-site-nav__brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: #ffffff !important;
+        font-weight: 600;
+        text-decoration: none !important;
+    }
+    .napkin-site-nav__brand:hover { color: #ffffff !important; }
+    .napkin-site-nav__chip {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        background: #ffffff;
+        border-radius: 3px;
+        position: relative;
+    }
+    .napkin-site-nav__chip::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 6px;
+        height: 6px;
+        background: #0f1f3a;
+        clip-path: polygon(100% 0, 0 100%, 100% 100%);
+    }
+    .napkin-site-nav__links {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+    }
+    .napkin-site-nav__links a {
+        color: #c8d2e1 !important;
+        padding: 6px 12px;
+        border-radius: 6px;
+        text-decoration: none !important;
+        display: inline-block;
+    }
+    .napkin-site-nav__links a:hover {
+        color: #ffffff !important;
+        background: rgba(255, 255, 255, 0.08);
+    }
+    @media (max-width: 540px) {
+        .napkin-site-nav__inner { padding: 0 16px; }
+        .napkin-site-nav__links a { padding: 6px 10px; font-size: 0.9rem; }
+    }
+</style>

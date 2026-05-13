@@ -37,8 +37,8 @@ jobs:
       - name: Build DocC
         # --hosting-base-path is just the repo name; the resulting URL is
         # https://wikipediabrown.github.io/napkin/documentation/napkin/
-        # The index.html redirect lets the bare /napkin/ URL land on the
-        # module page (DocC's static-hosting transform doesn't generate one).
+        # --experimental-enable-custom-templates picks up header.html from
+        # the napkin.docc catalog so every docs page gets the same top nav.
         run: |
           swift package --allow-writing-to-directory ./docs \
             generate-documentation \
@@ -46,8 +46,18 @@ jobs:
             --disable-indexing \
             --transform-for-static-hosting \
             --hosting-base-path napkin \
-            --output-path ./docs
-          echo '<script>window.location.href += "/documentation/napkin"</script>' > docs/index.html
+            --output-path ./docs \
+            --experimental-enable-custom-templates
+
+      - name: Copy homepage
+        # Hand-crafted homepage replaces DocC's missing root index.html with
+        # a real landing page (nav bar, hero, feature grid, footer). The
+        # nav links into /napkin/documentation/napkin/ where DocC lives.
+        run: |
+          cp Tools/site/index.html docs/index.html
+          cp Tools/site/styles.css docs/styles.css
+          cp Tools/site/napkin-icon.png docs/napkin-icon.png
+          cp Tools/site/napkin-icon@2x.png docs/napkin-icon@2x.png
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
