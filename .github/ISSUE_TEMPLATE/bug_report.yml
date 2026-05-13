@@ -1,0 +1,85 @@
+name: Bug report
+description: Report something that is broken or behaves unexpectedly in napkin.
+title: "[bug] "
+labels:
+  - "kind: bug"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report. The more detail you can
+        provide, the faster it can be triaged and fixed.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A short, clear description of the bug.
+      placeholder: "Router attaches child twice when..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimum steps required to reproduce the behavior. A code snippet or link to a minimal repro is ideal.
+      placeholder: |
+        1. Create a napkin with a child router
+        2. Call `attach(child:)` from `interactorDidBecomeActive()`
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened? Include error messages, stack traces, or screenshots if relevant.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: version
+    attributes:
+      label: napkin version
+      description: Which version of napkin are you using?
+      options:
+        - "main"
+        - "2.0.x"
+    validations:
+      required: true
+
+  - type: input
+    id: platform
+    attributes:
+      label: iOS / macOS version
+      description: e.g. `iOS 26.1`, `macOS 26.0`
+    validations:
+      required: true
+
+  - type: input
+    id: xcode
+    attributes:
+      label: Xcode version
+      description: e.g. `Xcode 26.0 (26A12345)`
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-flight checklist
+      options:
+        - label: I've read [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md).
+          required: true
+        - label: I've searched existing issues and discussions for duplicates.
+          required: true

@@ -103,3 +103,6 @@ docs/napkin-icon@2x.png
 
 # SwiftPM resolved manifest (library; consumers pin their own)
 Package.resolved
+
+# Claude Code session metadata
+.claude/
