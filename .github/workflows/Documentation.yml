@@ -30,7 +30,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # Need tags so we can stamp the homepage footer with the latest release.
+          # Need tags so we can stamp the homepage footer with the latest release
+          # and check out older tags for the versioned docs loop.
           fetch-depth: 0
 
       - name: Select Xcode
@@ -41,11 +42,33 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
-      - name: Build DocC
-        # --hosting-base-path is just the repo name; the resulting URL is
+      - name: Resolve version + version list
+        # Capture both the "current" version (for the homepage footer) and the
+        # list of versions to build (main + last 5 stable tags) BEFORE we do
+        # any `git checkout` in the versioned-docs loop. Otherwise
+        # `git describe --tags --abbrev=0` would resolve against whatever tag
+        # we last checked out instead of the tip of main.
+        id: versions
+        run: |
+          VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "main")
+          REFS=$( ( echo "main"; git tag -l --sort=-v:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -5 ) | tr '\n' ' ' )
+          ORIGINAL_REF=$(git rev-parse HEAD)
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "refs=${REFS}" >> "$GITHUB_OUTPUT"
+          echo "original_ref=${ORIGINAL_REF}" >> "$GITHUB_OUTPUT"
+          echo "Resolved VERSION=${VERSION}"
+          echo "Resolved REFS=${REFS}"
+          echo "Resolved ORIGINAL_REF=${ORIGINAL_REF}"
+
+      - name: Build DocC (latest)
+        # Builds the latest version's docs into ./docs/ so the bare URL works:
         # https://wikipediabrown.github.io/napkin/documentation/napkin/
         # --experimental-enable-custom-templates picks up header.html from
         # the napkin.docc catalog so every docs page gets the same top nav.
+        # --source-service / --source-service-base-url / --checkout-path wire
+        # up "View source on GitHub" buttons on each symbol page. (Note:
+        # source-link buttons render on symbol pages only, not on articles —
+        # that's a DocC limitation.)
         run: |
           swift package --allow-writing-to-directory ./docs \
             generate-documentation \
@@ -54,22 +77,85 @@ jobs:
             --transform-for-static-hosting \
             --hosting-base-path napkin \
             --output-path ./docs \
-            --experimental-enable-custom-templates
+            --experimental-enable-custom-templates \
+            --source-service github \
+            --source-service-base-url https://github.com/WikipediaBrown/napkin/blob/main \
+            --checkout-path ${{ github.workspace }}
+
+      - name: Build versioned docs
+        # Builds main + last 5 stable tags into ./docs/<ref>/ so the URLs
+        #   https://wikipediabrown.github.io/napkin/2.0.8/documentation/napkin/
+        #   https://wikipediabrown.github.io/napkin/main/documentation/napkin/
+        # resolve. Best-effort: if an old tag fails to build against the
+        # current toolchain we log it and keep going.
+        run: |
+          git config --global user.email "ci@napkin"
+          git config --global user.name "napkin CI"
+
+          REFS="${{ steps.versions.outputs.refs }}"
+          ORIGINAL_REF="${{ steps.versions.outputs.original_ref }}"
+
+          for ref in $REFS; do
+            echo "::group::Building docs for ${ref}"
+            if ! git checkout "$ref" 2>&1 | tail -2; then
+              echo "::warning::failed to check out ${ref}, skipping"
+              echo "::endgroup::"
+              continue
+            fi
+            mkdir -p "docs/${ref}"
+            if swift package --allow-writing-to-directory "docs/${ref}" \
+                generate-documentation \
+                --target napkin \
+                --disable-indexing \
+                --transform-for-static-hosting \
+                --hosting-base-path "napkin/${ref}" \
+                --output-path "docs/${ref}" \
+                --experimental-enable-custom-templates \
+                --source-service github \
+                --source-service-base-url "https://github.com/WikipediaBrown/napkin/blob/${ref}" \
+                --checkout-path "${{ github.workspace }}" 2>&1 | tail -5; then
+              echo '<script>window.location.href += "/documentation/napkin"</script>' > "docs/${ref}/index.html"
+            else
+              echo "::warning::failed to build docs for ${ref}"
+              rm -rf "docs/${ref}"
+            fi
+            echo "::endgroup::"
+          done
+
+          # Return to the original ref so the rest of the workflow sees latest.
+          git checkout "$ORIGINAL_REF" 2>&1 | tail -2
 
       - name: Copy homepage
         # Hand-crafted homepage replaces DocC's missing root index.html with
         # a real landing page (nav bar, hero, feature grid, footer). The
         # nav links into /napkin/documentation/napkin/ where DocC lives.
         # __NAPKIN_VERSION__ placeholders in index.html get stamped with the
-        # latest git tag at deploy time so the footer always reflects the
-        # currently-shipping release.
+        # latest git tag, and __VERSION_LINKS__ gets stamped with the list
+        # of <option> elements built in the versioned-docs loop above.
         run: |
           cp Tools/site/styles.css docs/styles.css
           cp Tools/site/napkin-icon.png docs/napkin-icon.png
           cp Tools/site/napkin-icon@2x.png docs/napkin-icon@2x.png
 
-          VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "main")
-          sed "s/__NAPKIN_VERSION__/${VERSION}/g" Tools/site/index.html > docs/index.html
+          VERSION="${{ steps.versions.outputs.version }}"
+          REFS="${{ steps.versions.outputs.refs }}"
+
+          # Build the list of <option> elements for the version dropdown.
+          # Only include refs whose docs/<ref>/ directory actually exists —
+          # this keeps the dropdown honest if a tag failed to build.
+          VERSION_LINKS=""
+          for ref in $REFS; do
+            if [ -d "docs/${ref}" ]; then
+              VERSION_LINKS="${VERSION_LINKS}<option value=\"/napkin/${ref}/documentation/napkin/\">${ref}</option>"
+            fi
+          done
+
+          # sed: escape forward slashes in the replacement string with %.
+          # Use # as the delimiter so URLs don't need escaping.
+          sed \
+            -e "s/__NAPKIN_VERSION__/${VERSION}/g" \
+            -e "s#<!-- __VERSION_LINKS__ -->#${VERSION_LINKS}#g" \
+            Tools/site/index.html > docs/index.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

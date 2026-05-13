@@ -112,6 +112,35 @@ code {
     text-decoration: none;
 }
 
+.site-nav__version {
+    display: inline-flex;
+    align-items: center;
+}
+.site-nav__version-select {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--nav-text);
+    border: 1px solid var(--nav-border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 26px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path fill='%23c8d2e1' d='M2 4l4 4 4-4z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 10px;
+}
+.site-nav__version-select:hover {
+    background-color: rgba(255, 255, 255, 0.14);
+}
+.site-nav__version-select option {
+    background: var(--nav-bg);
+    color: var(--nav-text);
+}
+
 /* Hero */
 .hero {
     max-width: 760px;
