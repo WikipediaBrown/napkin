@@ -4,6 +4,101 @@ All notable changes to napkin are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.8]
+
+### Changed
+
+- Homepage footer reflows onto two lines: framework attribution on the first
+  line, copyright + license on the second. The version is now a single
+  hyperlink to the GitHub release page; the duplicate "view release on
+  GitHub" link has been dropped.
+
+## [2.0.7]
+
+### Added
+
+- `Tools/site/` — version stamping mechanism. The Documentation workflow
+  resolves the latest git tag via `git describe --tags --abbrev=0` and
+  substitutes `__NAPKIN_VERSION__` placeholders in `index.html` at deploy
+  time so the footer always reflects the currently-shipping release.
+
+### Changed
+
+- Homepage footer rewritten with framework attribution, copyright, license
+  link, and "view release" link. Replaces the placeholder footer shipped
+  in 2.0.6.
+- `Examples/LaunchNapkinApp/` consolidated: the app shell
+  (`AppDelegate`/`SceneDelegate`/`Info.plist`) and the napkin
+  implementations (`Launch`/`Counter`/`Quote`) now live side by side in
+  `Sources/` rather than in separate sub-trees. Build product paths in
+  `project.yml` updated accordingly.
+
+## [2.0.6]
+
+### Added
+
+- `Tools/site/index.html`, `styles.css`, `napkin-icon*.png` — hand-crafted
+  homepage that replaces DocC's missing root `index.html` with a real
+  landing page (nav bar, hero, feature grid, footer). The Documentation
+  workflow copies this into `./docs/` after the DocC build.
+- `Sources/napkin/napkin.docc/header.html` — top-nav injected into every
+  DocC page via `--experimental-enable-custom-templates`, so symbol and
+  article pages share the homepage's navigation chrome.
+
+## [2.0.5]
+
+### Changed
+
+- Replaced the ASCII-art isolation map in `IsolationModel.md` with a
+  hand-drawn SVG diagram. Ships a light variant and a dark variant; DocC
+  selects the appropriate one based on the reader's color scheme.
+
+## [2.0.4]
+
+### Added
+
+- Hero metadata on the `napkin.md` landing page (`@PageImage`, `@CallToAction`,
+  `@Available` directives) so the docs root renders with a hero card on the
+  modern DocC renderer.
+- `theme-settings.json` enabling DocC's `quickNavigation` (cmd-K
+  fuzzy-search across symbols) and pinning the accent color to the
+  napkin blue palette.
+
+### Changed
+
+- Two article pages (`IsolationModel.md`, `WorkingWithCombine.md`) use
+  `@Row` / `@Column` for side-by-side before/after code snippets.
+- `DefiningAFeature.md` adopts `@Snippet(path:)` for the five major
+  Profile code blocks instead of inlining the Swift source.
+
+## [2.0.3]
+
+### Changed
+
+- Corrected the etymology of the name "napkin" in the `GettingStarted`
+  article — the framework is named after the noun "napkin" (as in
+  back-of-the-napkin sketches of a feature's architecture), not a verb.
+
+## [2.0.2]
+
+### Added
+
+- `.github/workflows/Documentation.yml` — builds the DocC catalog with
+  `swift package generate-documentation` and deploys the static site to
+  GitHub Pages via `actions/deploy-pages`. Site is live at
+  `https://wikipediabrown.github.io/napkin/documentation/napkin/`.
+
+## [2.0.1]
+
+### Added
+
+- `Sources/napkin/napkin.docc/` — DocC catalog with a landing page
+  (`napkin.md`) and seven articles in `Articles/`: GettingStarted,
+  DefiningAFeature, IsolationModel, RouterTree, ComponentsAndScopes,
+  TestingAsyncFeatures, WorkingWithCombine.
+- Comprehensive inline DocC comments on every public type and method
+  in `Sources/napkin/`.
+
 ## [2.0.0]
 
 Major rearchitecture: native Swift 6.2 concurrency, Combine removed.
