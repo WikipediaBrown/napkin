@@ -1,8 +1,12 @@
 name: Documentation
 on:
-  push:
-    branches:
-    - main
+  # Run after the Release workflow finishes, so `git describe --tags` picks up
+  # the freshly-pushed release tag instead of racing with it (the bug that
+  # left 2.0.7 in the footer while Release was publishing 2.0.8 in parallel).
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
