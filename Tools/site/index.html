@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>napkin - Swift framework for clean architecture</title>
+    <meta name="description" content="A Swift 6.2 framework for clean-architecture apps as a tree of isolated, composable units. Modeled on Uber's RIBs, rebuilt around Swift Concurrency.">
+    <link rel="icon" type="image/png" sizes="48x48" href="napkin-icon.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="napkin-icon@2x.png">
+    <link rel="apple-touch-icon" href="napkin-icon@2x.png">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="site-nav">
+        <div class="site-nav__inner">
+            <a class="site-nav__brand" href="/napkin/">
+                <img src="napkin-icon@2x.png" alt="" width="24" height="24">
+                <span>napkin</span>
+            </a>
+            <ul class="site-nav__links">
+                <li><a href="/napkin/documentation/napkin/">Docs</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/LaunchNapkinApp">Examples</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin">GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <img class="hero__logo" src="napkin-icon@2x.png" alt="napkin logo" width="120" height="120">
+            <h1 class="hero__title">napkin</h1>
+            <p class="hero__tagline">Swift 6.2 framework for clean-architecture apps as a tree of isolated, composable units.</p>
+            <div class="hero__cta">
+                <a class="btn btn--primary" href="/napkin/documentation/napkin/">Read the Docs</a>
+                <a class="btn btn--secondary" href="https://github.com/WikipediaBrown/napkin">View on GitHub</a>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="features__grid">
+                <article class="card">
+                    <h2 class="card__title">Clean isolation, by the compiler</h2>
+                    <p>Business logic lives in <code>final actor</code> interactors; routing and presentation are <code>@MainActor</code>. Swift enforces the dependency rule, not convention.</p>
+                </article>
+                <article class="card">
+                    <h2 class="card__title">No Combine, no RxSwift</h2>
+                    <p><code>@Observable</code> + <code>AsyncStream</code> + structured concurrency. Combine is removed entirely.</p>
+                </article>
+                <article class="card">
+                    <h2 class="card__title">iOS 26 / macOS 26 / Swift 6.2</h2>
+                    <p>Uses <code>isolated deinit</code>, <code>Mutex</code> from <code>Synchronization</code>, <code>@Observable</code>, and <code>Observations { }</code>.</p>
+                </article>
+                <article class="card">
+                    <h2 class="card__title">Modeled on Uber's RIBs</h2>
+                    <p>Builder, Component, Interactor, Router, Presenter. The familiar architecture, rebuilt around Swift Concurrency.</p>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="site-footer__inner">
+            <p class="site-footer__line">napkin v2.x &middot; Apache 2.0 &middot; Made with cascadian love</p>
+            <ul class="site-footer__links">
+                <li><a href="https://github.com/WikipediaBrown/napkin">GitHub</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md">CHANGELOG</a></li>
+            </ul>
+        </div>
+    </footer>
+</body>
+</html>
