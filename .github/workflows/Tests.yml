@@ -24,6 +24,20 @@ jobs:
         run: |
           sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
           xcodebuild -version
+      - name: Ensure iOS simulator runtime
+        # GitHub's macos-26 runner images occasionally ship with an Xcode
+        # whose default iOS runtime isn't preinstalled (e.g. Xcode wants
+        # iOS 26.5 but only 26.4 is on disk). xcodebuild then fails before
+        # any test runs. List what's installed; if no iOS 2x runtime is
+        # present, fall back to downloading via xcodebuild -downloadPlatform.
+        run: |
+          if xcrun simctl list runtimes iOS 2>&1 | grep -qE "iOS 2[0-9]"; then
+            echo "iOS runtime present:"
+            xcrun simctl list runtimes iOS | grep -E "iOS 2[0-9]"
+          else
+            echo "No iOS 2x runtime installed; downloading..."
+            sudo xcodebuild -downloadPlatform iOS 2>&1 | tail -10
+          fi
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -47,6 +61,17 @@ jobs:
         run: |
           sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
           xcodebuild -version
+      - name: Ensure iOS simulator runtime
+        # See unit-tests job for context. UI tests need an iPhone 17 sim,
+        # which depends on the iOS runtime being present.
+        run: |
+          if xcrun simctl list runtimes iOS 2>&1 | grep -qE "iOS 2[0-9]"; then
+            echo "iOS runtime present:"
+            xcrun simctl list runtimes iOS | grep -E "iOS 2[0-9]"
+          else
+            echo "No iOS 2x runtime installed; downloading..."
+            sudo xcodebuild -downloadPlatform iOS 2>&1 | tail -10
+          fi
       - name: Install XcodeGen
         run: brew install xcodegen
       - name: Generate example app Xcode project
