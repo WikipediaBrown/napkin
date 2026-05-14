@@ -2,10 +2,11 @@
 //  LaunchNapkinAppUITests.swift
 //  napkin example UI tests
 //
-//  Drives the napkin example app via XCUITest using the identifiers defined
-//  in AccessibilityIdentifiers.swift. The example app has two child napkins
-//  (Ping, Pong) that are swapped in and out of the LaunchNapkin container
-//  one at a time via a single "Swap" button on each child.
+//  Drives the napkin example app via XCUITest. The app has two child
+//  napkins managed by the LaunchNapkin: a LoggedOut screen with a Login
+//  button, and a LoggedIn screen showing the user's name + barbecue foods
+//  and a Logout button. The LaunchNapkin holds the AuthService and swaps
+//  children on login / logout.
 //
 
 import XCTest
@@ -20,36 +21,34 @@ final class LaunchNapkinAppUITests: XCTestCase {
         app.launch()
     }
 
-    func testLaunchStartsOnPing() {
-        let pingLabel = app.staticTexts[NapkinAccessibility.Ping.label]
-        XCTAssertTrue(pingLabel.waitForExistence(timeout: 5))
-        XCTAssertEqual(pingLabel.label, "Ping")
-        XCTAssertTrue(app.buttons[NapkinAccessibility.Ping.swapButton].exists)
+    func testLaunchStartsLoggedOut() {
+        let title = app.staticTexts[NapkinAccessibility.LoggedOut.title]
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons[NapkinAccessibility.LoggedOut.loginButton].exists)
     }
 
-    func testSwapAlternatesPingAndPong() {
-        // Initial state: Ping
-        let pingLabel = app.staticTexts[NapkinAccessibility.Ping.label]
-        XCTAssertTrue(pingLabel.waitForExistence(timeout: 5))
+    func testLoginRevealsBarbecueFoodsAndLogoutReturns() {
+        app.buttons[NapkinAccessibility.LoggedOut.loginButton].tap()
 
-        // First swap: Ping → Pong
-        app.buttons[NapkinAccessibility.Ping.swapButton].tap()
-        let pongLabel = app.staticTexts[NapkinAccessibility.Pong.label]
-        XCTAssertTrue(pongLabel.waitForExistence(timeout: 5))
-        XCTAssertEqual(pongLabel.label, "Pong")
-        XCTAssertFalse(app.staticTexts[NapkinAccessibility.Ping.label].exists)
+        // After login (the mock service sleeps ~200ms) we expect the
+        // logged-in screen with the user's name.
+        let nameLabel = app.staticTexts[NapkinAccessibility.LoggedIn.nameLabel]
+        XCTAssertTrue(nameLabel.waitForExistence(timeout: 5))
+        XCTAssertEqual(nameLabel.label, "Smokey Joe")
 
-        // Second swap: Pong → Ping
-        app.buttons[NapkinAccessibility.Pong.swapButton].tap()
+        // Barbecue list items render with identifiers like "loggedIn.food.Brisket".
+        // We don't pin the exact set in the test — just confirm at least one
+        // known food is visible (so the list rendered from the User object).
         XCTAssertTrue(
-            app.staticTexts[NapkinAccessibility.Ping.label].waitForExistence(timeout: 5)
+            app.staticTexts["\(NapkinAccessibility.LoggedIn.foodPrefix).Brisket"]
+                .waitForExistence(timeout: 2)
         )
-        XCTAssertFalse(app.staticTexts[NapkinAccessibility.Pong.label].exists)
 
-        // Third swap to confirm it keeps alternating cleanly
-        app.buttons[NapkinAccessibility.Ping.swapButton].tap()
+        // Logout takes us back to the logged-out screen.
+        app.buttons[NapkinAccessibility.LoggedIn.logoutButton].tap()
         XCTAssertTrue(
-            app.staticTexts[NapkinAccessibility.Pong.label].waitForExistence(timeout: 5)
+            app.staticTexts[NapkinAccessibility.LoggedOut.title]
+                .waitForExistence(timeout: 5)
         )
     }
 }

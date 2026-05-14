@@ -12,19 +12,18 @@ import Foundation
 public enum NapkinAccessibility {
 
     public enum Launch {
-        // Container view ID — the UI test uses this to confirm the host is up.
         public static let container = "launch.container"
     }
 
-    public enum Ping {
-        public static let label = "ping.label"
-        public static let connectedCount = "ping.connectedCount"
-        public static let swapButton = "ping.swapButton"
+    public enum LoggedOut {
+        public static let title = "loggedOut.title"
+        public static let loginButton = "loggedOut.loginButton"
     }
 
-    public enum Pong {
-        public static let label = "pong.label"
-        public static let connectedCount = "pong.connectedCount"
-        public static let swapButton = "pong.swapButton"
+    public enum LoggedIn {
+        public static let nameLabel = "loggedIn.nameLabel"
+        public static let logoutButton = "loggedIn.logoutButton"
+        // Per-food identifiers are built as `\(foodPrefix).\(food)`.
+        public static let foodPrefix = "loggedIn.food"
     }
 }

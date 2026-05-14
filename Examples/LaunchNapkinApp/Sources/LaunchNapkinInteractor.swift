@@ -2,46 +2,53 @@ import napkin
 
 @MainActor
 protocol LaunchNapkinRouting: LaunchRouting, Sendable {
-    func attachPing() async
-    func attachPong() async
+    func attachLoggedOut() async
+    func attachLoggedIn(user: User) async
 }
 
 protocol LaunchNapkinListener: AnyObject, Sendable {}
 
 final actor LaunchNapkinInteractor:
     Interactable,
-    PingNapkinListener,
-    PongNapkinListener
+    LoggedOutNapkinListener,
+    LoggedInNapkinListener
 {
 
     nonisolated let lifecycle = InteractorLifecycle()
+    nonisolated let authService: AuthService
 
     weak var router: LaunchNapkinRouting?
     weak var listener: LaunchNapkinListener?
+
+    init(authService: AuthService) {
+        self.authService = authService
+    }
 
     func set(router: LaunchNapkinRouting?) { self.router = router }
     func set(listener: LaunchNapkinListener?) { self.listener = listener }
 
     func didBecomeActive() async {
-        await router?.attachPing()
+        await router?.attachLoggedOut()
     }
 
     func willResignActive() async {}
 
-    // MARK: - PingNapkinListener / PongNapkinListener
+    // MARK: - LoggedOutNapkinListener
 
-    func pingDidTapSwap() async {
-        await router?.attachPong()
+    func loggedOutDidTapLogin() async {
+        do {
+            let user = try await authService.login()
+            await router?.attachLoggedIn(user: user)
+        } catch {
+            // Login failed — stay on the logged-out screen. Real apps would
+            // surface an alert; we keep this demo silent.
+        }
     }
 
-    func pongDidTapSwap() async {
-        await router?.attachPing()
-    }
+    // MARK: - LoggedInNapkinListener
 
-    func numberOfNapkinsConnected() async -> Int? {
-        // Hop to the main actor so we compute `count` on the array there
-        // instead of sending the non-Sendable `[any Routing]` back here.
-        let router = self.router
-        return await MainActor.run { router?.children.count }
+    func loggedInDidTapLogout() async {
+        try? await authService.logout()
+        await router?.attachLoggedOut()
     }
 }
