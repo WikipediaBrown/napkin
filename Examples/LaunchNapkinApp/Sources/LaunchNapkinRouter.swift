@@ -1,15 +1,10 @@
-//
-//  LaunchNapkinRouter.swift
-//  napkin
-//
-//  Created by nonplus on 3/13/26.
-//
-
 import napkin
 
 @MainActor
 protocol LaunchNapkinViewControllable: ViewControllable {
-    // Declare methods the router invokes to manipulate the view hierarchy.
+    // Container ops the router calls when swapping which child is on screen.
+    func embed(_ child: ViewControllable)
+    func detach(_ child: ViewControllable)
 }
 
 @MainActor
@@ -18,65 +13,51 @@ final class LaunchNapkinRouter:
     LaunchNapkinRouting
 {
 
-    private let counterBuilder: CounterNapkinBuildable
-    private let quoteBuilder: QuoteNapkinBuildable
-    private var counterRouter: CounterNapkinRouting?
-    private var quoteRouter: QuoteNapkinRouting?
+    private let pingBuilder: PingNapkinBuildable
+    private let pongBuilder: PongNapkinBuildable
+    private var pingRouter: PingNapkinRouting?
+    private var pongRouter: PongNapkinRouting?
 
     init(
         interactor: LaunchNapkinInteractor,
         viewController: LaunchNapkinViewControllable,
-        counterBuilder: CounterNapkinBuildable,
-        quoteBuilder: QuoteNapkinBuildable
+        pingBuilder: PingNapkinBuildable,
+        pongBuilder: PongNapkinBuildable
     ) {
-        self.counterBuilder = counterBuilder
-        self.quoteBuilder = quoteBuilder
+        self.pingBuilder = pingBuilder
+        self.pongBuilder = pongBuilder
         super.init(interactor: interactor, viewController: viewController)
     }
 
     // MARK: - LaunchNapkinRouting
 
-    func routeToCounter() async {
-        guard counterRouter == nil else { return }
-        let router = await counterBuilder.build(withListener: interactor)
-        counterRouter = router
+    func attachPing() async {
+        guard pingRouter == nil else { return }
+        let router = await pingBuilder.build(withListener: interactor)
+        pingRouter = router
         await attachChild(router)
-        #if canImport(UIKit)
-        viewController.uiviewController.present(
-            router.viewControllable.uiviewController,
-            animated: true
-        )
-        #endif
+        viewController.embed(router.viewControllable)
     }
 
-    func routeBackFromCounter() async {
-        guard let router = counterRouter else { return }
-        counterRouter = nil
-        #if canImport(UIKit)
-        router.viewControllable.uiviewController.dismiss(animated: true)
-        #endif
-        await detachChild(router)
-    }
+    func swap() async {
+        if let ping = pingRouter {
+            viewController.detach(ping.viewControllable)
+            await detachChild(ping)
+            pingRouter = nil
 
-    func routeToQuote() async {
-        guard quoteRouter == nil else { return }
-        let router = await quoteBuilder.build(withListener: interactor)
-        quoteRouter = router
-        await attachChild(router)
-        #if canImport(UIKit)
-        viewController.uiviewController.present(
-            router.viewControllable.uiviewController,
-            animated: true
-        )
-        #endif
-    }
+            let router = await pongBuilder.build(withListener: interactor)
+            pongRouter = router
+            await attachChild(router)
+            viewController.embed(router.viewControllable)
+        } else if let pong = pongRouter {
+            viewController.detach(pong.viewControllable)
+            await detachChild(pong)
+            pongRouter = nil
 
-    func routeBackFromQuote() async {
-        guard let router = quoteRouter else { return }
-        quoteRouter = nil
-        #if canImport(UIKit)
-        router.viewControllable.uiviewController.dismiss(animated: true)
-        #endif
-        await detachChild(router)
+            let router = await pingBuilder.build(withListener: interactor)
+            pingRouter = router
+            await attachChild(router)
+            viewController.embed(router.viewControllable)
+        }
     }
 }

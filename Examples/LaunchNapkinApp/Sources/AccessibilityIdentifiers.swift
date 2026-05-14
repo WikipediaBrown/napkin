@@ -6,30 +6,23 @@
 //  app target (which sets the identifiers via `.accessibilityIdentifier(...)`)
 //  and the UI test target (which queries them via `app.buttons[...]` etc.).
 //
-//  Identifiers are namespaced by napkin so tests can reference, e.g.,
-//  `NapkinAccessibility.Launch.showCounterButton`.
-//
 
 import Foundation
 
 public enum NapkinAccessibility {
 
     public enum Launch {
-        public static let greeting = "launch.greeting"
-        public static let showCounterButton = "launch.showCounterButton"
-        public static let showQuoteButton = "launch.showQuoteButton"
+        // Container view ID — the UI test uses this to confirm the host is up.
+        public static let container = "launch.container"
     }
 
-    public enum Counter {
-        public static let countLabel = "counter.countLabel"
-        public static let incrementButton = "counter.incrementButton"
-        public static let decrementButton = "counter.decrementButton"
-        public static let doneButton = "counter.doneButton"
+    public enum Ping {
+        public static let label = "ping.label"
+        public static let swapButton = "ping.swapButton"
     }
 
-    public enum Quote {
-        public static let quoteLabel = "quote.quoteLabel"
-        public static let newQuoteButton = "quote.newQuoteButton"
-        public static let doneButton = "quote.doneButton"
+    public enum Pong {
+        public static let label = "pong.label"
+        public static let swapButton = "pong.swapButton"
     }
 }
