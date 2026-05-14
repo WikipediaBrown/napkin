@@ -30,9 +30,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # Need tags so we can stamp the homepage footer with the latest release
-          # and check out older tags for the versioned docs loop.
-          fetch-depth: 0
+          # Shallow + tags. Deliberately NOT `fetch-depth: 0` here: that
+          # triggers a bulk fetch of every remote branch via refspec
+          # `+refs/heads/*:refs/remotes/origin/*`. On macos-26 the runner
+          # filesystem is APFS (case-insensitive), so the long-stale `CI`
+          # branch (file at .git/refs/remotes/origin/CI) collides with
+          # `ci/...` namespaced branches (which need a directory at
+          # .git/refs/remotes/origin/ci/) and the fetch dies with
+          # `[new branch] CI -> origin/CI (unable to update local ref)`.
+          # `fetch-tags: true` still pulls all tag refs + their commits,
+          # which is all the homepage stamp + versioned docs loop need.
+          fetch-depth: 1
+          fetch-tags: true
 
       - name: Select Xcode
         # Plain Apple tooling, no third-party action. Glob picks the highest
@@ -48,12 +57,16 @@ jobs:
       - name: Resolve version + version list
         # Capture both the "current" version (for the homepage footer) and the
         # list of versions to build (main + last 5 stable tags) BEFORE we do
-        # any `git checkout` in the versioned-docs loop. Otherwise
-        # `git describe --tags --abbrev=0` would resolve against whatever tag
-        # we last checked out instead of the tip of main.
+        # any `git checkout` in the versioned-docs loop.
+        #
+        # We use `git tag --sort=-v:refname` instead of `git describe` because
+        # the shallow checkout above has no ancestry path back to the latest
+        # tag for `git describe` to walk. Sorting all tags by semver and
+        # taking the head gives us the same answer without needing history.
         id: versions
         run: |
-          VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "main")
+          VERSION=$(git tag -l --sort=-v:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+          [ -z "$VERSION" ] && VERSION="main"
           REFS=$( ( echo "main"; git tag -l --sort=-v:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -5 ) | tr '\n' ' ' )
           ORIGINAL_REF=$(git rev-parse HEAD)
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
@@ -100,6 +113,14 @@ jobs:
 
           for ref in $REFS; do
             echo "::group::Building docs for ${ref}"
+            # Belt and suspenders: `fetch-tags: true` in the checkout step
+            # pulls all tag refs, but the trees of tagged commits in a
+            # shallow clone aren't guaranteed across git versions. Explicitly
+            # fetch each non-main ref at depth 1 so `git checkout` and the
+            # subsequent docs build always have the tree they need.
+            if [ "$ref" != "main" ]; then
+              git fetch --depth=1 origin "+refs/tags/${ref}:refs/tags/${ref}" 2>&1 | tail -2 || true
+            fi
             if ! git checkout "$ref" 2>&1 | tail -2; then
               echo "::warning::failed to check out ${ref}, skipping"
               echo "::endgroup::"
