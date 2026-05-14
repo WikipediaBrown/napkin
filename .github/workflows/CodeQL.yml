@@ -1,0 +1,53 @@
+name: CodeQL
+run-name: ${{ github.actor }} is running CodeQL.
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop]
+  schedule:
+    # Weekly cron at 09:00 UTC on Mondays. CodeQL queries get refreshed
+    # by GitHub so a periodic re-scan catches newly-known issues without
+    # any code changes.
+    - cron: '0 9 * * 1'
+
+# Tests.yml and ReleaseTests.yml own the build-and-test gating; CodeQL is
+# purely analytical, so writes against `security-events` are the only escalated
+# permission we need.
+permissions:
+  security-events: write
+  actions: read
+  contents: read
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze Swift
+    # CodeQL's Swift analyzer requires macOS to run swiftc. Use the same
+    # macos-26 image as the rest of the build matrix so Xcode 26 / Swift 6.2
+    # are available.
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Select Xcode
+        # Match Tests.yml: pick the highest non-beta Xcode 26.x available.
+        run: |
+          sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app 2>/dev/null | grep -v -i beta | sort -V | tail -1)"
+          xcodebuild -version
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: swift
+          # `autobuild` lets CodeQL figure out the build (it understands SPM).
+          # Switch to `manual` + a Build step if autobuild misses something.
+          build-mode: autobuild
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:swift"
