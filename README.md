@@ -4,9 +4,13 @@
 
 # napkin
 
-![Release Workflow](https://github.com/WikipediaBrown/napkin/actions/workflows/Release.yml/badge.svg)
+[![Tests](https://github.com/WikipediaBrown/napkin/actions/workflows/Tests.yml/badge.svg)](https://github.com/WikipediaBrown/napkin/actions/workflows/Tests.yml)
+[![Release](https://github.com/WikipediaBrown/napkin/actions/workflows/Release.yml/badge.svg?branch=main)](https://github.com/WikipediaBrown/napkin/actions/workflows/Release.yml)
+[![Latest Release](https://img.shields.io/github/v/release/WikipediaBrown/napkin?label=release&sort=semver&color=2dbe60)](https://github.com/WikipediaBrown/napkin/releases/latest)
 [![Swift Versions](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FWikipediaBrown%2Fnapkin%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/WikipediaBrown/napkin)
-[![Platforms Supported](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FWikipediaBrown%2Fnapkin%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/WikipediaBrown/napkin)
+[![Platforms](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FWikipediaBrown%2Fnapkin%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/WikipediaBrown/napkin)
+[![License: Apache 2.0](https://img.shields.io/github/license/WikipediaBrown/napkin?color=blue)](https://github.com/WikipediaBrown/napkin/blob/main/LICENSE.md)
+[![Docs](https://img.shields.io/badge/docs-getnapkin.to-2dbe60)](https://getnapkin.to/documentation/napkin/)
 
 napkin is a fork of Uber's [RIBs](https://github.com/uber/RIBs) rebuilt on Swift 6.2 native concurrency. It structures iOS and macOS applications as a tree of modular units using the Router-Interactor-Builder pattern, with business logic running off the main actor and routing/presentation pinned to it.
 
