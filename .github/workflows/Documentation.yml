@@ -94,7 +94,10 @@ jobs:
 
       - name: Build DocC (latest)
         # Builds the latest version's docs into ./docs/ so the bare URL works:
-        # https://wikipediabrown.github.io/napkin/documentation/napkin/
+        # https://getnapkin.to/documentation/napkin/
+        # With a custom domain, GH Pages serves the artifact at the domain
+        # root (not at /napkin/), so `--hosting-base-path` is omitted —
+        # DocC then emits root-relative links instead of `/napkin/...`.
         # --experimental-enable-custom-templates picks up header.html from
         # the napkin.docc catalog so every docs page gets the same top nav.
         # --source-service / --source-service-base-url / --checkout-path wire
@@ -107,7 +110,6 @@ jobs:
             --target napkin \
             --disable-indexing \
             --transform-for-static-hosting \
-            --hosting-base-path napkin \
             --output-path ./docs \
             --experimental-enable-custom-templates \
             --source-service github \
@@ -116,8 +118,8 @@ jobs:
 
       - name: Build versioned docs
         # Builds main + last 5 stable tags into ./docs/<ref>/ so the URLs
-        #   https://wikipediabrown.github.io/napkin/2.0.8/documentation/napkin/
-        #   https://wikipediabrown.github.io/napkin/main/documentation/napkin/
+        #   https://getnapkin.to/2.0.8/documentation/napkin/
+        #   https://getnapkin.to/main/documentation/napkin/
         # resolve. Best-effort: if an old tag fails to build against the
         # current toolchain we log it and keep going.
         run: |
@@ -148,7 +150,7 @@ jobs:
                 --target napkin \
                 --disable-indexing \
                 --transform-for-static-hosting \
-                --hosting-base-path "napkin/${ref}" \
+                --hosting-base-path "${ref}" \
                 --output-path "docs/${ref}" \
                 --experimental-enable-custom-templates \
                 --source-service github \
@@ -168,7 +170,7 @@ jobs:
       - name: Copy homepage
         # Hand-crafted homepage replaces DocC's missing root index.html with
         # a real landing page (nav bar, hero, feature grid, footer). The
-        # nav links into /napkin/documentation/napkin/ where DocC lives.
+        # nav links into /documentation/napkin/ where DocC lives.
         # __NAPKIN_VERSION__ placeholders in index.html get stamped with the
         # latest git tag, and __VERSION_LINKS__ gets stamped with the list
         # of <option> elements built in the versioned-docs loop above.
@@ -186,7 +188,7 @@ jobs:
           VERSION_LINKS=""
           for ref in $REFS; do
             if [ -d "docs/${ref}" ]; then
-              VERSION_LINKS="${VERSION_LINKS}<option value=\"/napkin/${ref}/documentation/napkin/\">${ref}</option>"
+              VERSION_LINKS="${VERSION_LINKS}<option value=\"/${ref}/documentation/napkin/\">${ref}</option>"
             fi
           done
 
@@ -196,6 +198,13 @@ jobs:
             -e "s/__NAPKIN_VERSION__/${VERSION}/g" \
             -e "s#<!-- __VERSION_LINKS__ -->#${VERSION_LINKS}#g" \
             Tools/site/index.html > docs/index.html
+
+      - name: Write CNAME
+        # GitHub Pages reads docs/CNAME to determine the custom domain.
+        # Putting it in the deploy artifact (rather than setting it via the
+        # Pages API) means the binding is owned by source control and
+        # survives any accidental change to the Pages settings.
+        run: echo "getnapkin.to" > docs/CNAME
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
