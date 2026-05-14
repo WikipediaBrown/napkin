@@ -1,0 +1,13 @@
+# Enable a "Sponsor" button on the repo + a sidebar entry on the About panel.
+#
+# Uncomment a line and fill in the handle/URL after you've set up the matching
+# platform. The maintainer (WikipediaBrown) does not currently have a GitHub
+# Sponsors profile; enable one at https://github.com/sponsors and then
+# uncomment the `github:` line below.
+
+# github: [WikipediaBrown]
+# ko_fi: # username
+# patreon: # username
+# open_collective: # username
+# tidelift: # vendor/package
+# custom: # ["https://example.com/donate"]
