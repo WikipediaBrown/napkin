@@ -30,18 +30,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # Shallow + tags. Deliberately NOT `fetch-depth: 0` here: that
-          # triggers a bulk fetch of every remote branch via refspec
-          # `+refs/heads/*:refs/remotes/origin/*`. On macos-26 the runner
-          # filesystem is APFS (case-insensitive), so the long-stale `CI`
-          # branch (file at .git/refs/remotes/origin/CI) collides with
-          # `ci/...` namespaced branches (which need a directory at
-          # .git/refs/remotes/origin/ci/) and the fetch dies with
-          # `[new branch] CI -> origin/CI (unable to update local ref)`.
-          # `fetch-tags: true` still pulls all tag refs + their commits,
-          # which is all the homepage stamp + versioned docs loop need.
+          # Always deploy from main. `workflow_run` fires Documentation
+          # in the default branch's context (develop), but main is the
+          # source of truth for the public site — we don't want develop
+          # changes leaking out before they're merged to main.
+          ref: main
+          # Shallow. Deliberately NOT `fetch-depth: 0`: that triggers a
+          # bulk fetch of every remote branch via refspec
+          # `+refs/heads/*:refs/remotes/origin/*`. On macos-26 APFS
+          # (case-insensitive), the long-stale `CI` branch (file) collides
+          # with `ci/...` namespaced branches (would-be directory) and
+          # the fetch dies with `error: some local refs could not be updated`.
+          # We intentionally do NOT set `fetch-tags: true` here — empirically
+          # the option is silently dropped on shallow checkouts (the fetch
+          # log shows no `--tags` flag). Tags are fetched explicitly below
+          # with a narrowed refspec.
           fetch-depth: 1
-          fetch-tags: true
+
+      - name: Fetch tags
+        # Pull all tag refs + their commits ourselves, since actions/checkout's
+        # `fetch-tags: true` doesn't fire on shallow checkouts. Narrow
+        # `remote.origin.fetch` to `main` first so `git fetch --tags`
+        # doesn't try to bulk-fetch every remote branch (which would hit
+        # the same APFS case-collision as `fetch-depth: 0`). `--depth=1`
+        # keeps each tag's history minimal — we only need the tagged
+        # commit's tree to build its docs.
+        run: |
+          git config --local remote.origin.fetch '+refs/heads/main:refs/remotes/origin/main'
+          git fetch --tags --force --depth=1 origin
 
       - name: Select Xcode
         # Plain Apple tooling, no third-party action. Glob picks the highest
