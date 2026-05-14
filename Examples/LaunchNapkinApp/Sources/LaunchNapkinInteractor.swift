@@ -28,17 +28,20 @@ final actor LaunchNapkinInteractor:
 
     func willResignActive() async {}
 
-    // MARK: - PingNapkinListener
+    // MARK: - PingNapkinListener / PongNapkinListener
 
-    // Ping just told us it was tapped — replace it with Pong. The router
-    // tears down Ping as part of attachPong().
     func pingDidTapSwap() async {
         await router?.attachPong()
     }
 
-    // MARK: - PongNapkinListener
-
     func pongDidTapSwap() async {
         await router?.attachPing()
+    }
+
+    func numberOfNapkinsConnected() async -> Int? {
+        // Hop to the main actor so we compute `count` on the array there
+        // instead of sending the non-Sendable `[any Routing]` back here.
+        let router = self.router
+        return await MainActor.run { router?.children.count }
     }
 }

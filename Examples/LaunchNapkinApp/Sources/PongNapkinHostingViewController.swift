@@ -19,6 +19,10 @@ protocol PongNapkinPresentableListener: AnyObject, Sendable {
     @MainActor required dynamic init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+
+    func update(connectedCount: Int?) async {
+        rootView.connectedCount = connectedCount
+    }
 }
 #elseif canImport(AppKit)
 @MainActor final class PongNapkinViewController: NSHostingController<PongNapkinView>, PongNapkinPresentable {
@@ -33,6 +37,10 @@ protocol PongNapkinPresentableListener: AnyObject, Sendable {
 
     @MainActor required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    func update(connectedCount: Int?) async {
+        rootView.connectedCount = connectedCount
     }
 }
 #endif

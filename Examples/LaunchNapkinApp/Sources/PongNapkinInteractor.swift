@@ -5,10 +5,12 @@ protocol PongNapkinRouting: ViewableRouting, Sendable {}
 
 protocol PongNapkinPresentable: Presentable, Sendable {
     @MainActor var listener: PongNapkinPresentableListener? { get set }
+    func update(connectedCount: Int?) async
 }
 
 protocol PongNapkinListener: AnyObject, Sendable {
     func pongDidTapSwap() async
+    func numberOfNapkinsConnected() async -> Int?
 }
 
 final actor PongNapkinInteractor: PresentableInteractable, PongNapkinPresentableListener {
@@ -27,6 +29,8 @@ final actor PongNapkinInteractor: PresentableInteractable, PongNapkinPresentable
     func set(listener: PongNapkinListener?) { self.listener = listener }
 
     func didBecomeActive() async {
+        let count = await listener?.numberOfNapkinsConnected() ?? nil
+        await presenter.update(connectedCount: count)
         let presenter = self.presenter
         await MainActor.run { presenter.listener = self }
     }

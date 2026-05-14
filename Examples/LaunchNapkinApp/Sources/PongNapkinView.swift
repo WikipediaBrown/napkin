@@ -2,7 +2,13 @@ import SwiftUI
 import napkin
 
 struct PongNapkinView: View {
+    var connectedCount: Int? = nil
     weak var listener: PongNapkinPresentableListener?
+
+    private var connectedText: String {
+        guard let n = connectedCount else { return "— napkins connected" }
+        return "\(n) napkin\(n == 1 ? "" : "s") connected"
+    }
 
     var body: some View {
         ZStack {
@@ -16,6 +22,11 @@ struct PongNapkinView: View {
                     .italic()
                     .foregroundStyle(Color(red: 0.95, green: 0.92, blue: 0.84))
                     .accessibilityIdentifier(NapkinAccessibility.Pong.label)
+
+                Text(connectedText)
+                    .font(.system(.subheadline, design: .monospaced))
+                    .foregroundStyle(Color(red: 0.95, green: 0.92, blue: 0.84).opacity(0.7))
+                    .accessibilityIdentifier(NapkinAccessibility.Pong.connectedCount)
 
                 Button {
                     dispatch { [listener] in await listener?.didTapSwap() }

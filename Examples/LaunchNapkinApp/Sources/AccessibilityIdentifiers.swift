@@ -18,11 +18,13 @@ public enum NapkinAccessibility {
 
     public enum Ping {
         public static let label = "ping.label"
+        public static let connectedCount = "ping.connectedCount"
         public static let swapButton = "ping.swapButton"
     }
 
     public enum Pong {
         public static let label = "pong.label"
+        public static let connectedCount = "pong.connectedCount"
         public static let swapButton = "pong.swapButton"
     }
 }
