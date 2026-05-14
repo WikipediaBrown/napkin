@@ -29,6 +29,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Narrow remote refspec
+        # Override `remote.origin.fetch` so subsequent `git fetch --tags`
+        # calls (run by fastlane's `git_pull(only_tags: true)` inside
+        # `create_next_version`) only target `main` instead of all
+        # branches. On macos-26 APFS (case-insensitive), the long-stale
+        # `CI` branch (file at .git/refs/remotes/origin/CI) collides with
+        # `ci/...` namespaced branches (which need a directory at
+        # .git/refs/remotes/origin/ci/), failing with
+        # `error: some local refs could not be updated`. The narrowed
+        # refspec sidesteps the collision entirely.
+        run: |
+          git config --local remote.origin.fetch '+refs/heads/main:refs/remotes/origin/main'
       - name: Select Xcode
         # Plain Apple tooling, no third-party action. Glob picks the highest
         # Xcode 26.x.y installed on the runner so a runner-image refresh
