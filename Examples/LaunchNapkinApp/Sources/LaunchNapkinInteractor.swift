@@ -3,7 +3,7 @@ import napkin
 @MainActor
 protocol LaunchNapkinRouting: LaunchRouting, Sendable {
     func attachPing() async
-    func swap() async
+    func attachPong() async
 }
 
 protocol LaunchNapkinListener: AnyObject, Sendable {}
@@ -23,8 +23,6 @@ final actor LaunchNapkinInteractor:
     func set(listener: LaunchNapkinListener?) { self.listener = listener }
 
     func didBecomeActive() async {
-        // Start with Ping attached. Subsequent swap requests from either child
-        // will flip back and forth.
         await router?.attachPing()
     }
 
@@ -32,13 +30,15 @@ final actor LaunchNapkinInteractor:
 
     // MARK: - PingNapkinListener
 
+    // Ping just told us it was tapped — replace it with Pong. The router
+    // tears down Ping as part of attachPong().
     func pingDidTapSwap() async {
-        await router?.swap()
+        await router?.attachPong()
     }
 
     // MARK: - PongNapkinListener
 
     func pongDidTapSwap() async {
-        await router?.swap()
+        await router?.attachPing()
     }
 }
