@@ -113,6 +113,14 @@ jobs:
 
           for ref in $REFS; do
             echo "::group::Building docs for ${ref}"
+            # Belt and suspenders: `fetch-tags: true` in the checkout step
+            # pulls all tag refs, but the trees of tagged commits in a
+            # shallow clone aren't guaranteed across git versions. Explicitly
+            # fetch each non-main ref at depth 1 so `git checkout` and the
+            # subsequent docs build always have the tree they need.
+            if [ "$ref" != "main" ]; then
+              git fetch --depth=1 origin "+refs/tags/${ref}:refs/tags/${ref}" 2>&1 | tail -2 || true
+            fi
             if ! git checkout "$ref" 2>&1 | tail -2; then
               echo "::warning::failed to check out ${ref}, skipping"
               echo "::endgroup::"
