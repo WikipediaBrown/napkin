@@ -1,8 +1,15 @@
 <nav class="napkin-site-nav" aria-label="Site">
     <div class="napkin-site-nav__inner">
         <a class="napkin-site-nav__brand" href="/napkin/">
-            <span class="napkin-site-nav__chip" aria-hidden="true"></span>
-            <span>napkin</span>
+            <span class="napkin-site-nav__mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16v16H4z"/>
+                    <path d="M4 4l8 8"/>
+                    <path d="M20 4l-8 8"/>
+                    <path d="M12 12v8"/>
+                </svg>
+            </span>
+            <span class="napkin-site-nav__wordmark">napkin</span>
         </a>
         <ul class="napkin-site-nav__links">
             <li><a href="/napkin/documentation/napkin/">Docs</a></li>
@@ -12,19 +19,44 @@
     </div>
 </nav>
 <style>
+    /* napkin DocC header — matched to /napkin/ homepage palette.
+       Self-contained: DocC injects this verbatim into every docs page,
+       so we can't rely on the homepage stylesheet. */
+    :root {
+        --napkin-bg: #fbfaf6;
+        --napkin-text: #1a201d;
+        --napkin-muted: #5b665f;
+        --napkin-border: #e6e3d9;
+        --napkin-brand: #2b5743;
+        --napkin-brand-on: #ffffff;
+        --napkin-hover-bg: rgba(43, 87, 67, 0.08);
+    }
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --napkin-bg: rgba(15, 19, 17, 0.85);
+            --napkin-text: #ecebe5;
+            --napkin-muted: #aab3ac;
+            --napkin-border: #1f2622;
+            --napkin-brand: #7fc7a7;
+            --napkin-brand-on: #0d1311;
+            --napkin-hover-bg: rgba(127, 199, 167, 0.10);
+        }
+    }
     .napkin-site-nav {
-        background: #0f1f3a;
-        color: #ffffff;
-        border-bottom: 1px solid #21304a;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background: var(--napkin-bg);
+        color: var(--napkin-text);
+        border-bottom: 1px solid var(--napkin-border);
+        font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         font-size: 15px;
         line-height: 1.4;
+        backdrop-filter: saturate(180%) blur(14px);
+        -webkit-backdrop-filter: saturate(180%) blur(14px);
     }
     .napkin-site-nav__inner {
         max-width: 1280px;
         margin: 0 auto;
         padding: 0 24px;
-        height: 48px;
+        height: 52px;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -34,29 +66,25 @@
         display: inline-flex;
         align-items: center;
         gap: 10px;
-        color: #ffffff !important;
+        color: var(--napkin-text) !important;
         font-weight: 600;
+        letter-spacing: -0.01em;
         text-decoration: none !important;
     }
-    .napkin-site-nav__brand:hover { color: #ffffff !important; }
-    .napkin-site-nav__chip {
-        display: inline-block;
-        width: 18px;
-        height: 18px;
-        background: #ffffff;
-        border-radius: 3px;
-        position: relative;
+    .napkin-site-nav__brand:hover { color: var(--napkin-text) !important; }
+    .napkin-site-nav__mark {
+        width: 26px;
+        height: 26px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--napkin-brand);
+        color: var(--napkin-brand-on);
+        border-radius: 7px;
+        transition: transform 200ms cubic-bezier(.2,.7,.2,1);
     }
-    .napkin-site-nav__chip::after {
-        content: "";
-        position: absolute;
-        right: 0;
-        bottom: 0;
-        width: 6px;
-        height: 6px;
-        background: #0f1f3a;
-        clip-path: polygon(100% 0, 0 100%, 100% 100%);
-    }
+    .napkin-site-nav__brand:hover .napkin-site-nav__mark { transform: rotate(-6deg) scale(1.04); }
+    .napkin-site-nav__wordmark { font-size: 1rem; }
     .napkin-site-nav__links {
         list-style: none;
         margin: 0;
@@ -66,18 +94,26 @@
         flex-wrap: wrap;
     }
     .napkin-site-nav__links a {
-        color: #c8d2e1 !important;
+        color: var(--napkin-muted) !important;
         padding: 6px 12px;
         border-radius: 6px;
         text-decoration: none !important;
         display: inline-block;
+        font-weight: 500;
+        transition: color 140ms ease, background 140ms ease;
     }
     .napkin-site-nav__links a:hover {
-        color: #ffffff !important;
-        background: rgba(255, 255, 255, 0.08);
+        color: var(--napkin-text) !important;
+        background: var(--napkin-hover-bg);
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .napkin-site-nav__mark { transition: none; }
+        .napkin-site-nav__links a { transition: none; }
     }
     @media (max-width: 540px) {
-        .napkin-site-nav__inner { padding: 0 16px; }
+        .napkin-site-nav__inner { padding: 0 16px; height: 48px; }
         .napkin-site-nav__links a { padding: 6px 10px; font-size: 0.9rem; }
+        .napkin-site-nav__mark { width: 22px; height: 22px; }
+        .napkin-site-nav__mark svg { width: 15px; height: 15px; }
     }
 </style>
