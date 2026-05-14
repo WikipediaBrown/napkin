@@ -51,9 +51,17 @@ jobs:
         # any `git checkout` in the versioned-docs loop. Otherwise
         # `git describe --tags --abbrev=0` would resolve against whatever tag
         # we last checked out instead of the tip of main.
+        #
+        # Explicit `git fetch --tags --force` pulls any tags that the Release
+        # workflow may have pushed AFTER actions/checkout fetched. Without
+        # this, the homepage footer would stamp the previous version on the
+        # first deploy after each release (the Release workflow runs in
+        # parallel-then-completes, and the workflow_run trigger fires fast).
         id: versions
         run: |
-          VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "main")
+          git fetch --tags --force origin
+          VERSION=$(git describe --tags --abbrev=0 origin/main 2>/dev/null || git tag -l --sort=-v:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+          : "${VERSION:=main}"
           REFS=$( ( echo "main"; git tag -l --sort=-v:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -5 ) | tr '\n' ' ' )
           ORIGINAL_REF=$(git rev-parse HEAD)
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
