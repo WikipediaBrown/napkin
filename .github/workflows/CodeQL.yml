@@ -31,7 +31,10 @@ jobs:
     # macos-26 image as the rest of the build matrix so Xcode 26 / Swift 6.2
     # are available.
     runs-on: macos-26
-    timeout-minutes: 30
+    # `swift build` for the framework regularly takes 25+ minutes on the
+    # macos-26 runner; CodeQL's own analysis adds another 5–10. The 30-min
+    # default was hitting the wall before analysis could finish.
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v6
