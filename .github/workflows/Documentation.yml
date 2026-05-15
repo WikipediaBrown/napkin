@@ -203,6 +203,13 @@ jobs:
               cat "$article"
             done
           } > docs/llms-full.txt
+          cp Tools/site/sitemap.xml docs/sitemap.xml
+          cp Tools/site/robots.txt docs/robots.txt
+          # Blog: 5 SEO-targeted long-form articles + listing page + Atom feed.
+          # Hand-rolled HTML (no static-site-generator). Each post lives in
+          # its own folder so the URL is `/blog/<slug>/`.
+          mkdir -p docs/blog
+          cp -R Tools/site/blog/. docs/blog/
 
           VERSION="${{ steps.versions.outputs.version }}"
           REFS="${{ steps.versions.outputs.refs }}"

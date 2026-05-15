@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A RIBs alternative for Swift Concurrency, without RxSwift: meet napkin</title>
+    <meta name="description" content="Uber's RIBs is actively maintained, but it's built on RxSwift and ships a runtime leak detector. napkin is the same Router-Interactor-Builder pattern, written for Swift Concurrency, without the RxSwift dependency or the leak heuristics. Clean Architecture on a napkin.">
+    <meta name="theme-color" content="#f6f1e3" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0e1410" media="(prefers-color-scheme: dark)">
+
+    <meta property="og:title" content="A RIBs alternative for Swift Concurrency, without RxSwift: meet napkin">
+    <meta property="og:description" content="napkin is the Router-Interactor-Builder pattern written for Swift Concurrency — actors instead of subclasses, no RxSwift, no leak detector. Clean Architecture on a napkin.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://getnapkin.to/blog/swift-6-ribs-replacement/">
+    <meta property="og:image" content="https://getnapkin.to/social-preview.png">
+    <meta property="article:published_time" content="2026-05-15">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://getnapkin.to/blog/swift-6-ribs-replacement/">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="/napkin-icon.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/napkin-icon@2x.png">
+    <link rel="apple-touch-icon" href="/napkin-icon@2x.png">
+    <link rel="alternate" type="application/atom+xml" title="napkin blog" href="/blog/feed.xml">
+    <link rel="stylesheet" href="/styles.css">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "A RIBs alternative for Swift Concurrency, without RxSwift: meet napkin",
+        "description": "napkin is the Router-Interactor-Builder pattern written for Swift Concurrency — actors instead of subclasses, no RxSwift, no leak detector.",
+        "datePublished": "2026-05-15",
+        "author": { "@type": "Organization", "name": "napkin" },
+        "publisher": { "@type": "Organization", "name": "napkin", "url": "https://getnapkin.to/" },
+        "image": "https://getnapkin.to/social-preview.png",
+        "mainEntityOfPage": "https://getnapkin.to/blog/swift-6-ribs-replacement/"
+    }
+    </script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="masthead" role="banner">
+    <div class="masthead__inner">
+        <a class="masthead__brand" href="/" aria-label="napkin — home">
+            <span class="masthead__mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4 H20 V20 L4 20 L4 4 Z" />
+                    <path d="M4 14 L14 14 L14 20" />
+                </svg>
+            </span>
+            <span class="masthead__wordmark">napkin</span>
+        </a>
+        <nav class="masthead__nav" aria-label="Primary">
+            <ul>
+                <li><a href="/documentation/napkin/">Docs</a></li>
+                <li><a href="/#example">Example</a></li>
+                <li><a href="/blog/" aria-current="page">Blog</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md">Changelog</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin">GitHub</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main id="main">
+<article class="post">
+    <p class="post__kicker"><span>§ 01</span> <span class="sep">·</span> <span>2026 · 05 · 15</span> <span class="sep">·</span> <span>Architecture</span></p>
+    <h1 class="post__title">A RIBs alternative for Swift Concurrency, without RxSwift: meet napkin</h1>
+    <p class="post__lede">Uber's <a href="https://github.com/uber/RIBs">RIBs</a> is alive, well, and actively developed. It's also built on RxSwift and ships a runtime leak detector. napkin is the same Router-Interactor-Builder pattern written for Swift Concurrency, without either — Clean Architecture on a napkin.</p>
+
+    <div class="post__body">
+        <p>If you've shipped a non-trivial iOS app in the last five years, you've probably worked with <a href="https://github.com/uber/RIBs">RIBs</a>. The pattern is simple to describe and hard to fully internalize: every feature is a unit of <strong>Router</strong>, <strong>Interactor</strong>, and <strong>Builder</strong>, composed into a tree. The interactor is the unit's brain; the router owns the subtree; the builder constructs everything. A view, when there is one, lives behind a <code>Presentable</code> protocol that the interactor talks to.</p>
+
+        <p>RIBs is good. Uber still maintains it. Teams ship with it every day. This post isn't a "RIBs is dead" pitch — it isn't, and any post that tries to sell you that is selling something.</p>
+
+        <p>This post is for a narrower audience: people who want the RIBs <em>pattern</em> but don't want to bring RxSwift along with it. People who'd rather have the compiler enforce structure than have a runtime leak detector. People who like the idea of Clean Architecture but want it expressed in Swift 6's native vocabulary — actors, <code>@MainActor</code>, <code>Sendable</code>, <code>async</code>/<code>await</code> — not in operators and disposables.</p>
+
+        <h2>Two things RIBs ships that you may not want</h2>
+
+        <h3>RxSwift</h3>
+
+        <p>RIBs is built on RxSwift. Stream protocols are <code>Observable</code>; cancellation goes through <code>DisposeBag</code>; lifecycle hooks fire into Rx pipelines. That's a fine choice and a battle-tested one. It's also a transitive dependency that ships in your binary, has its own learning curve, and pulls in idioms that don't compose neatly with <code>async</code> functions.</p>
+
+        <p>If your team is already fluent in RxSwift and your codebase is full of it, this isn't a problem. If you're starting a new app on Swift 6 and you'd rather not add a reactive-streams library on top of the language's built-in concurrency model, it's friction.</p>
+
+        <h3>The runtime leak detector</h3>
+
+        <p>RIBs ships a runtime leak detector that scans the routing tree at deactivation time, looking for detached interactors that didn't release their references. It's clever and useful in a large codebase with many contributors. It also runs in production, fires false positives under certain valid patterns, and is, fundamentally, a heuristic — a check that your <em>code</em> matched a <em>structure</em>.</p>
+
+        <p>Swift 6's strict concurrency model can enforce many of those structural invariants at compile time. Actor isolation, <code>Sendable</code> conformance, and explicit lifecycles cover most of the cases the leak detector watches for. If you're willing to design within those constraints, you don't need the runtime check — the compiler is the check.</p>
+
+        <h2>What napkin is</h2>
+
+        <p>napkin is the RIBs pattern, kept honest:</p>
+
+        <ul>
+            <li>Same vocabulary — Builder, Component, Interactor, Router, Presenter, ViewController.</li>
+            <li>Same tree composition — parent components conform to children's dependency protocols; intents flow up through listener protocols; routing happens via <code>attachChild</code> / <code>detachChild</code>.</li>
+            <li>Different mechanics underneath — <code>final actor</code> instead of subclasses, <code>@MainActor</code> instead of "assume main thread," <code>AsyncStream</code> instead of <code>Observable</code>, weak listeners instead of disposables.</li>
+            <li>No third-party dependencies. The whole framework is plain Swift Concurrency on top of Foundation, UIKit/AppKit, and SwiftUI.</li>
+        </ul>
+
+        <p>The name is the pitch: a napkin is what you sketch Clean Architecture on. The framework is small enough to fit on one.</p>
+
+        <h2>What napkin changes (concretely)</h2>
+
+        <h3>Interactor: <code>final actor</code>, not subclass</h3>
+
+        <p>Where a typical RIBs interactor looks like:</p>
+
+        <figure class="code-card" aria-label="Typical RIBs interactor">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">HomeInteractor.swift (RIBs)</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>import RIBs
+import RxSwift
+
+final class HomeInteractor: PresentableInteractor&lt;HomePresentable&gt;,
+                            HomeInteractable,
+                            HomePresentableListener {
+
+    override func didBecomeActive() {
+        super.didBecomeActive()
+        userStream
+            .observeOn(MainScheduler.instance)
+            .subscribe(onNext: { [weak self] in self?.presenter.update($0) })
+            .disposeOnDeactivate(interactor: self)
+    }
+}
+</code></pre>
+        </figure>
+
+        <p>napkin's looks like:</p>
+
+        <figure class="code-card" aria-label="napkin actor interactor">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">HomeInteractor.swift (napkin)</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>import napkin
+
+final actor HomeInteractor: PresentableInteractable,
+                            HomePresentableListener {
+    nonisolated let lifecycle = InteractorLifecycle()
+    nonisolated let presenter: HomePresentable
+
+    init(presenter: HomePresentable) { self.presenter = presenter }
+
+    func didBecomeActive() async {
+        for await user in userStream {
+            await presenter.update(user)
+        }
+    }
+}
+</code></pre>
+        </figure>
+
+        <p>Same intent, different mechanics. <code>final actor</code> replaces <code>final class</code> — business logic runs off the main actor on its own serial executor. <code>PresentableInteractable</code> is a protocol; there's no base class because <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0306-actors.md">Swift actors can't be subclassed</a>. <code>nonisolated let lifecycle = InteractorLifecycle()</code> is the protocol-composition trick that gives the actor "inherited" lifecycle hooks via a default extension. <a href="/documentation/napkin/protocolcompositionoverinheritance">The full reasoning is in the docs.</a></p>
+
+        <p>And no RxSwift. The stream consumption is <code>for await ... in</code>; cancellation is the task being torn down when the interactor deactivates.</p>
+
+        <h3>Routing: <code>@MainActor</code>, explicit <code>await</code></h3>
+
+        <p>Routing and presentation touch UIKit, so they're <code>@MainActor</code>. The interactor crosses the boundary with an explicit <code>await</code>:</p>
+
+        <figure class="code-card" aria-label="Interactor calling into MainActor router">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">HomeInteractor.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>func didTapProfile() async {
+    await router?.routeToProfile()
+}
+</code></pre>
+        </figure>
+
+        <p>Every isolation crossing is an <code>await</code>. The compiler enforces it — no Sendable warnings to suppress, no isolation ceremony to learn around. You start the call with <code>await</code> and stop worrying.</p>
+
+        <h3>No leak detector</h3>
+
+        <p>napkin doesn't ship one. The framework relies on Swift 6's compile-time guarantees: <code>weak var listener</code> is enforced; <code>detachChild</code> deactivates the child's lifecycle deterministically; <code>isolated deinit</code> (iOS 26+) ensures teardown happens on the right executor. Patterns that would have tripped the RIBs leak detector are either caught by the compiler or impossible to express.</p>
+
+        <p>If you ship without the leak detector and worry about subtle leaks, run Instruments. The point isn't that leaks can't happen — it's that the framework doesn't carry a runtime memory-heuristic to find them.</p>
+
+        <h2>What napkin keeps</h2>
+
+        <p>Everything that made RIBs valuable in the first place is still there:</p>
+
+        <ul>
+            <li><strong>The Router/Interactor/Builder triad.</strong> If you've named a RIBs feature, you can name a napkin.</li>
+            <li><strong>Listener protocols for upward communication.</strong> Children don't import or reference their parent; they call <code>listener?.fooDidFinish()</code> and the parent's interactor conforms to the listener.</li>
+            <li><strong>Component-tree dependency injection.</strong> Every feature declares what it needs from above via a <code>Dependency</code> protocol; the parent's component conforms to its children's needs. Compile-time enforced.</li>
+            <li><strong>The Clean Architecture dependency rule.</strong> Business logic doesn't depend on UI; UI depends on protocols, not concrete interactor types.</li>
+            <li><strong>Headless napkins.</strong> Orchestrator napkins with no view of their own — the parent that owns the LoggedOut/LoggedIn swap in the example app is one.</li>
+        </ul>
+
+        <h2>When to use what</h2>
+
+        <p><strong>Use RIBs if</strong> you have an existing RIBs codebase that works, your team is fluent in RxSwift, or you specifically want the runtime leak detector. None of those are wrong reasons.</p>
+
+        <p><strong>Use napkin if</strong> you want the same pattern without the RxSwift dependency, you're starting a new app on Swift 6, or you want to lean on the compiler instead of runtime checks. None of those are wrong reasons either.</p>
+
+        <p>Both ship the same architecture pattern. They make different trade-offs underneath. Pick the one whose trade-offs match your team.</p>
+
+        <h2>Try it</h2>
+
+        <p>The <a href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse">RibHouse example</a> is a complete tree (auth flow, three napkins, ~600 lines of Swift) and the <a href="/documentation/napkin/tutorialbuildingaloginflow">tutorial</a> walks every file. If you've shipped RIBs code, the tutorial will feel familiar — you'll see what's the same and what's been swapped underneath.</p>
+    </div>
+
+    <footer class="post__footer">
+        <p><a href="/blog/">← All posts</a></p>
+        <p>napkin · <a href="/documentation/napkin/">Docs</a> · <a href="https://github.com/WikipediaBrown/napkin">GitHub</a></p>
+    </footer>
+</article>
+</main>
+
+<footer class="colophon" role="contentinfo">
+    <div class="colophon__inner">
+        <p class="colophon__line">
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin">napkin</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/LICENSE.md">Apache&#8209;2.0</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md">CHANGELOG</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/">Blog</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/feed.xml" type="application/atom+xml">RSS</a>
+        </p>
+        <p class="colophon__line colophon__line--right">
+            Made with 🌲🌲🌲 in Cascadia
+        </p>
+    </div>
+</footer>
+
+<script>
+(function() {
+    document.querySelectorAll('button[data-copy]').forEach(function(btn) {
+        btn.addEventListener('click', async function() {
+            var card = btn.closest('.code-card');
+            var code = card && card.querySelector('pre code');
+            if (!code) return;
+            try {
+                await navigator.clipboard.writeText(code.innerText);
+                var prev = btn.textContent;
+                btn.setAttribute('data-state', 'copied');
+                btn.textContent = 'Copied';
+                setTimeout(function() {
+                    btn.removeAttribute('data-state');
+                    btn.textContent = prev;
+                }, 1400);
+            } catch (e) { btn.textContent = 'Copy failed'; }
+        });
+    });
+})();
+</script>
+
+</body>
+</html>
