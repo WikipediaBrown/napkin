@@ -2,9 +2,11 @@
 //  LaunchNapkinAppUITests.swift
 //  napkin example UI tests
 //
-//  Demonstrates how to drive the napkin example app via XCUITest using the
-//  identifiers defined in AccessibilityIdentifiers.swift. Mirrors how a real
-//  consumer would write end-to-end tests against an app built with napkin.
+//  Drives the napkin example app via XCUITest. The app has two child
+//  napkins managed by the LaunchNapkin: a LoggedOut screen with a Login
+//  button, and a LoggedIn screen showing the user's name + barbecue foods
+//  and a Logout button. The LaunchNapkin holds the AuthService and swaps
+//  children on login / logout.
 //
 
 import XCTest
@@ -19,60 +21,33 @@ final class LaunchNapkinAppUITests: XCTestCase {
         app.launch()
     }
 
-    func testLaunchScreenShowsBothNapkinEntryButtons() {
-        let greeting = app.staticTexts[NapkinAccessibility.Launch.greeting]
-        XCTAssertTrue(greeting.waitForExistence(timeout: 5))
-        XCTAssertEqual(greeting.label, "Hello, World!")
-
-        XCTAssertTrue(app.buttons[NapkinAccessibility.Launch.showCounterButton].exists)
-        XCTAssertTrue(app.buttons[NapkinAccessibility.Launch.showQuoteButton].exists)
+    func testLaunchStartsLoggedOut() {
+        let title = app.staticTexts[NapkinAccessibility.LoggedOut.title]
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons[NapkinAccessibility.LoggedOut.loginButton].exists)
     }
 
-    func testCounterIncrementsAndDecrements() {
-        app.buttons[NapkinAccessibility.Launch.showCounterButton].tap()
+    func testLoginRevealsBarbecueFoodsAndLogoutReturns() {
+        app.buttons[NapkinAccessibility.LoggedOut.loginButton].tap()
 
-        let count = app.staticTexts[NapkinAccessibility.Counter.countLabel]
-        XCTAssertTrue(count.waitForExistence(timeout: 5))
-        XCTAssertEqual(count.label, "0")
+        // After login (the mock service sleeps ~200ms) we expect the
+        // logged-in screen with the user's name.
+        let nameLabel = app.staticTexts[NapkinAccessibility.LoggedIn.nameLabel]
+        XCTAssertTrue(nameLabel.waitForExistence(timeout: 5))
+        XCTAssertEqual(nameLabel.label, "Smokey Joe")
 
-        app.buttons[NapkinAccessibility.Counter.incrementButton].tap()
-        app.buttons[NapkinAccessibility.Counter.incrementButton].tap()
-        XCTAssertEqual(count.label, "2")
-
-        app.buttons[NapkinAccessibility.Counter.decrementButton].tap()
-        XCTAssertEqual(count.label, "1")
-
-        app.buttons[NapkinAccessibility.Counter.doneButton].tap()
-        // Back at the launch screen
+        // Barbecue list items render with identifiers like "loggedIn.food.Brisket".
+        // We don't pin the exact set in the test — just confirm at least one
+        // known food is visible (so the list rendered from the User object).
         XCTAssertTrue(
-            app.buttons[NapkinAccessibility.Launch.showCounterButton]
-                .waitForExistence(timeout: 5)
+            app.staticTexts["\(NapkinAccessibility.LoggedIn.foodPrefix).Brisket"]
+                .waitForExistence(timeout: 2)
         )
-    }
 
-    func testQuoteRerollsAndDismisses() {
-        app.buttons[NapkinAccessibility.Launch.showQuoteButton].tap()
-
-        let quote = app.staticTexts[NapkinAccessibility.Quote.quoteLabel]
-        XCTAssertTrue(quote.waitForExistence(timeout: 5))
-        let initialQuote = quote.label
-        XCTAssertFalse(initialQuote.isEmpty)
-
-        // Reroll a few times — at least one of the new values should differ from
-        // the initial value (the quotes array has more than one entry).
-        var sawDifferent = false
-        for _ in 0..<10 {
-            app.buttons[NapkinAccessibility.Quote.newQuoteButton].tap()
-            if quote.label != initialQuote {
-                sawDifferent = true
-                break
-            }
-        }
-        XCTAssertTrue(sawDifferent, "New Quote button should produce a different quote within 10 taps")
-
-        app.buttons[NapkinAccessibility.Quote.doneButton].tap()
+        // Logout takes us back to the logged-out screen.
+        app.buttons[NapkinAccessibility.LoggedIn.logoutButton].tap()
         XCTAssertTrue(
-            app.buttons[NapkinAccessibility.Launch.showQuoteButton]
+            app.staticTexts[NapkinAccessibility.LoggedOut.title]
                 .waitForExistence(timeout: 5)
         )
     }

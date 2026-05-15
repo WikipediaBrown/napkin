@@ -1,15 +1,9 @@
-//
-//  LaunchNapkinRouter.swift
-//  napkin
-//
-//  Created by nonplus on 3/13/26.
-//
-
 import napkin
 
 @MainActor
 protocol LaunchNapkinViewControllable: ViewControllable {
-    // Declare methods the router invokes to manipulate the view hierarchy.
+    func embed(_ child: ViewControllable)
+    func detach(_ child: ViewControllable)
 }
 
 @MainActor
@@ -18,65 +12,55 @@ final class LaunchNapkinRouter:
     LaunchNapkinRouting
 {
 
-    private let counterBuilder: CounterNapkinBuildable
-    private let quoteBuilder: QuoteNapkinBuildable
-    private var counterRouter: CounterNapkinRouting?
-    private var quoteRouter: QuoteNapkinRouting?
+    private let loggedOutBuilder: LoggedOutNapkinBuildable
+    private let loggedInBuilder: LoggedInNapkinBuildable
+    private var loggedOutRouter: LoggedOutNapkinRouting?
+    private var loggedInRouter: LoggedInNapkinRouting?
 
     init(
         interactor: LaunchNapkinInteractor,
         viewController: LaunchNapkinViewControllable,
-        counterBuilder: CounterNapkinBuildable,
-        quoteBuilder: QuoteNapkinBuildable
+        loggedOutBuilder: LoggedOutNapkinBuildable,
+        loggedInBuilder: LoggedInNapkinBuildable
     ) {
-        self.counterBuilder = counterBuilder
-        self.quoteBuilder = quoteBuilder
+        self.loggedOutBuilder = loggedOutBuilder
+        self.loggedInBuilder = loggedInBuilder
         super.init(interactor: interactor, viewController: viewController)
     }
 
     // MARK: - LaunchNapkinRouting
 
-    func routeToCounter() async {
-        guard counterRouter == nil else { return }
-        let router = await counterBuilder.build(withListener: interactor)
-        counterRouter = router
+    func attachLoggedOut() async {
+        await detachLoggedInIfNeeded()
+        guard loggedOutRouter == nil else { return }
+        let router = await loggedOutBuilder.build(withListener: interactor)
+        loggedOutRouter = router
         await attachChild(router)
-        #if canImport(UIKit)
-        viewController.uiviewController.present(
-            router.viewControllable.uiviewController,
-            animated: true
-        )
-        #endif
+        viewController.embed(router.viewControllable)
     }
 
-    func routeBackFromCounter() async {
-        guard let router = counterRouter else { return }
-        counterRouter = nil
-        #if canImport(UIKit)
-        router.viewControllable.uiviewController.dismiss(animated: true)
-        #endif
+    func attachLoggedIn(user: User) async {
+        await detachLoggedOutIfNeeded()
+        guard loggedInRouter == nil else { return }
+        let router = await loggedInBuilder.build(withListener: interactor, user: user)
+        loggedInRouter = router
+        await attachChild(router)
+        viewController.embed(router.viewControllable)
+    }
+
+    // MARK: - Private
+
+    private func detachLoggedOutIfNeeded() async {
+        guard let router = loggedOutRouter else { return }
+        loggedOutRouter = nil
+        viewController.detach(router.viewControllable)
         await detachChild(router)
     }
 
-    func routeToQuote() async {
-        guard quoteRouter == nil else { return }
-        let router = await quoteBuilder.build(withListener: interactor)
-        quoteRouter = router
-        await attachChild(router)
-        #if canImport(UIKit)
-        viewController.uiviewController.present(
-            router.viewControllable.uiviewController,
-            animated: true
-        )
-        #endif
-    }
-
-    func routeBackFromQuote() async {
-        guard let router = quoteRouter else { return }
-        quoteRouter = nil
-        #if canImport(UIKit)
-        router.viewControllable.uiviewController.dismiss(animated: true)
-        #endif
+    private func detachLoggedInIfNeeded() async {
+        guard let router = loggedInRouter else { return }
+        loggedInRouter = nil
+        viewController.detach(router.viewControllable)
         await detachChild(router)
     }
 }
