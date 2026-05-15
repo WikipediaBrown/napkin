@@ -931,9 +931,279 @@ strong {
     .spec:hover .spec__index { color: var(--moss-2); }
 }
 
+/* ---------- Example section ---------- */
+/* Two-column at desktop: editorial copy on the left, an iPhone-shaped frame
+   + a stack of code blocks on the right that auto-cycle. Phone fades between
+   the LoggedOut/LoggedIn snapshots; each code step staggers its lines in on
+   activation like an editor typing them out. */
+
+.example {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: var(--s-7) clamp(1.25rem, 4vw, 4.5rem) var(--s-6);
+    display: grid;
+    gap: var(--s-5);
+    grid-template-columns: 1fr;
+    align-items: start;
+}
+@media (min-width: 940px) {
+    .example {
+        grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.1fr);
+        gap: var(--s-7);
+    }
+}
+
+.example__copy { max-width: 36rem; }
+.example__title {
+    font-family: var(--font-serif);
+    font-size: var(--step-3);
+    line-height: 1.06;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    margin: var(--s-2) 0 var(--s-3);
+}
+.example__lede {
+    font-family: var(--font-serif);
+    font-size: var(--step-1);
+    line-height: 1.45;
+    color: var(--ink-2);
+    margin: 0 0 var(--s-4);
+}
+.example__lede code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    color: var(--ink);
+    background: color-mix(in oklab, var(--moss), transparent 92%);
+    padding: 0.05em 0.4em;
+    border-radius: 4px;
+}
+
+.example__demo {
+    display: grid;
+    /* `minmax(0, 1fr)` (vs bare `1fr`) is what lets the code column actually
+       respect its share — otherwise long Swift lines push the track wider
+       than the available space and the section overflows the viewport. */
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--s-5);
+    align-items: start;
+}
+@media (max-width: 760px) {
+    .example__demo { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+}
+
+.example__phone-wrap { position: sticky; top: 90px; }
+
+.phone {
+    position: relative;
+    width: 220px;
+    aspect-ratio: 1170 / 2532;
+    border-radius: 36px;
+    background: var(--ink);
+    padding: 8px;
+    box-shadow:
+        0 30px 70px -25px oklch(0% 0 0 / 0.4),
+        0 6px 16px -4px oklch(0% 0 0 / 0.18),
+        inset 0 0 0 1px color-mix(in oklab, var(--ink), white 8%);
+    transform: rotate(-1.2deg);
+}
+.phone__notch {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 22px;
+    border-radius: 12px;
+    background: var(--ink);
+    z-index: 2;
+}
+.phone__shot {
+    position: absolute;
+    inset: 8px;
+    width: calc(100% - 16px);
+    height: calc(100% - 16px);
+    object-fit: cover;
+    border-radius: 28px;
+    display: block;
+    opacity: 0;
+    transition: opacity 700ms ease-in-out;
+    pointer-events: none;
+}
+.phone__shot.is-visible { opacity: 1; }
+
+.example__steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    min-height: 340px;
+    /* `min-width: 0` overrides the default `min-content` that grid items get,
+       so the code track respects its `minmax(0, 1fr)` allocation instead of
+       being pushed wider by long Swift lines. */
+    min-width: 0;
+}
+.step {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 350ms ease-out, transform 350ms ease-out;
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+    min-width: 0;
+}
+.step.is-active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    position: relative;
+}
+
+.step__head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6ch;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--ink-3);
+    margin: 0;
+    letter-spacing: 0.02em;
+}
+.step__num   { color: var(--moss); font-weight: 600; }
+.step__sep   { color: color-mix(in oklab, var(--ink-3), transparent 40%); }
+.step__file  { color: var(--ink-2); }
+.step__folder { color: var(--ink-3); }
+
+.step .code {
+    margin: 0;
+    padding: var(--s-3);
+    background: var(--paper-deep);
+    color: var(--ink);
+    border-radius: 14px;
+    border: 1px solid color-mix(in oklab, var(--ink-3), transparent 70%);
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 0.84rem;
+    line-height: 1.55;
+    box-shadow: inset 0 1px 0 color-mix(in oklab, white, transparent 90%);
+}
+.step .code code { font: inherit; color: inherit; }
+
+.step .line {
+    display: block;
+    min-height: 1.55em;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 220ms ease-out, transform 220ms ease-out;
+}
+.step.is-active .line { opacity: 1; transform: translateY(0); }
+.step.is-active .line:nth-child(1) { transition-delay: 80ms; }
+.step.is-active .line:nth-child(2) { transition-delay: 200ms; }
+.step.is-active .line:nth-child(3) { transition-delay: 320ms; }
+.step.is-active .line:nth-child(4) { transition-delay: 440ms; }
+.step.is-active .line:nth-child(5) { transition-delay: 560ms; }
+.step.is-active .line:nth-child(6) { transition-delay: 680ms; }
+.step.is-active .line:nth-child(7) { transition-delay: 800ms; }
+.step.is-active .line:nth-child(8) { transition-delay: 920ms; }
+.step.is-active .line:nth-child(9) { transition-delay: 1040ms; }
+.step.is-active .line:nth-child(10) { transition-delay: 1160ms; }
+
+.step.is-active .line:last-child::after {
+    content: "▎";
+    display: inline-block;
+    margin-left: 2px;
+    color: var(--moss);
+    animation: caret-blink 1s steps(1) infinite;
+}
+@keyframes caret-blink { 50% { opacity: 0; } }
+
+.example__progress {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: var(--s-3);
+}
+.dot {
+    width: 38px;
+    height: 4px;
+    border-radius: 2px;
+    background: color-mix(in oklab, var(--ink-3), transparent 70%);
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    transition: background 220ms ease-out, transform 220ms ease-out;
+}
+.dot:hover { background: color-mix(in oklab, var(--ink-3), transparent 40%); }
+.dot.is-active {
+    background: var(--moss);
+    transform: scaleX(1.15);
+    transform-origin: left center;
+}
+.dot:focus-visible {
+    outline: 2px solid var(--moss);
+    outline-offset: 4px;
+}
+
+/* Reduced-motion + JS-disabled fallback: stack all four steps statically,
+   show both phone shots in sequence, kill the typing animation. */
+.example--static .example__steps { min-height: 0; }
+.example--static .step {
+    position: relative;
+    opacity: 1;
+    transform: none;
+    margin-bottom: var(--s-3);
+    pointer-events: auto;
+}
+.example--static .step .line {
+    opacity: 1; transform: none; transition: none;
+}
+.example--static .step .line:last-child::after { display: none; }
+.example--static .phone__shot {
+    opacity: 1;
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: auto;
+    margin-bottom: var(--s-2);
+    border-radius: 14px;
+    transition: none;
+}
+.example--static .example__progress { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+    .example__steps { min-height: 0; }
+    .step {
+        position: relative;
+        opacity: 1;
+        transform: none;
+        margin-bottom: var(--s-3);
+        pointer-events: auto;
+    }
+    .step .line { opacity: 1; transform: none; transition: none; }
+    .step .line:last-child::after { display: none; }
+    .phone__shot {
+        opacity: 1; position: relative; inset: auto;
+        width: 100%; height: auto;
+        margin-bottom: var(--s-2);
+        border-radius: 14px;
+        transition: none;
+    }
+    .example__progress { display: none; }
+}
+
 /* ---------- Print ---------- */
 
 @media print {
     .masthead, .colophon, .cta-row, .hero__paper { display: none; }
     body { background: white; color: black; }
+    .phone, .example__progress, .example__phone-wrap { display: none; }
+    .step {
+        position: relative; opacity: 1; transform: none;
+        margin-bottom: 1em;
+    }
+    .step .line { opacity: 1; transform: none; }
+    .step .line:last-child::after { display: none; }
 }

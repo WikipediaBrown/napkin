@@ -179,6 +179,8 @@ jobs:
           cp Tools/site/napkin-icon.png docs/napkin-icon.png
           cp Tools/site/napkin-icon@2x.png docs/napkin-icon@2x.png
           cp Tools/site/social-preview.png docs/social-preview.png
+          cp Tools/site/rib-house-logged-out.png docs/rib-house-logged-out.png
+          cp Tools/site/rib-house-logged-in.png docs/rib-house-logged-in.png
 
           VERSION="${{ steps.versions.outputs.version }}"
           REFS="${{ steps.versions.outputs.refs }}"
