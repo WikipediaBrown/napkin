@@ -40,7 +40,8 @@ playground.xcworkspace
 *.xcodeproj
 # Example app's xcodeproj is tracked so the project opens without running
 # xcodegen first; the line below un-ignores it (still ignore user state).
-!Examples/LaunchNapkinApp/LaunchNapkinApp.xcodeproj
+!Examples/RibHouse/RibHouse.xcodeproj
+!Examples/RibHouse/RibHouse.xcodeproj/**
 
 # CocoaPods
 #
@@ -76,8 +77,8 @@ fastlane/screenshots
 # XcodeGen-generated user state (xcuserdata, xcuserstate). The .xcodeproj
 # itself is tracked so the example opens without running xcodegen first;
 # regenerate via `xcodegen` after changing project.yml or adding Sources.
-Examples/LaunchNapkinApp/LaunchNapkinApp.xcodeproj/xcuserdata
-Examples/LaunchNapkinApp/LaunchNapkinApp.xcodeproj/project.xcworkspace/xcuserdata
+Examples/RibHouse/RibHouse.xcodeproj/xcuserdata
+Examples/RibHouse/RibHouse.xcodeproj/project.xcworkspace/xcuserdata
 
 # fastlane auto-generated docs
 fastlane/README.md

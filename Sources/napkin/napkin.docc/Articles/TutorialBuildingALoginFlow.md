@@ -3,8 +3,14 @@
 A walkthrough of **Napkin's Rib House** (`Examples/RibHouse`): two child napkins, a service held by the parent, dependencies declared from the top down.
 
 @Metadata {
+    @PageImage(purpose: icon, source: "napkin-icon", alt: "napkin logo")
     @PageImage(purpose: card, source: "napkin-icon", alt: "napkin icon")
     @PageColor(green)
+    @CallToAction(
+        url: "https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse",
+        purpose: link,
+        label: "Open the example on GitHub")
+    @TitleHeading("Tutorial")
 }
 
 ## Overview
@@ -20,6 +26,8 @@ LaunchNapkin (headless container, holds AuthService)
 ```
 
 Only one child is attached at a time. The parent's router enforces this by detaching the other before attaching.
+
+> Tip: Open the project alongside this tutorial — `open Examples/RibHouse/RibHouse.xcodeproj` — and keep each file pinned in a tab as you read. The tutorial follows the same file order as the napkin folders under `Sources/`.
 
 ## Step 1: The data + service boundary
 
@@ -55,6 +63,8 @@ final class BarbecueAuthService: AuthService {
 
 `Sendable` here is the contract that this service can be passed across actor boundaries — important because the LaunchInteractor (an `actor`) will hold and call it.
 
+> Note: Both methods are `async throws` even though the mock implementation is synchronous and never throws. The signatures are part of the *contract*, not the mock — a real `BackendAuthService` would block on the network and surface errors, and the LaunchInteractor's `try await` will already handle both.
+
 ## Step 2: The dependency root
 
 Every napkin tree starts from a root component. In the example, that's `AppComponent` in `SceneDelegate.swift`:
@@ -72,8 +82,16 @@ final class AppComponent: Component<EmptyDependency>, LaunchNapkinDependency, @u
 
 Two things to notice:
 
-- **`Component<EmptyDependency>`** — the root has nothing above it, so it depends on `Nothing`.
-- **`LaunchNapkinDependency`** — the AppComponent conforms to the *child's* dependency protocol. This is the napkin DI pattern: a component is the union of its own internal scope plus the conformance to its children's needs.
+@Row {
+    @Column {
+        **`Component<EmptyDependency>`** — the root has nothing above it, so it depends on `Nothing`. Every other component in the tree will be `Component<SomeChildDependency>`.
+    }
+    @Column {
+        **`LaunchNapkinDependency` conformance** — the AppComponent conforms to the *child's* dependency protocol. This is the DI pattern: a component is the union of its own internal scope plus the conformance to its children's needs.
+    }
+}
+
+> Important: The `let authService` is `let`, not `var`, and the value is initialized in `init`. This isn't accidental — DI dependencies should be immutable for the lifetime of the napkin tree so that no one can swap services out from under live interactors.
 
 ## Step 3: The LaunchNapkin (parent, holds the service)
 
@@ -267,6 +285,15 @@ final class LaunchNapkinViewController: UIViewController, LaunchNapkinViewContro
 
 Standard UIKit child-view-controller plumbing.
 
+@TabNavigator {
+    @Tab("UIKit (iOS)") {
+        The iOS implementation above. The container is a plain `UIViewController` (not a `UIHostingController`) because it never renders its own SwiftUI — it only hosts whichever child is currently attached.
+    }
+    @Tab("AppKit (macOS)") {
+        The macOS version of this file lives in the same Swift file behind `#elseif canImport(AppKit)`. It uses `NSViewController` + `addChild(_:)` + `view.addSubview(_:)` with identical Auto Layout constraints. The router code is unchanged — the `embed` / `detach` calls just dispatch to whichever platform is compiled in.
+    }
+}
+
 ## Step 4: A child napkin (LoggedOutNapkin)
 
 The children follow the same six-file shape as the parent but in miniature.
@@ -319,6 +346,17 @@ Two listener types live in this file:
 - **`LoggedOutNapkinListener`** — the interactor talks *up* to the parent through this. The parent (LaunchInteractor) conforms to it.
 
 That's the napkin listener pattern. Each napkin's interactor forwards user intent upward via the `listener?.xxxDidYyy()` method.
+
+@Row {
+    @Column {
+        **`<Self>PresentableListener`** — declared in the *HostingViewController* file alongside the view-side concrete class. View → interactor.
+    }
+    @Column {
+        **`<Self>NapkinListener`** — declared in the *Interactor* file alongside the parent-facing protocol. Interactor → parent's interactor.
+    }
+}
+
+> Tip: This split keeps the view's vocabulary (`didTapLogin()`) separate from the parent's vocabulary (`loggedOutDidTapLogin()`). The interactor sits between them, translating low-level taps into high-level intents.
 
 ### View
 
@@ -395,6 +433,8 @@ The `user` parameter threads the full chain: `LaunchInteractor` → `LaunchRoute
 
 The data flows along the same path as the routing call. The router holds it as `let user: User`; the view receives it via `UIHostingController(rootView: LoggedInNapkinView(user: user))`.
 
+> Important: The user object only exists for the lifetime of one LoggedIn napkin instance. When the user logs out, the router *detaches* (and releases) that napkin entirely. On the next login the router *builds a new* LoggedIn napkin with a fresh user. No state survives the swap.
+
 ## Step 6: The SceneDelegate
 
 ```swift
@@ -444,11 +484,20 @@ What that demonstrates:
 - **DI through the dependency chain.** The parent's component conforms to its children's dependency protocols. Services injected at the top reach the leaves without anyone hand-rolling a singleton.
 - **Listener pattern for upward communication.** Children never import or reference their parent — they communicate intent through a `<Self>NapkinListener` protocol that the parent's interactor implements.
 
-For the deeper *why* on each piece:
-
-- <doc:ProtocolCompositionOverInheritance> — why napkin doesn't ship a `PresentableInteractor<P>` base class.
-- <doc:CrossIsolationPatterns> — the four directional patterns for crossing actor boundaries.
-- <doc:HeadlessNapkins> — when (and why) a napkin can be a pure orchestrator with no view.
-- <doc:SwiftUIIntegration> — `dispatch`, `UIHostingController` glue, and SwiftUI-specific concurrency notes.
-
 For the running code: [`Examples/RibHouse`](https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse). Open the project file directly — `xcodegen` is no longer required.
+
+## Topics
+
+### The deeper why
+
+@Links(visualStyle: detailedGrid) {
+    - <doc:ProtocolCompositionOverInheritance>
+    - <doc:CrossIsolationPatterns>
+    - <doc:HeadlessNapkins>
+    - <doc:SwiftUIIntegration>
+}
+
+### Building from scratch
+
+- <doc:GettingStarted>
+- <doc:DefiningAFeature>
