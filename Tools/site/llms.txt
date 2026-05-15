@@ -1,0 +1,50 @@
+# napkin
+
+> A Swift 6.2 framework for building iOS & macOS apps as a tree of small, isolated, composable units ("napkins"). Modeled on Uber's RIBs, rebuilt around Swift Concurrency. Business logic lives in `final actor` interactors; routing and presentation are `@MainActor`; crossings are explicit.
+
+## Docs
+
+- [Getting Started](https://getnapkin.to/documentation/napkin/gettingstarted): What a napkin is and how to bring napkin into a Swift package.
+- [Tutorial: Building a Login Flow](https://getnapkin.to/documentation/napkin/tutorialbuildingaloginflow): A guided walkthrough of the runnable example app (Napkin's Rib House) — service injection, parent + two children, listener pattern, snapshot tests.
+- [Defining a Feature](https://getnapkin.to/documentation/napkin/definingafeature): File-by-file walkthrough of building one viewable napkin with `@Snippet`-pulled code.
+- [Testing a Napkin](https://getnapkin.to/documentation/napkin/testinganapkin): Unit-test an actor-based interactor without booting a simulator. Mock presenter/router/listener, drive lifecycle, assert on recorded calls.
+- [Adding a Networked Service](https://getnapkin.to/documentation/napkin/addinganetworkedservice): Swap the example's BarbecueAuthService mock for a real URLSession-backed implementation. The napkin tree above the service doesn't change.
+- [Tab Bar Napkin](https://getnapkin.to/documentation/napkin/tabbarnapkin): Concurrent routing pattern — a parent napkin holds N child napkin builders, all attached at once, hosted in a UITabBarController.
+- [Migrating from V0](https://getnapkin.to/documentation/napkin/migratingfromv0): Side-by-side diffs for converting older RIBs/Combine code to napkin's Swift Concurrency idioms.
+
+## Architecture
+
+- [Protocol Composition Over Inheritance](https://getnapkin.to/documentation/napkin/protocolcompositionoverinheritance): Why napkin doesn't ship `open class PresentableInteractor<P>`; the SE-0306 / SE-0316 reasoning.
+- [Cross-Isolation Patterns](https://getnapkin.to/documentation/napkin/crossisolationpatterns): The four directional patterns for crossing actor boundaries (`await`, `dispatch`, etc.).
+- [Headless Napkins](https://getnapkin.to/documentation/napkin/headlessnapkins): When (and why) a napkin can be a pure orchestrator with no view.
+- [SwiftUI Integration](https://getnapkin.to/documentation/napkin/swiftuiintegration): `dispatch`, `UIHostingController` glue, accessibility identifiers.
+
+## API reference
+
+- [`Interactable`](https://getnapkin.to/documentation/napkin/interactable): the actor-typed business-logic ring.
+- [`PresentableInteractable`](https://getnapkin.to/documentation/napkin/presentableinteractable): interactor that owns a presenter.
+- [`InteractorLifecycle`](https://getnapkin.to/documentation/napkin/interactorlifecycle): the lifecycle helper interactors delegate to.
+- [`Routing`](https://getnapkin.to/documentation/napkin/routing), [`Router`](https://getnapkin.to/documentation/napkin/router): the routing primitives.
+- [`ViewableRouting`](https://getnapkin.to/documentation/napkin/viewablerouting), [`ViewableRouter`](https://getnapkin.to/documentation/napkin/viewablerouter): routers that own a view controller.
+- [`LaunchRouting`](https://getnapkin.to/documentation/napkin/launchrouting), [`LaunchRouter`](https://getnapkin.to/documentation/napkin/launchrouter): the root of the napkin tree.
+- [`ViewControllable`](https://getnapkin.to/documentation/napkin/viewcontrollable): platform view-controller bridge (`UIKit` / `AppKit`).
+- [`Presentable`](https://getnapkin.to/documentation/napkin/presentable): view-state holder protocol.
+
+## Examples
+
+- [Napkin's Rib House](https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse): Runnable iOS app — a headless `LaunchNapkin` holds an `AuthService`, swaps between a `LoggedOutNapkin` and a `LoggedInNapkin` on tap. Tracked `.xcodeproj` (no XcodeGen step required to open).
+
+## Project
+
+- [GitHub repository](https://github.com/WikipediaBrown/napkin)
+- [Latest release](https://github.com/WikipediaBrown/napkin/releases/latest)
+- [Releases feed (Atom)](https://github.com/WikipediaBrown/napkin/releases.atom)
+- [License: Apache 2.0](https://github.com/WikipediaBrown/napkin/blob/main/LICENSE.md)
+- [CHANGELOG](https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md)
+- [AGENTS.md (conventions for AI agents)](https://github.com/WikipediaBrown/napkin/blob/main/AGENTS.md)
+
+## Optional
+
+- [Swift Package Index listing](https://swiftpackageindex.com/WikipediaBrown/napkin): build status, Swift versions, supported platforms, hosted docs alternative.
+- [Marketing homepage](https://getnapkin.to/): overview and a 4-step animated tutorial of the example app.
+- [Full LLM-readable corpus](https://getnapkin.to/llms-full.txt): expanded version of this file with the full body text of each article inlined.

@@ -181,6 +181,28 @@ jobs:
           cp Tools/site/social-preview.png docs/social-preview.png
           cp Tools/site/rib-house-logged-out.png docs/rib-house-logged-out.png
           cp Tools/site/rib-house-logged-in.png docs/rib-house-logged-in.png
+          # llms.txt — emerging convention for LLM-readable site maps.
+          cp Tools/site/llms.txt docs/llms.txt
+          # llms-full.txt — same shape but with every article body inlined,
+          # generated from the .md files so it stays in sync with the catalog.
+          {
+            cat Tools/site/llms.txt
+            echo
+            echo "---"
+            echo
+            echo "# napkin (catalog root)"
+            echo
+            cat Sources/napkin/napkin.docc/napkin.md
+            for article in Sources/napkin/napkin.docc/Articles/*.md; do
+              name=$(basename "$article" .md)
+              echo
+              echo "---"
+              echo
+              echo "# Article: $name"
+              echo
+              cat "$article"
+            done
+          } > docs/llms-full.txt
 
           VERSION="${{ steps.versions.outputs.version }}"
           REFS="${{ steps.versions.outputs.refs }}"
