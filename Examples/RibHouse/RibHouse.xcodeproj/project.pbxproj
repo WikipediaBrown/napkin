@@ -13,7 +13,6 @@
 		39364AF55F5C5B2EF49E9FFA /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2926F18DC49F1A86742F7710 /* AuthService.swift */; };
 		3BA0D6AA2CA036F453C22A04 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A126B8212368800A9093A53 /* SceneDelegate.swift */; };
 		3EDE8AF5B1BEECC93A8BC13B /* LoggedOutNapkinBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67BDD04B5EAC54134C4BD833 /* LoggedOutNapkinBuilder.swift */; };
-		499351963FA88143BEFCB581 /* Info 2.plist in Resources */ = {isa = PBXBuildFile; fileRef = 37421886C9507A93BE97B0E8 /* Info 2.plist */; };
 		4E3698FD86B1E4884A5B4372 /* LoggedOutNapkinView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF72016881F53FB3C3AAD0B0 /* LoggedOutNapkinView.swift */; };
 		4EEDC47C5C40A335C40F1673 /* AccessibilityIdentifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320B423566EB1A3D1494D67D /* AccessibilityIdentifiers.swift */; };
 		5022237B891086C1CDE262CD /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D9F460D1E15A72658F681D /* User.swift */; };
@@ -49,7 +48,6 @@
 		2926F18DC49F1A86742F7710 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		2BC68A44DF4CAF7F6FC6C1A5 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		320B423566EB1A3D1494D67D /* AccessibilityIdentifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityIdentifiers.swift; sourceTree = "<group>"; };
-		37421886C9507A93BE97B0E8 /* Info 2.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info 2.plist"; sourceTree = "<group>"; };
 		45B0D14F833CB795853874A3 /* RibHouseUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RibHouseUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5C315556B6222F6EC58B93D9 /* RibHouse.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = RibHouse.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		67BDD04B5EAC54134C4BD833 /* LoggedOutNapkinBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedOutNapkinBuilder.swift; sourceTree = "<group>"; };
@@ -138,7 +136,6 @@
 			isa = PBXGroup;
 			children = (
 				2BC68A44DF4CAF7F6FC6C1A5 /* AppDelegate.swift */,
-				37421886C9507A93BE97B0E8 /* Info 2.plist */,
 				CE22BFA5F10EB7948775CEC0 /* Info.plist */,
 				9A126B8212368800A9093A53 /* SceneDelegate.swift */,
 			);
@@ -196,7 +193,6 @@
 			buildConfigurationList = D9EACC01FEF15C26A2C33C74 /* Build configuration list for PBXNativeTarget "RibHouse" */;
 			buildPhases = (
 				B182D4A92067A1D36639D1D2 /* Sources */,
-				F563AD3C3B2BAFB2C90C1929 /* Resources */,
 				FD67AE9B37E21FF5629DFA61 /* Frameworks */,
 			);
 			buildRules = (
@@ -265,17 +261,6 @@
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXResourcesBuildPhase section */
-		F563AD3C3B2BAFB2C90C1929 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				499351963FA88143BEFCB581 /* Info 2.plist in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		06B81631668608BF376DB65D /* Sources */ = {
