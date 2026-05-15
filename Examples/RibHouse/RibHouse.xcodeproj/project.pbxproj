@@ -16,9 +16,11 @@
 		4E3698FD86B1E4884A5B4372 /* LoggedOutNapkinView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF72016881F53FB3C3AAD0B0 /* LoggedOutNapkinView.swift */; };
 		4EEDC47C5C40A335C40F1673 /* AccessibilityIdentifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320B423566EB1A3D1494D67D /* AccessibilityIdentifiers.swift */; };
 		5022237B891086C1CDE262CD /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D9F460D1E15A72658F681D /* User.swift */; };
+		6F47F9C8B8FFC6E554BEC22B /* LoggedOutNapkinViewSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAC1EDA12E27599882A8CD8A /* LoggedOutNapkinViewSnapshotTests.swift */; };
 		77CF0006F08D0E2A9F952814 /* LaunchNapkinHostingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B36063DF066C53EEF1195FB0 /* LaunchNapkinHostingViewController.swift */; };
 		7D805B5BF07263367390AF4A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BC68A44DF4CAF7F6FC6C1A5 /* AppDelegate.swift */; };
 		8710F1015FBC6673BE75F619 /* napkin in Frameworks */ = {isa = PBXBuildFile; productRef = 6716A7B18CBA938557EB5049 /* napkin */; };
+		8CA664742483776B6807D70C /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 61EBF7A28A5D8AC060FFCC1C /* SnapshotTesting */; };
 		98FCA22750635CFF3EFA5E36 /* AccessibilityIdentifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320B423566EB1A3D1494D67D /* AccessibilityIdentifiers.swift */; };
 		B01577ED137F0D9CDB777B55 /* LoggedInNapkinBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C631D2076B45AB0F5B4AD3 /* LoggedInNapkinBuilder.swift */; };
 		B6EADD163EA2021FCB71764E /* LoggedOutNapkinRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3A35A4291E0731E86967071 /* LoggedOutNapkinRouter.swift */; };
@@ -27,6 +29,8 @@
 		D1D3C9CABA465632ABE2C6EC /* LaunchNapkinRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B490B60E8CB5D73467C8F88D /* LaunchNapkinRouter.swift */; };
 		E0E9FB28DBBC10137F981147 /* LoggedOutNapkinInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10604EDC0C0069797CF9EA1 /* LoggedOutNapkinInteractor.swift */; };
 		E267A68DB75507DB2695684C /* RibHouseUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A236832A9C4F60936AA218A3 /* RibHouseUITests.swift */; };
+		E42A3EC5F460B153D12D8F92 /* napkin in Frameworks */ = {isa = PBXBuildFile; productRef = 91F22BD7B28DCEF3EE693372 /* napkin */; };
+		EE1C945355D8B81CE25C0515 /* LoggedInNapkinViewSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493C24891CB2AFA177AAAE4C /* LoggedInNapkinViewSnapshotTests.swift */; };
 		EF6B542984EB1144C7DE07FE /* LaunchNapkinBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4A569891A1CBD5CF286863 /* LaunchNapkinBuilder.swift */; };
 		F1D4358FE7689495C4823080 /* LoggedInNapkinView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B75A61491224CFA53ED9D9E /* LoggedInNapkinView.swift */; };
 		F2E5BAF4EC1A15777C02E297 /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07D96E571C4BEF4D2B06FBBC /* Palette.swift */; };
@@ -34,6 +38,13 @@
 
 /* Begin PBXContainerItemProxy section */
 		0CAF97D82CA17B7324E7AB71 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2A61A1EF031E3807548E42D2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 448AC2471EB1D7FE72927F98;
+			remoteInfo = RibHouse;
+		};
+		3C4E7C836286B0A1AB34A8BB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 2A61A1EF031E3807548E42D2 /* Project object */;
 			proxyType = 1;
@@ -49,6 +60,7 @@
 		2BC68A44DF4CAF7F6FC6C1A5 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		320B423566EB1A3D1494D67D /* AccessibilityIdentifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityIdentifiers.swift; sourceTree = "<group>"; };
 		45B0D14F833CB795853874A3 /* RibHouseUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RibHouseUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		493C24891CB2AFA177AAAE4C /* LoggedInNapkinViewSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedInNapkinViewSnapshotTests.swift; sourceTree = "<group>"; };
 		5C315556B6222F6EC58B93D9 /* RibHouse.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = RibHouse.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		67BDD04B5EAC54134C4BD833 /* LoggedOutNapkinBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedOutNapkinBuilder.swift; sourceTree = "<group>"; };
 		6AABB03AE1D9597A0885E2B7 /* LaunchNapkinInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchNapkinInteractor.swift; sourceTree = "<group>"; };
@@ -66,11 +78,22 @@
 		C10604EDC0C0069797CF9EA1 /* LoggedOutNapkinInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedOutNapkinInteractor.swift; sourceTree = "<group>"; };
 		CE22BFA5F10EB7948775CEC0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		D0D9F460D1E15A72658F681D /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		D106F592FFCACFF5FE08F2BD /* RibHouseSnapshotTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RibHouseSnapshotTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D429C0E4661BD247C79235D1 /* napkin */ = {isa = PBXFileReference; lastKnownFileType = folder; name = napkin; path = ../..; sourceTree = SOURCE_ROOT; };
+		EAC1EDA12E27599882A8CD8A /* LoggedOutNapkinViewSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedOutNapkinViewSnapshotTests.swift; sourceTree = "<group>"; };
 		FAE5780F3790B916A2CEC0B0 /* LoggedInNapkinInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedInNapkinInteractor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		F853B44F8F036BBF6FC89051 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E42A3EC5F460B153D12D8F92 /* napkin in Frameworks */,
+				8CA664742483776B6807D70C /* SnapshotTesting in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FD67AE9B37E21FF5629DFA61 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -117,6 +140,7 @@
 			isa = PBXGroup;
 			children = (
 				B38FA8664A336806F6B5E720 /* Packages */,
+				D2CBCDB71462DA53DD4DFB6B /* SnapshotTests */,
 				4308B847A286CC0B0FBB8C22 /* Sources */,
 				2412A73B6E205C2546CC353D /* UITests */,
 				7BE348DD26FFD1C219033F1A /* Products */,
@@ -127,6 +151,7 @@
 			isa = PBXGroup;
 			children = (
 				5C315556B6222F6EC58B93D9 /* RibHouse.app */,
+				D106F592FFCACFF5FE08F2BD /* RibHouseSnapshotTests.xctest */,
 				45B0D14F833CB795853874A3 /* RibHouseUITests.xctest */,
 			);
 			name = Products;
@@ -159,6 +184,15 @@
 				D429C0E4661BD247C79235D1 /* napkin */,
 			);
 			name = Packages;
+			sourceTree = "<group>";
+		};
+		D2CBCDB71462DA53DD4DFB6B /* SnapshotTests */ = {
+			isa = PBXGroup;
+			children = (
+				493C24891CB2AFA177AAAE4C /* LoggedInNapkinViewSnapshotTests.swift */,
+				EAC1EDA12E27599882A8CD8A /* LoggedOutNapkinViewSnapshotTests.swift */,
+			);
+			path = SnapshotTests;
 			sourceTree = "<group>";
 		};
 		E99D313E1696274B6BC3B240 /* LoggedOutNapkin */ = {
@@ -207,6 +241,27 @@
 			productReference = 5C315556B6222F6EC58B93D9 /* RibHouse.app */;
 			productType = "com.apple.product-type.application";
 		};
+		F51A459D34110B074E5E1B06 /* RibHouseSnapshotTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 916801190F07C2E34621DE88 /* Build configuration list for PBXNativeTarget "RibHouseSnapshotTests" */;
+			buildPhases = (
+				AA9EA2BAFEA85EC3651C81E6 /* Sources */,
+				F853B44F8F036BBF6FC89051 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E9B4A2F42C97231DBDBF603F /* PBXTargetDependency */,
+			);
+			name = RibHouseSnapshotTests;
+			packageProductDependencies = (
+				91F22BD7B28DCEF3EE693372 /* napkin */,
+				61EBF7A28A5D8AC060FFCC1C /* SnapshotTesting */,
+			);
+			productName = RibHouseSnapshotTests;
+			productReference = D106F592FFCACFF5FE08F2BD /* RibHouseSnapshotTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		FBD6EEF94B47729C8D324833 /* RibHouseUITests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 3D1EE0F5F23E136847476FFE /* Build configuration list for PBXNativeTarget "RibHouseUITests" */;
@@ -249,6 +304,7 @@
 			mainGroup = 795E42B1717C673A1A5CA666;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				4206FEC7D88D178AEA20AFD5 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */,
 				9E0EA513DF1AD114114F0410 /* XCLocalSwiftPackageReference "../.." */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -257,6 +313,7 @@
 			projectRoot = "";
 			targets = (
 				448AC2471EB1D7FE72927F98 /* RibHouse */,
+				F51A459D34110B074E5E1B06 /* RibHouseSnapshotTests */,
 				FBD6EEF94B47729C8D324833 /* RibHouseUITests */,
 			);
 		};
@@ -269,6 +326,15 @@
 			files = (
 				98FCA22750635CFF3EFA5E36 /* AccessibilityIdentifiers.swift in Sources */,
 				E267A68DB75507DB2695684C /* RibHouseUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA9EA2BAFEA85EC3651C81E6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EE1C945355D8B81CE25C0515 /* LoggedInNapkinViewSnapshotTests.swift in Sources */,
+				6F47F9C8B8FFC6E554BEC22B /* LoggedOutNapkinViewSnapshotTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -307,6 +373,11 @@
 			target = 448AC2471EB1D7FE72927F98 /* RibHouse */;
 			targetProxy = 0CAF97D82CA17B7324E7AB71 /* PBXContainerItemProxy */;
 		};
+		E9B4A2F42C97231DBDBF603F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 448AC2471EB1D7FE72927F98 /* RibHouse */;
+			targetProxy = 3C4E7C836286B0A1AB34A8BB /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -328,6 +399,25 @@
 				TEST_TARGET_NAME = RibHouse;
 			};
 			name = Release;
+		};
+		320724A828B25D8298DB3BE0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.napkin.example.RibHouseSnapshotTests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RibHouse.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/RibHouse";
+			};
+			name = Debug;
 		};
 		492FDCF72736DF105E2EEA79 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -411,6 +501,25 @@
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
+		};
+		569AB9AF06749D7E81CB3346 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.napkin.example.RibHouseSnapshotTests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RibHouse.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/RibHouse";
+			};
+			name = Release;
 		};
 		5A76FA3302C36B3D4DB072C0 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -528,6 +637,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		916801190F07C2E34621DE88 /* Build configuration list for PBXNativeTarget "RibHouseSnapshotTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				320724A828B25D8298DB3BE0 /* Debug */,
+				569AB9AF06749D7E81CB3346 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		D9EACC01FEF15C26A2C33C74 /* Build configuration list for PBXNativeTarget "RibHouse" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -546,8 +664,28 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		4206FEC7D88D178AEA20AFD5 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-snapshot-testing";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.18.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
+		61EBF7A28A5D8AC060FFCC1C /* SnapshotTesting */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4206FEC7D88D178AEA20AFD5 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */;
+			productName = SnapshotTesting;
+		};
 		6716A7B18CBA938557EB5049 /* napkin */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = napkin;
+		};
+		91F22BD7B28DCEF3EE693372 /* napkin */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = napkin;
 		};

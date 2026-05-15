@@ -7,6 +7,9 @@ options:
 packages:
   napkin:
     path: ../..
+  swift-snapshot-testing:
+    url: https://github.com/pointfreeco/swift-snapshot-testing
+    from: "1.18.0"
 targets:
   RibHouse:
     type: application
@@ -59,3 +62,23 @@ targets:
         GENERATE_INFOPLIST_FILE: "YES"
         PRODUCT_BUNDLE_IDENTIFIER: com.napkin.example.RibHouseUITests
         TEST_TARGET_NAME: RibHouse
+
+  RibHouseSnapshotTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: SnapshotTests
+    dependencies:
+      - target: RibHouse
+      - package: napkin
+      - package: swift-snapshot-testing
+        product: SnapshotTesting
+    settings:
+      base:
+        IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+        SWIFT_VERSION: "6.2"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: "YES"
+        PRODUCT_BUNDLE_IDENTIFIER: com.napkin.example.RibHouseSnapshotTests
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/RibHouse.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/RibHouse"
+        BUNDLE_LOADER: "$(TEST_HOST)"
