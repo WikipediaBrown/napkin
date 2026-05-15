@@ -138,7 +138,7 @@ HStack {
 }
 ```
 
-This matches the example app's convention (see `Examples/LaunchNapkinApp/Sources/AccessibilityIdentifiers.swift`): identifiers are leaf-level, namespaced by feature, and centralized in a single enum so view code and UI tests share a single source of truth.
+This matches the example app's convention (see `Examples/RibHouse/Sources/Shared/AccessibilityIdentifiers.swift`): identifiers are leaf-level, namespaced by feature, and centralized in a single enum so view code and UI tests share a single source of truth.
 
 ## Cross-references
 

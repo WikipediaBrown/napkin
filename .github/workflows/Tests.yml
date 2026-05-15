@@ -60,7 +60,8 @@ jobs:
   ui-tests:
     name: Example App UI Tests
     # Same runner image / Xcode toolchain as unit-tests; exercises the
-    # LaunchNapkinApp end-to-end (3 napkins) via XCUITest on iPhone 17 sim.
+    # RibHouse example end-to-end (login → logged-in → logout) via
+    # XCUITest on iPhone 17 sim.
     runs-on: macos-26
     steps:
       - name: Checkout
@@ -89,16 +90,13 @@ jobs:
           done
           echo "::error::downloadPlatform failed after 3 attempts"
           exit 1
-      - name: Install XcodeGen
-        run: brew install xcodegen
-      - name: Generate example app Xcode project
-        working-directory: Examples/LaunchNapkinApp
-        run: xcodegen
       - name: Example app UI tests
-        working-directory: Examples/LaunchNapkinApp
+        # RibHouse.xcodeproj is tracked in the repo (no XcodeGen step
+        # required) — just build + test against the iPhone 17 simulator.
+        working-directory: Examples/RibHouse
         run: |
           xcodebuild \
-            -project LaunchNapkinApp.xcodeproj \
-            -scheme LaunchNapkinApp \
+            -project RibHouse.xcodeproj \
+            -scheme RibHouse \
             -destination "platform=iOS Simulator,name=iPhone 17,OS=latest" \
             test

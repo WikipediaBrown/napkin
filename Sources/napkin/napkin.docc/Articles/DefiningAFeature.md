@@ -6,7 +6,7 @@ Build a single feature, file by file. We'll define a `Counter` napkin that displ
 
 This article walks through every file you write to define a viewable napkin. Each section explains *why* the file is shaped the way it is — not just what to type. By the end you will have a complete `Counter` napkin: builder, component, interactor, router, view controller, and SwiftUI view.
 
-The walkthrough mirrors the runnable `Counter` napkin in `Examples/LaunchNapkinApp/Sources/CounterNapkin*.swift`. Open the example app alongside this article to compare the snippet with working code — the snippet here drops the `Napkin` infix (so types read `CounterBuilder` instead of `CounterNapkinBuilder`) but the structure is identical.
+The same shape powers every napkin in the runnable example app, **Napkin's Rib House** (`Examples/RibHouse/Sources/`); each child napkin lives in its own folder with the six files described below. The snippet here drops the `Napkin` infix (so types read `CounterBuilder` instead of `CounterNapkinBuilder`) for brevity, but the structure is identical. See <doc:TutorialBuildingALoginFlow> for a guided tour of the working example.
 
 ## CounterBuilder.swift
 

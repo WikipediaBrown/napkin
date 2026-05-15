@@ -1,4 +1,4 @@
-name: LaunchNapkinApp
+name: RibHouse
 options:
   bundleIdPrefix: com.napkin.example
   deploymentTarget:
@@ -8,7 +8,7 @@ packages:
   napkin:
     path: ../..
 targets:
-  LaunchNapkinApp:
+  RibHouse:
     type: application
     platform: iOS
     sources:
@@ -16,8 +16,9 @@ targets:
     dependencies:
       - package: napkin
     info:
-      path: Sources/Info.plist
+      path: Sources/App/Info.plist
       properties:
+        CFBundleDisplayName: "Napkin's Rib House"
         UILaunchScreen:
           UIColorName: ""
         UIApplicationSceneManifest:
@@ -40,21 +41,21 @@ targets:
         TARGETED_DEVICE_FAMILY: "1,2"
         ENABLE_PREVIEWS: "YES"
         GENERATE_INFOPLIST_FILE: "NO"
-        PRODUCT_BUNDLE_IDENTIFIER: com.napkin.example.LaunchNapkinApp
+        PRODUCT_BUNDLE_IDENTIFIER: com.napkin.example.RibHouse
 
-  LaunchNapkinAppUITests:
+  RibHouseUITests:
     type: bundle.ui-testing
     platform: iOS
     sources:
       - path: UITests
-      - path: Sources/AccessibilityIdentifiers.swift
+      - path: Sources/Shared/AccessibilityIdentifiers.swift
     dependencies:
-      - target: LaunchNapkinApp
+      - target: RibHouse
     settings:
       base:
         IPHONEOS_DEPLOYMENT_TARGET: "26.0"
         SWIFT_VERSION: "6.2"
         TARGETED_DEVICE_FAMILY: "1,2"
         GENERATE_INFOPLIST_FILE: "YES"
-        PRODUCT_BUNDLE_IDENTIFIER: com.napkin.example.LaunchNapkinAppUITests
-        TEST_TARGET_NAME: LaunchNapkinApp
+        PRODUCT_BUNDLE_IDENTIFIER: com.napkin.example.RibHouseUITests
+        TEST_TARGET_NAME: RibHouse
