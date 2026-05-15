@@ -51,10 +51,11 @@ A "napkin," then, is a single feature unit composed of a builder, interactor, ro
 
 ## A runnable example
 
-The repository ships a working example app at `Examples/LaunchNapkinApp/`. It demonstrates a root napkin (`LaunchNapkin`) that hosts a child counter napkin (`CounterNapkin`) and a child quote napkin (`QuoteNapkin`), each with its own builder, interactor, router, presenter, and SwiftUI view. Read the example top-down starting from `LaunchNapkinBuilder.swift` to see how a real tree fits together.
+The repository ships **Napkin's Rib House** at `Examples/RibHouse/`. A headless `LaunchNapkin` holds an `AuthService`, then swaps between a `LoggedOutNapkin` (a single Login button) and a `LoggedInNapkin` (the user's name + a list of barbecue foods + Logout). Each child napkin lives in its own folder under `Sources/`. Read the tree top-down from `Sources/LaunchNapkin/LaunchNapkinBuilder.swift` to see how a real tree fits together — or skip to <doc:TutorialBuildingALoginFlow> for a guided walkthrough.
 
 ## Next
 
+- <doc:TutorialBuildingALoginFlow> walks the example app end to end.
 - <doc:DefiningAFeature> walks through building a feature file by file.
 - <doc:CrossIsolationPatterns> covers the four cross-isolation flows you'll write daily.
 - <doc:ProtocolCompositionOverInheritance> explains why the framework is shaped the way it is.

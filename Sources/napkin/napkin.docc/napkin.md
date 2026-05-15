@@ -48,17 +48,19 @@ See <doc:CrossIsolationPatterns> for the full set of directional patterns and wh
 ### Where to start
 
 - New to napkin? Begin with <doc:GettingStarted>.
+- Want to see a real app, line by line? <doc:TutorialBuildingALoginFlow> walks through the example end to end.
 - Building your first feature? <doc:DefiningAFeature> walks through every file.
 - Migrating an older RIBs / pre-2.0 codebase? <doc:MigratingFromV0> shows the conversion line by line.
 - Wondering "why is it shaped this way?" — <doc:ProtocolCompositionOverInheritance>.
 
-A runnable end-to-end reference lives at `Examples/LaunchNapkinApp/` in the repository.
+A runnable end-to-end reference, **Napkin's Rib House**, lives at `Examples/RibHouse/` in the repository. The tracked `RibHouse.xcodeproj` opens directly.
 
 ## Topics
 
 ### Getting Started
 
 - <doc:GettingStarted>
+- <doc:TutorialBuildingALoginFlow>
 - <doc:DefiningAFeature>
 - <doc:MigratingFromV0>
 

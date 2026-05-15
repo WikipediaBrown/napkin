@@ -38,6 +38,10 @@ playground.xcworkspace
 # Package.pins
 .build/
 *.xcodeproj
+# Example app's xcodeproj is tracked so the project opens without running
+# xcodegen first; the line below un-ignores it (still ignore user state).
+!Examples/RibHouse/RibHouse.xcodeproj
+!Examples/RibHouse/RibHouse.xcodeproj/**
 
 # CocoaPods
 #
@@ -70,8 +74,11 @@ fastlane/screenshots
 # This file records the visual position of the images of the files in the finder window. You don't need this.
 .DS_Store
 
-# XcodeGen-generated project
-Examples/LaunchNapkinApp/*.xcodeproj
+# XcodeGen-generated user state (xcuserdata, xcuserstate). The .xcodeproj
+# itself is tracked so the example opens without running xcodegen first;
+# regenerate via `xcodegen` after changing project.yml or adding Sources.
+Examples/RibHouse/RibHouse.xcodeproj/xcuserdata
+Examples/RibHouse/RibHouse.xcodeproj/project.xcworkspace/xcuserdata
 
 # fastlane auto-generated docs
 fastlane/README.md

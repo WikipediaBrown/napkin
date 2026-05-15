@@ -1,17 +1,17 @@
 //
-//  LaunchNapkinAppUITests.swift
-//  napkin example UI tests
+//  RibHouseUITests.swift
+//  napkin example UI tests — Napkin's Rib House
 //
-//  Drives the napkin example app via XCUITest. The app has two child
-//  napkins managed by the LaunchNapkin: a LoggedOut screen with a Login
-//  button, and a LoggedIn screen showing the user's name + barbecue foods
-//  and a Logout button. The LaunchNapkin holds the AuthService and swaps
+//  Drives the example app via XCUITest. The app has two child napkins
+//  managed by the LaunchNapkin: a LoggedOut screen with a Login button,
+//  and a LoggedIn screen showing the user's name + barbecue foods and
+//  a Logout button. The LaunchNapkin holds the AuthService and swaps
 //  children on login / logout.
 //
 
 import XCTest
 
-final class LaunchNapkinAppUITests: XCTestCase {
+final class RibHouseUITests: XCTestCase {
 
     var app: XCUIApplication!
 
