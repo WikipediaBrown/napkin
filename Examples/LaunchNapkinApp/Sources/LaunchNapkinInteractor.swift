@@ -1,94 +1,54 @@
-//
-//  LaunchNapkinInteractor.swift
-//  napkin
-//
-//  Created by nonplus on 3/13/26.
-//
-
 import napkin
 
 @MainActor
 protocol LaunchNapkinRouting: LaunchRouting, Sendable {
-    // Declare methods the interactor can invoke to manage sub-tree via the router.
-    // Routing methods are async because the router is @MainActor and is called from
-    // the interactor actor.
-    func routeToCounter() async
-    func routeBackFromCounter() async
-    func routeToQuote() async
-    func routeBackFromQuote() async
+    func attachLoggedOut() async
+    func attachLoggedIn(user: User) async
 }
 
-protocol LaunchNapkinPresentable: Presentable, Sendable {
-    @MainActor var listener: LaunchNapkinPresentableListener? { get set }
-    // Declare methods the interactor can invoke the presenter to present data.
-    // Presentable methods are async because the presenter is @MainActor.
-}
-
-protocol LaunchNapkinListener: AnyObject, Sendable {
-    // Declare methods the interactor can invoke to communicate with other napkins.
-    // Listener methods are async because the parent's interactor is an actor.
-}
+protocol LaunchNapkinListener: AnyObject, Sendable {}
 
 final actor LaunchNapkinInteractor:
-    PresentableInteractable,
-    LaunchNapkinPresentableListener,
-    CounterNapkinListener,
-    QuoteNapkinListener
+    Interactable,
+    LoggedOutNapkinListener,
+    LoggedInNapkinListener
 {
 
     nonisolated let lifecycle = InteractorLifecycle()
-    nonisolated let presenter: LaunchNapkinPresentable
+    nonisolated let authService: AuthService
 
     weak var router: LaunchNapkinRouting?
     weak var listener: LaunchNapkinListener?
 
-    // Add additional dependencies to constructor. Do not perform any logic
-    // in constructor.
-    init(presenter: LaunchNapkinPresentable) {
-        self.presenter = presenter
+    init(authService: AuthService) {
+        self.authService = authService
     }
 
-    func set(router: LaunchNapkinRouting?) {
-        self.router = router
-    }
-
-    func set(listener: LaunchNapkinListener?) {
-        self.listener = listener
-    }
+    func set(router: LaunchNapkinRouting?) { self.router = router }
+    func set(listener: LaunchNapkinListener?) { self.listener = listener }
 
     func didBecomeActive() async {
-        let presenter = self.presenter
-        await MainActor.run {
-            presenter.listener = self
+        await router?.attachLoggedOut()
+    }
+
+    func willResignActive() async {}
+
+    // MARK: - LoggedOutNapkinListener
+
+    func loggedOutDidTapLogin() async {
+        do {
+            let user = try await authService.login()
+            await router?.attachLoggedIn(user: user)
+        } catch {
+            // Login failed — stay on the logged-out screen. Real apps would
+            // surface an alert; we keep this demo silent.
         }
     }
 
-    func willResignActive() async {
-        let presenter = self.presenter
-        await MainActor.run {
-            presenter.listener = nil
-        }
-    }
+    // MARK: - LoggedInNapkinListener
 
-    // MARK: - LaunchNapkinPresentableListener
-
-    func didTapShowCounter() async {
-        await router?.routeToCounter()
-    }
-
-    func didTapShowQuote() async {
-        await router?.routeToQuote()
-    }
-
-    // MARK: - CounterNapkinListener
-
-    func counterDidFinish() async {
-        await router?.routeBackFromCounter()
-    }
-
-    // MARK: - QuoteNapkinListener
-
-    func quoteDidFinish() async {
-        await router?.routeBackFromQuote()
+    func loggedInDidTapLogout() async {
+        try? await authService.logout()
+        await router?.attachLoggedOut()
     }
 }

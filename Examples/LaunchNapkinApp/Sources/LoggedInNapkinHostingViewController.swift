@@ -1,0 +1,40 @@
+import napkin
+import SwiftUI
+
+protocol LoggedInNapkinPresentableListener: AnyObject, Sendable {
+    func didTapLogout() async
+}
+
+#if canImport(UIKit)
+@MainActor final class LoggedInNapkinViewController: UIHostingController<LoggedInNapkinView>, LoggedInNapkinPresentable {
+
+    weak var listener: LoggedInNapkinPresentableListener? {
+        didSet { rootView.listener = listener }
+    }
+
+    init(user: User) {
+        super.init(rootView: LoggedInNapkinView(user: user))
+    }
+
+    @MainActor required dynamic init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+#elseif canImport(AppKit)
+@MainActor final class LoggedInNapkinViewController: NSHostingController<LoggedInNapkinView>, LoggedInNapkinPresentable {
+
+    weak var listener: LoggedInNapkinPresentableListener? {
+        didSet { rootView.listener = listener }
+    }
+
+    init(user: User) {
+        super.init(rootView: LoggedInNapkinView(user: user))
+    }
+
+    @MainActor required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+#endif
+
+extension LoggedInNapkinViewController: LoggedInNapkinViewControllable {}

@@ -44,9 +44,13 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: swift
-          # `autobuild` lets CodeQL figure out the build (it understands SPM).
-          # Switch to `manual` + a Build step if autobuild misses something.
-          build-mode: autobuild
+          # `manual` instead of `autobuild`: autobuild tries to run SPM in a
+          # way that races with its own cache layout for swift-docc-plugin
+          # (`fatal: cannot change to .../swift-docc-plugin-XXXX: No such file
+          # or directory`). A plain `swift build` is what we'd do anyway.
+          build-mode: manual
+      - name: Build for CodeQL
+        run: swift build
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:

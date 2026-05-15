@@ -1,51 +1,83 @@
-//
-//  LaunchNapkinHostingViewController.swift
-//  napkin
-//
-//  Created by nonplus on 3/13/26.
-//
-
 import napkin
-import SwiftUI
-
-protocol LaunchNapkinPresentableListener: AnyObject, Sendable {
-    // Declare properties and methods that the view controller can invoke to perform
-    // business logic, such as signIn(). This protocol is implemented by the corresponding
-    // interactor actor; methods are async.
-    func didTapShowCounter() async
-    func didTapShowQuote() async
-}
 
 #if canImport(UIKit)
-@MainActor final class LaunchNapkinViewController: UIHostingController<LaunchNapkinView>, LaunchNapkinPresentable {
+import UIKit
 
-    weak var listener: LaunchNapkinPresentableListener? {
-        didSet { rootView.listener = listener }
+@MainActor
+final class LaunchNapkinViewController: UIViewController, LaunchNapkinViewControllable {
+
+    private weak var currentChild: UIViewController?
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .systemBackground
+        view.accessibilityIdentifier = NapkinAccessibility.Launch.container
     }
 
-    init() {
-        super.init(rootView: LaunchNapkinView())
+    // MARK: - LaunchNapkinViewControllable
+
+    func embed(_ child: ViewControllable) {
+        let childVC = child.uiviewController
+        addChild(childVC)
+        childVC.view.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(childVC.view)
+        NSLayoutConstraint.activate([
+            childVC.view.topAnchor.constraint(equalTo: view.topAnchor),
+            childVC.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            childVC.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            childVC.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+        ])
+        childVC.didMove(toParent: self)
+        currentChild = childVC
     }
 
-    @MainActor required dynamic init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    func detach(_ child: ViewControllable) {
+        let childVC = child.uiviewController
+        childVC.willMove(toParent: nil)
+        childVC.view.removeFromSuperview()
+        childVC.removeFromParent()
+        if currentChild === childVC { currentChild = nil }
     }
 }
+
 #elseif canImport(AppKit)
-@MainActor final class LaunchNapkinViewController: NSHostingController<LaunchNapkinView>, LaunchNapkinPresentable {
+import AppKit
 
-    weak var listener: LaunchNapkinPresentableListener? {
-        didSet { rootView.listener = listener }
+@MainActor
+final class LaunchNapkinViewController: NSViewController, LaunchNapkinViewControllable {
+
+    private weak var currentChild: NSViewController?
+
+    override func loadView() {
+        view = NSView()
     }
 
-    init() {
-        super.init(rootView: LaunchNapkinView())
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.setAccessibilityIdentifier(NapkinAccessibility.Launch.container)
     }
 
-    @MainActor required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    // MARK: - LaunchNapkinViewControllable
+
+    func embed(_ child: ViewControllable) {
+        let childVC = child.nsviewController
+        addChild(childVC)
+        childVC.view.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(childVC.view)
+        NSLayoutConstraint.activate([
+            childVC.view.topAnchor.constraint(equalTo: view.topAnchor),
+            childVC.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            childVC.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            childVC.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+        ])
+        currentChild = childVC
+    }
+
+    func detach(_ child: ViewControllable) {
+        let childVC = child.nsviewController
+        childVC.view.removeFromSuperview()
+        childVC.removeFromParent()
+        if currentChild === childVC { currentChild = nil }
     }
 }
 #endif
-
-extension LaunchNapkinViewController: LaunchNapkinViewControllable {}

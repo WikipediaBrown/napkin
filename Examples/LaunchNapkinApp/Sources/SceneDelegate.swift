@@ -2,16 +2,20 @@ import UIKit
 import napkin
 
 // Root dependency conforming to the launch napkin's dependency protocol.
-// The launch napkin declares no required dependencies, so an empty
-// component is sufficient.
+// Provides the AuthService at the top of the dependency tree; the
+// LaunchNapkin reads it through its dependency.
 final class AppComponent: Component<EmptyDependency>, LaunchNapkinDependency, @unchecked Sendable {
-    init() {
+    let authService: AuthService
+
+    init(authService: AuthService = BarbecueAuthService()) {
+        self.authService = authService
         super.init(dependency: EmptyComponent())
     }
 }
 
-// Top-level listener for the launch napkin. The launch napkin declares
-// no listener methods, so this is intentionally empty.
+// Top-level listener for the launch napkin. LaunchNapkinListener is empty
+// (the launch napkin doesn't need to talk back to the app), so this is
+// intentionally a no-op.
 final class AppListener: LaunchNapkinListener, @unchecked Sendable {}
 
 final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
