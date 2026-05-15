@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title>napkin — blog</title>
+    <subtitle>Posts on Swift 6 concurrency, iOS app architecture, dependency injection, actor testing, and modular iOS apps.</subtitle>
+    <link rel="alternate" href="https://getnapkin.to/blog/"/>
+    <link rel="self" href="https://getnapkin.to/blog/feed.xml"/>
+    <id>https://getnapkin.to/blog/</id>
+    <updated>2026-05-15T00:00:00Z</updated>
+    <icon>https://getnapkin.to/napkin-icon.png</icon>
+    <author>
+        <name>napkin</name>
+        <uri>https://getnapkin.to/</uri>
+    </author>
+
+    <entry>
+        <title>A RIBs alternative for Swift Concurrency, without RxSwift: meet napkin</title>
+        <link href="https://getnapkin.to/blog/swift-6-ribs-replacement/"/>
+        <id>https://getnapkin.to/blog/swift-6-ribs-replacement/</id>
+        <updated>2026-05-15T00:00:00Z</updated>
+        <published>2026-05-15T00:00:00Z</published>
+        <summary>Uber's RIBs is alive, well, and actively developed. It's also built on RxSwift and ships a runtime leak detector. napkin is the same Router-Interactor-Builder pattern written for Swift Concurrency, without either — Clean Architecture on a napkin.</summary>
+    </entry>
+
+    <entry>
+        <title>Actor isolation for iOS app architecture in Swift 6</title>
+        <link href="https://getnapkin.to/blog/swift-6-actor-isolation-architecture/"/>
+        <id>https://getnapkin.to/blog/swift-6-actor-isolation-architecture/</id>
+        <updated>2026-05-12T00:00:00Z</updated>
+        <published>2026-05-12T00:00:00Z</published>
+        <summary>Swift 6 makes you declare where every piece of code runs. That's an architecture decision in disguise. Here's the four-ring isolation map napkin uses and why business logic belongs off the main actor.</summary>
+    </entry>
+
+    <entry>
+        <title>Dependency injection in SwiftUI without third-party libraries</title>
+        <link href="https://getnapkin.to/blog/swiftui-dependency-injection-without-libraries/"/>
+        <id>https://getnapkin.to/blog/swiftui-dependency-injection-without-libraries/</id>
+        <updated>2026-05-08T00:00:00Z</updated>
+        <published>2026-05-08T00:00:00Z</published>
+        <summary>SwiftUI's @Environment wasn't designed for services. @EnvironmentObject crashes at runtime. There's a third option that's been around since RIBs and works cleanly with Swift 6 actors.</summary>
+    </entry>
+
+    <entry>
+        <title>Testing Swift actors: a practical guide</title>
+        <link href="https://getnapkin.to/blog/testing-swift-actors-guide/"/>
+        <id>https://getnapkin.to/blog/testing-swift-actors-guide/</id>
+        <updated>2026-05-05T00:00:00Z</updated>
+        <published>2026-05-05T00:00:00Z</published>
+        <summary>If your business logic is in final actor types, you can unit-test it without a simulator. Mock the protocols, drive the lifecycle, assert on recorded calls.</summary>
+    </entry>
+
+    <entry>
+        <title>Modular iOS apps with Swift Concurrency</title>
+        <link href="https://getnapkin.to/blog/modular-ios-apps-swift-concurrency/"/>
+        <id>https://getnapkin.to/blog/modular-ios-apps-swift-concurrency/</id>
+        <updated>2026-05-01T00:00:00Z</updated>
+        <published>2026-05-01T00:00:00Z</published>
+        <summary>Modularity isn't a build-system question. It's about whether features can be reasoned about in isolation. Here's how to compose an iOS app as a tree of small, isolated units in Swift 6.</summary>
+    </entry>
+</feed>

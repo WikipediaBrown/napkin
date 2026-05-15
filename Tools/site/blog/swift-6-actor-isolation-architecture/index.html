@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actor isolation for iOS app architecture in Swift 6</title>
+    <meta name="description" content="Swift 6 makes you declare where every piece of code runs. That's an architecture decision in disguise. Here's the four-ring isolation map napkin uses and why business logic belongs off the main actor.">
+    <meta name="theme-color" content="#f6f1e3" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0e1410" media="(prefers-color-scheme: dark)">
+
+    <meta property="og:title" content="Actor isolation for iOS app architecture in Swift 6">
+    <meta property="og:description" content="Swift 6 makes you declare where every piece of code runs. Here's the four-ring isolation map napkin uses and why business logic belongs off the main actor.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://getnapkin.to/blog/swift-6-actor-isolation-architecture/">
+    <meta property="og:image" content="https://getnapkin.to/social-preview.png">
+    <meta property="article:published_time" content="2026-05-12">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://getnapkin.to/blog/swift-6-actor-isolation-architecture/">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="/napkin-icon.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/napkin-icon@2x.png">
+    <link rel="apple-touch-icon" href="/napkin-icon@2x.png">
+    <link rel="alternate" type="application/atom+xml" title="napkin blog" href="/blog/feed.xml">
+    <link rel="stylesheet" href="/styles.css">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "Actor isolation for iOS app architecture in Swift 6",
+        "description": "Swift 6 makes you declare where every piece of code runs. Here's the four-ring isolation map napkin uses and why business logic belongs off the main actor.",
+        "datePublished": "2026-05-12",
+        "author": { "@type": "Organization", "name": "napkin" },
+        "publisher": { "@type": "Organization", "name": "napkin", "url": "https://getnapkin.to/" },
+        "image": "https://getnapkin.to/social-preview.png",
+        "mainEntityOfPage": "https://getnapkin.to/blog/swift-6-actor-isolation-architecture/"
+    }
+    </script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="masthead" role="banner">
+    <div class="masthead__inner">
+        <a class="masthead__brand" href="/" aria-label="napkin — home">
+            <span class="masthead__mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4 H20 V20 L4 20 L4 4 Z" />
+                    <path d="M4 14 L14 14 L14 20" />
+                </svg>
+            </span>
+            <span class="masthead__wordmark">napkin</span>
+        </a>
+        <nav class="masthead__nav" aria-label="Primary">
+            <ul>
+                <li><a href="/documentation/napkin/">Docs</a></li>
+                <li><a href="/#example">Example</a></li>
+                <li><a href="/blog/" aria-current="page">Blog</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md">Changelog</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin">GitHub</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main id="main">
+<article class="post">
+    <p class="post__kicker"><span>§ 02</span> <span class="sep">·</span> <span>2026 · 05 · 12</span> <span class="sep">·</span> <span>Concurrency</span></p>
+    <h1 class="post__title">Actor isolation for iOS app architecture in Swift 6</h1>
+    <p class="post__lede">Swift 6 makes you declare where every piece of code runs. That's an architecture decision in disguise — and most apps haven't made it explicitly before.</p>
+
+    <div class="post__body">
+        <p>When the Swift 6 strict-concurrency warnings first lit up your codebase, the most common reaction was to silence them: scatter <code>@MainActor</code> annotations, wrap suspect blocks in <code>Task { @MainActor in ... }</code>, mark a few types <code>@unchecked Sendable</code>. The errors go away. The architecture quietly shifts.</p>
+
+        <p>That shift matters. Once <code>@MainActor</code> appears on a type, every method on that type runs on UIKit's main scheduler. If the type is a "view model" with networking code, your networking code now blocks the UI thread until the next <code>await</code>. Tap a button, get a frame drop.</p>
+
+        <p>Most production iOS architectures (MVVM, MVC, VIPER) predate actors. They were designed when threading was an implementation detail. Swift 6 promotes it to an interface concern: the compiler refuses to compile code unless you've decided where each method runs. The right response isn't to silence the warnings — it's to design with isolation as a first-class layer.</p>
+
+        <h2>The four rings</h2>
+
+        <p>napkin uses a deliberate four-domain isolation map. Every type sits in exactly one of these, and crossings between them happen at named, explicit boundaries.</p>
+
+        <ul>
+            <li><strong>Builder + Component</strong> — <code>Sendable</code> classes. Construct napkins, satisfy DI requirements. Built once, frozen, passed across actor boundaries.</li>
+            <li><strong>Interactor</strong> — <code>final actor</code>. Business logic. Holds state. Owns lifecycle. <strong>Off the main actor.</strong></li>
+            <li><strong>Router</strong> — <code>@MainActor</code> class. Owns the subtree. Attaches/detaches children, calls the view controller.</li>
+            <li><strong>Presenter / ViewController</strong> — <code>@MainActor</code> class. The view. A <code>UIHostingController</code> wrapping a SwiftUI <code>View</code>, or a <code>UIViewController</code>.</li>
+        </ul>
+
+        <p>Three of these are <code>@MainActor</code>. One — the interactor — isn't. That's the architectural lever.</p>
+
+        <h2>Why business logic goes off the main actor</h2>
+
+        <p>The interactor holds the unit's state and runs its decisions: "did the user complete onboarding," "is the cart valid," "what should happen when the network call returns." None of that needs to run on the UI thread. Putting it there is a category error.</p>
+
+        <p>An actor is the cheapest way to get state that's safe to access concurrently. The actor's executor serializes calls automatically; you don't write locks. Reading <code>self.user</code> from inside an actor is a normal property read. Reading it from outside requires <code>await</code>, which the compiler enforces.</p>
+
+        <figure class="code-card" aria-label="Final actor interactor declaration">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">CartInteractor.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>final actor CartInteractor: PresentableInteractable {
+    nonisolated let lifecycle = InteractorLifecycle()
+    nonisolated let presenter: CartPresentable
+
+    private var items: [CartItem] = []
+    private var couponCode: String?
+
+    func didTapAddItem(_ item: CartItem) async {
+        items.append(item)
+        await presenter.update(items: items)  // hops to @MainActor
+    }
+}
+</code></pre>
+        </figure>
+
+        <p>The state lives on the actor. The presenter call is an explicit <code>await</code> because the presenter is <code>@MainActor</code>. You can see the crossing in the source.</p>
+
+        <h2>The four crossings</h2>
+
+        <p>Once you accept that the interactor is one domain and the view/router are another, you have a small fixed set of crossing patterns:</p>
+
+        <ol>
+            <li><strong>Interactor → Presenter</strong> (<code>actor → @MainActor</code>): <code>await presenter.update(...)</code></li>
+            <li><strong>Interactor → Router</strong> (<code>actor → @MainActor</code>): <code>await router?.routeToProfile()</code></li>
+            <li><strong>View → Interactor</strong> (<code>@MainActor sync → actor</code>): <code>dispatch { await listener?.didTap() }</code></li>
+            <li><strong>Interactor → Listener (parent)</strong> (stays in the parent actor): <code>await listener?.fooDidFinish()</code></li>
+        </ol>
+
+        <p>The first three are real isolation crossings. The fourth is a same-actor call — the parent's interactor is also an actor, but the boundary is procedural (child telling parent) not isolation-based.</p>
+
+        <p><a href="/documentation/napkin/crossisolationpatterns">The full pattern reference is in the docs.</a> The point is that there's a fixed, small number of these, and you can name them. It's easier to reason about an architecture where every cross-actor call falls into one of four shapes than one where each is invented per type.</p>
+
+        <h2>Where SwiftUI fits</h2>
+
+        <p>SwiftUI views are implicitly <code>@MainActor</code>. Button action closures are <code>@MainActor</code> synchronous. The interactor is <code>actor</code>. To call from one to the other you need a <code>Task</code> — and a way to handle cancellation if the view goes away mid-call.</p>
+
+        <figure class="code-card" aria-label="dispatch helper in SwiftUI">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">CartView.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>Button("Add to cart") {
+    dispatch { [listener] in await listener?.didTapAddItem(item) }
+}
+</code></pre>
+        </figure>
+
+        <p>napkin's <code>dispatch { }</code> helper is a thin wrapper around <code>Task { }</code> that captures the listener weakly and bails if the view is gone before the closure runs. <a href="/documentation/napkin/swiftuiintegration">More on it here.</a> Use it instead of inline <code>Task { }</code> in SwiftUI button actions and you avoid a whole class of "method called on deallocated interactor" bugs.</p>
+
+        <h2>What changes for you</h2>
+
+        <p>If you're moving an existing codebase to Swift 6, the most useful exercise is to sit with one feature and ask: <em>which methods belong on the main actor, and which don't?</em> Once you've named the boundary, the <code>@MainActor</code> annotations and <code>await</code>s land where they should. Once you've named the actor, the state moves there too.</p>
+
+        <p>For new code, napkin offers a default answer: business logic in <code>final actor</code> interactors, view/routing in <code>@MainActor</code>, DI in <code>Sendable</code> classes. You can disagree with the specifics, but you do have to decide. Swift 6 doesn't let you not decide.</p>
+
+        <p>Want to see the rings in a working app? The <a href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse">Rib House example</a> is end-to-end (a few hundred lines) and the <a href="/documentation/napkin/tutorialbuildingaloginflow">tutorial walks it</a>.</p>
+    </div>
+
+    <footer class="post__footer">
+        <p><a href="/blog/">← All posts</a></p>
+        <p>napkin · <a href="/documentation/napkin/">Docs</a> · <a href="https://github.com/WikipediaBrown/napkin">GitHub</a></p>
+    </footer>
+</article>
+</main>
+
+<footer class="colophon" role="contentinfo">
+    <div class="colophon__inner">
+        <p class="colophon__line">
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin">napkin</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/LICENSE.md">Apache&#8209;2.0</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md">CHANGELOG</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/">Blog</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/feed.xml" type="application/atom+xml">RSS</a>
+        </p>
+        <p class="colophon__line colophon__line--right">
+            Made with 🌲🌲🌲 in Cascadia
+        </p>
+    </div>
+</footer>
+
+<script>
+(function() {
+    document.querySelectorAll('button[data-copy]').forEach(function(btn) {
+        btn.addEventListener('click', async function() {
+            var card = btn.closest('.code-card');
+            var code = card && card.querySelector('pre code');
+            if (!code) return;
+            try {
+                await navigator.clipboard.writeText(code.innerText);
+                var prev = btn.textContent;
+                btn.setAttribute('data-state', 'copied');
+                btn.textContent = 'Copied';
+                setTimeout(function() {
+                    btn.removeAttribute('data-state');
+                    btn.textContent = prev;
+                }, 1400);
+            } catch (e) { btn.textContent = 'Copy failed'; }
+        });
+    });
+})();
+</script>
+
+</body>
+</html>

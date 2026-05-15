@@ -1194,6 +1194,316 @@ strong {
     .example__progress { display: none; }
 }
 
+/* ---------- Blog ---------- */
+/* Listing page: an editorial index of posts. Each card is a serif title +
+   mono date + body excerpt, separated by hairlines like a magazine spread. */
+
+.blog {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: var(--s-6) clamp(1.25rem, 4vw, 4.5rem) var(--s-7);
+}
+.blog__head { margin-bottom: var(--s-5); }
+.blog__title {
+    font-family: var(--font-serif);
+    font-size: var(--step-3);
+    line-height: 1.06;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    margin: var(--s-2) 0 var(--s-2);
+}
+.blog__lede {
+    font-family: var(--font-serif);
+    font-size: var(--step-1);
+    line-height: 1.45;
+    color: var(--ink-2);
+    margin: 0;
+    max-width: 36rem;
+}
+
+.blog__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+}
+.post-card {
+    padding: var(--s-4) 0;
+    border-bottom: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s-2);
+}
+@media (min-width: 720px) {
+    .post-card {
+        grid-template-columns: 9rem 1fr;
+        gap: var(--s-4);
+    }
+}
+.post-card__meta {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--ink-3);
+    letter-spacing: 0.02em;
+    margin: 0;
+}
+.post-card__body { min-width: 0; }
+.post-card__title {
+    font-family: var(--font-serif);
+    font-size: var(--step-2);
+    line-height: 1.12;
+    letter-spacing: -0.018em;
+    margin: 0 0 var(--s-1);
+    text-wrap: balance;
+}
+.post-card__title a {
+    color: var(--ink);
+    text-decoration: none;
+}
+.post-card__title a:hover { color: var(--moss); }
+.post-card__excerpt {
+    font-family: var(--font-serif);
+    font-size: var(--step-0);
+    line-height: 1.55;
+    color: var(--ink-2);
+    margin: 0 0 var(--s-2);
+}
+.post-card__tag {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--moss);
+    text-decoration: none;
+}
+.post-card__tag::before { content: "→ "; }
+
+/* Individual post: long-form reading. Narrow measure, generous leading. */
+
+.post {
+    max-width: 42rem;
+    margin: 0 auto;
+    padding: var(--s-6) clamp(1.25rem, 4vw, 1.5rem) var(--s-7);
+}
+.post__kicker {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    letter-spacing: 0.02em;
+    color: var(--ink-3);
+    margin: 0 0 var(--s-2);
+    display: flex;
+    align-items: baseline;
+    gap: 0.6ch;
+}
+.post__kicker .sep {
+    color: color-mix(in oklab, var(--ink-3), transparent 40%);
+}
+.post__title {
+    font-family: var(--font-serif);
+    font-size: var(--step-3);
+    line-height: 1.06;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    margin: 0 0 var(--s-3);
+}
+.post__lede {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: var(--step-1);
+    line-height: 1.45;
+    color: var(--ink-2);
+    margin: 0 0 var(--s-5);
+    padding-bottom: var(--s-4);
+    border-bottom: 1px solid var(--rule);
+}
+.post__body {
+    font-family: var(--font-serif);
+    font-size: var(--step-0);
+    line-height: 1.65;
+    color: var(--ink);
+}
+.post__body > p { margin: 0 0 1.1em; }
+.post__body h2 {
+    font-family: var(--font-serif);
+    font-size: var(--step-2);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    margin: 2em 0 0.6em;
+}
+.post__body h3 {
+    font-family: var(--font-serif);
+    font-size: var(--step-1);
+    line-height: 1.2;
+    margin: 1.6em 0 0.4em;
+}
+.post__body a {
+    color: var(--moss);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+}
+.post__body code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    color: var(--ink);
+    background: var(--code-bg);
+    padding: 0.05em 0.4em;
+    border-radius: 4px;
+}
+.post__body pre {
+    margin: 1.4em 0;
+    padding: var(--s-3);
+    background: var(--code-bg);
+    border-radius: 10px;
+    border: 1px solid var(--rule);
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 0.86rem;
+    line-height: 1.55;
+}
+.post__body pre code {
+    background: none;
+    padding: 0;
+    font-size: inherit;
+}
+
+/* Code-card pattern with macOS-style traffic-light dots on the left and
+   a copy-to-clipboard button on the right. Used inside blog posts for
+   anything more than a short inline snippet. */
+.code-card {
+    margin: 1.4em 0;
+    background: var(--code-bg);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    overflow: hidden;
+    /* Asymmetric tilt and shadow lift, same gesture as the homepage hero
+       code card but without the rotate so reading flow stays calm. */
+    box-shadow: 0 1px 0 0 var(--rule-2),
+                0 12px 36px -28px oklch(20% 0.04 240 / 0.28);
+}
+.code-card__cap {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    padding: 10px 14px 10px 16px;
+    background: var(--code-bg-2);
+    border-bottom: 1px solid var(--rule);
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--ink-3);
+    letter-spacing: 0.02em;
+}
+.code-card__dots {
+    display: inline-flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.code-card__dots span {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: block;
+    background: oklch(72% 0.14 28);    /* red */
+    box-shadow: inset 0 0 0 1px oklch(0% 0 0 / 0.08);
+}
+.code-card__dots span:nth-child(2) { background: oklch(82% 0.16 80); }  /* yellow */
+.code-card__dots span:nth-child(3) { background: oklch(75% 0.16 145); } /* green */
+.code-card__name {
+    flex: 1;
+    min-width: 0;
+    color: var(--ink-2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.code-card__copy {
+    flex-shrink: 0;
+    background: transparent;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    color: var(--ink-2);
+    font: inherit;
+    padding: 3px 10px;
+    cursor: pointer;
+    transition: background 150ms ease-out, color 150ms ease-out, border-color 150ms ease-out;
+}
+.code-card__copy:hover {
+    background: var(--code-bg);
+    color: var(--ink);
+    border-color: var(--ink-3);
+}
+.code-card__copy:focus-visible {
+    outline: 2px solid var(--moss);
+    outline-offset: 2px;
+}
+.code-card__copy[data-state="copied"] {
+    color: var(--moss);
+    border-color: var(--moss);
+}
+.code-card pre {
+    margin: 0;
+    padding: var(--s-3) var(--s-4);
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 0.86rem;
+    line-height: 1.6;
+    color: var(--ink);
+}
+.code-card pre code {
+    background: none;
+    padding: 0;
+    font-size: inherit;
+    color: inherit;
+    /* Override the global `code` styles. `nowrap` and `border` on an inline
+       element cause per-line-box artifacts when the content wraps across
+       multiple lines (the snippet renders with a 1px stripe through each
+       line and the pre-wrap turns into nowrap-with-overflow). Inside a
+       block code container, `code` needs to be a transparent passthrough. */
+    white-space: pre;
+    border: 0;
+    border-radius: 0;
+}
+.post__body pre code {
+    white-space: pre;
+    border: 0;
+    background: none;
+    padding: 0;
+    border-radius: 0;
+}
+.post__body blockquote {
+    margin: 1.4em 0;
+    padding: 0.2em 1.2em;
+    border-left: 3px solid var(--moss);
+    color: var(--ink-2);
+    font-style: italic;
+}
+.post__body ul, .post__body ol {
+    margin: 0 0 1.2em;
+    padding-left: 1.4em;
+}
+.post__body li { margin-bottom: 0.4em; }
+
+.post__footer {
+    margin-top: var(--s-6);
+    padding-top: var(--s-4);
+    border-top: 1px solid var(--rule);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--ink-3);
+}
+.post__footer a {
+    color: var(--moss);
+    text-decoration: none;
+}
+.post__footer a:hover { text-decoration: underline; }
+
 /* ---------- Print ---------- */
 
 @media print {
@@ -1206,4 +1516,5 @@ strong {
     }
     .step .line { opacity: 1; transform: none; }
     .step .line:last-child::after { display: none; }
+    .post { max-width: 100%; padding: 0; }
 }

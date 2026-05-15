@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testing Swift actors: a practical guide</title>
+    <meta name="description" content="If your business logic is in final actor types, you can unit-test it without a simulator. Mock the protocols, drive the lifecycle, assert on recorded calls. Here's the pattern with examples.">
+    <meta name="theme-color" content="#f6f1e3" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0e1410" media="(prefers-color-scheme: dark)">
+
+    <meta property="og:title" content="Testing Swift actors: a practical guide">
+    <meta property="og:description" content="Mock the protocols, drive the lifecycle, assert on recorded calls. Swift actors are trivially testable when you stop trying to mock them.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://getnapkin.to/blog/testing-swift-actors-guide/">
+    <meta property="og:image" content="https://getnapkin.to/social-preview.png">
+    <meta property="article:published_time" content="2026-05-05">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://getnapkin.to/blog/testing-swift-actors-guide/">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="/napkin-icon.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/napkin-icon@2x.png">
+    <link rel="apple-touch-icon" href="/napkin-icon@2x.png">
+    <link rel="alternate" type="application/atom+xml" title="napkin blog" href="/blog/feed.xml">
+    <link rel="stylesheet" href="/styles.css">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "Testing Swift actors: a practical guide",
+        "description": "Mock the protocols, drive the lifecycle, assert on recorded calls. Swift actors are trivially testable when you stop trying to mock them.",
+        "datePublished": "2026-05-05",
+        "author": { "@type": "Organization", "name": "napkin" },
+        "publisher": { "@type": "Organization", "name": "napkin", "url": "https://getnapkin.to/" },
+        "image": "https://getnapkin.to/social-preview.png",
+        "mainEntityOfPage": "https://getnapkin.to/blog/testing-swift-actors-guide/"
+    }
+    </script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="masthead" role="banner">
+    <div class="masthead__inner">
+        <a class="masthead__brand" href="/" aria-label="napkin — home">
+            <span class="masthead__mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4 H20 V20 L4 20 L4 4 Z" />
+                    <path d="M4 14 L14 14 L14 20" />
+                </svg>
+            </span>
+            <span class="masthead__wordmark">napkin</span>
+        </a>
+        <nav class="masthead__nav" aria-label="Primary">
+            <ul>
+                <li><a href="/documentation/napkin/">Docs</a></li>
+                <li><a href="/#example">Example</a></li>
+                <li><a href="/blog/" aria-current="page">Blog</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md">Changelog</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin">GitHub</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main id="main">
+<article class="post">
+    <p class="post__kicker"><span>§ 04</span> <span class="sep">·</span> <span>2026 · 05 · 05</span> <span class="sep">·</span> <span>Testing</span></p>
+    <h1 class="post__title">Testing Swift actors: a practical guide</h1>
+    <p class="post__lede">Swift actors are easy to test, in the same way protocols are. The trick is to stop trying to mock the actor and start mocking what it talks to.</p>
+
+    <div class="post__body">
+        <p>The first instinct most developers have when they hit a <code>final actor</code> they need to test is to look for a way to subclass it, swap a method, or override init. None of that works. Actors can't be subclassed. There's no <code>final actor</code> equivalent of the OCMock-era tricks.</p>
+
+        <p>That's fine. The actor is the thing under test; you don't <em>need</em> to mock it. What you need to mock are its collaborators — the presenter it talks to, the router it asks to route, the parent listener it sends intent up to, the service it calls. All of those are protocols. Replace the protocols with stub implementations that record calls. Done.</p>
+
+        <h2>The recipe</h2>
+
+        <p>For any actor under test, write three kinds of stubs:</p>
+
+        <ol>
+            <li>A <strong>presenter stub</strong> that records calls.</li>
+            <li>A <strong>service stub</strong> that returns canned results.</li>
+            <li>A <strong>listener stub</strong> (for the parent) that records what the actor sent upward.</li>
+        </ol>
+
+        <p>For a router, you can usually mock it the same way — it's also a protocol. The wrinkle is that the router protocol often inherits from <code>Routing</code> with members like <code>children: [Routing]</code>, which means more boilerplate. Worth extracting into a base.</p>
+
+        <h2>Mocking a service</h2>
+
+        <p>Services are the easiest. A <code>final class</code> that conforms to the protocol, with mutable state for what to return:</p>
+
+        <figure class="code-card" aria-label="MockAuthService recorder">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">MockAuthService.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>final class MockAuthService: AuthService, @unchecked Sendable {
+    var loginResult: Result&lt;User, Error&gt; = .success(.init(name: "Test", barbecueFoods: []))
+    var loginCalls = 0
+    var logoutCalls = 0
+
+    func login() async throws -&gt; User {
+        loginCalls += 1
+        return try loginResult.get()
+    }
+    func logout() async throws { logoutCalls += 1 }
+}
+</code></pre>
+        </figure>
+
+        <p>The <code>Result</code>-based stub lets one mock test the happy path and the failure path without rewriting. <code>@unchecked Sendable</code> because the counter is mutable; in a test the only thread touching it is the test method's, so the unchecked annotation is honest about the trade-off.</p>
+
+        <h2>Driving the actor</h2>
+
+        <p>The interactor's methods are <code>async</code>. The test method is <code>async</code> too. There's nothing else to it:</p>
+
+        <figure class="code-card" aria-label="A direct interactor test">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">LaunchInteractorTests.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>@MainActor
+final class LaunchInteractorTests: XCTestCase {
+
+    func testDidTapLogin_callsServiceAndAttachesLoggedIn() async {
+        let auth = MockAuthService()
+        let user = User(name: "Smokey Joe", barbecueFoods: ["Brisket"])
+        auth.loginResult = .success(user)
+        let router = MockLaunchRouting()
+        let sut = LaunchInteractor(authService: auth)
+        await sut.set(router: router)
+
+        await sut.loggedOutDidTapLogin()
+
+        XCTAssertEqual(auth.loginCalls, 1)
+        XCTAssertEqual(router.attachLoggedInCalls.count, 1)
+        XCTAssertEqual(router.attachLoggedInCalls.first?.user, user)
+    }
+}
+</code></pre>
+        </figure>
+
+        <p>Three things to notice. The test class is <code>@MainActor</code> — XCTest lifecycle is main-actor anyway, so it's the simplest place to keep it. The actor's methods take <code>await</code> because they're <code>async</code>. And assertions are about <em>observable state</em>: what the mock service recorded, what the mock router was asked to do. Not about the internals of the actor.</p>
+
+        <h2>Lifecycle is just another method</h2>
+
+        <p>If your actor has a <code>didBecomeActive()</code>, call it directly. There's no magic. The framework's <code>activate()</code> method exists too, and exercises the full lifecycle, but calling the hook method directly is often more legible:</p>
+
+        <figure class="code-card" aria-label="Driving lifecycle directly">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">LaunchInteractor_LifecycleTests.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>func testDidBecomeActive_attachesLoggedOut() async {
+    let auth = MockAuthService()
+    let router = MockLaunchRouting()
+    let sut = LaunchInteractor(authService: auth)
+    await sut.set(router: router)
+
+    await sut.didBecomeActive()
+
+    XCTAssertEqual(router.attachLoggedOutCalls, 1)
+}
+</code></pre>
+        </figure>
+
+        <h2>Anti-patterns to skip</h2>
+
+        <p><strong>Don't make the actor <code>@MainActor</code> "for testability."</strong> It makes the test slightly simpler (no <code>await</code> on actor properties) and puts your business logic on the main thread in production. Bad trade.</p>
+
+        <p><strong>Don't assert on order of <code>await</code>s.</strong> Two <code>await</code>s on the same actor are sequential by definition; the language guarantees it. Asserting "the service was called before the router was attached" is testing Swift, not your code. Assert on the end state.</p>
+
+        <p><strong>Don't extract a "testable wrapper" around the actor.</strong> The protocols you already have are the seam. Adding another layer to "make testing easier" usually just moves the test to the wrong altitude.</p>
+
+        <h2>Where to start</h2>
+
+        <p>If you're moving onto Swift actors and don't have tests for your interactors yet, the <a href="/documentation/napkin/testinganapkin">"Testing a napkin"</a> tutorial in the napkin docs walks the full pattern with example code. The example app's <a href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse">RibHouse</a> also ships snapshot tests for its SwiftUI views — a parallel pattern for the view side.</p>
+
+        <p>Most teams that adopt this pattern report that writing tests for their actors is faster than writing tests for the view-model classes they replaced. The reason is mundane: actor methods take typed arguments and return typed values. You don't have to set up Combine subscribers to capture output, and you don't have to <code>XCTestExpectation</code>-wait for async work — the <code>await</code> is the wait.</p>
+    </div>
+
+    <footer class="post__footer">
+        <p><a href="/blog/">← All posts</a></p>
+        <p>napkin · <a href="/documentation/napkin/">Docs</a> · <a href="https://github.com/WikipediaBrown/napkin">GitHub</a></p>
+    </footer>
+</article>
+</main>
+
+<footer class="colophon" role="contentinfo">
+    <div class="colophon__inner">
+        <p class="colophon__line">
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin">napkin</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/LICENSE.md">Apache&#8209;2.0</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md">CHANGELOG</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/">Blog</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/feed.xml" type="application/atom+xml">RSS</a>
+        </p>
+        <p class="colophon__line colophon__line--right">
+            Made with 🌲🌲🌲 in Cascadia
+        </p>
+    </div>
+</footer>
+
+<script>
+(function() {
+    document.querySelectorAll('button[data-copy]').forEach(function(btn) {
+        btn.addEventListener('click', async function() {
+            var card = btn.closest('.code-card');
+            var code = card && card.querySelector('pre code');
+            if (!code) return;
+            try {
+                await navigator.clipboard.writeText(code.innerText);
+                var prev = btn.textContent;
+                btn.setAttribute('data-state', 'copied');
+                btn.textContent = 'Copied';
+                setTimeout(function() {
+                    btn.removeAttribute('data-state');
+                    btn.textContent = prev;
+                }, 1400);
+            } catch (e) { btn.textContent = 'Copy failed'; }
+        });
+    });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog — napkin</title>
+    <meta name="description" content="Posts on Swift 6 concurrency, iOS app architecture, dependency injection, actor testing, and modular iOS apps — from the team behind the napkin Swift framework.">
+    <meta name="theme-color" content="#f6f1e3" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0e1410" media="(prefers-color-scheme: dark)">
+
+    <meta property="og:title" content="Blog — napkin">
+    <meta property="og:description" content="Posts on Swift 6 concurrency, iOS app architecture, dependency injection, actor testing, and modular iOS apps.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://getnapkin.to/blog/">
+    <meta property="og:image" content="https://getnapkin.to/social-preview.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://getnapkin.to/blog/">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="/napkin-icon.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/napkin-icon@2x.png">
+    <link rel="apple-touch-icon" href="/napkin-icon@2x.png">
+    <link rel="alternate" type="application/atom+xml" title="napkin blog" href="/blog/feed.xml">
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="masthead" role="banner">
+    <div class="masthead__inner">
+        <a class="masthead__brand" href="/" aria-label="napkin — home">
+            <span class="masthead__mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4 H20 V20 L4 20 L4 4 Z" />
+                    <path d="M4 14 L14 14 L14 20" />
+                </svg>
+            </span>
+            <span class="masthead__wordmark">napkin</span>
+        </a>
+
+        <nav class="masthead__nav" aria-label="Primary">
+            <ul>
+                <li><a href="/documentation/napkin/">Docs</a></li>
+                <li><a href="/#example">Example</a></li>
+                <li><a href="/blog/" aria-current="page">Blog</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md">Changelog</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin">GitHub</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main id="main">
+
+<section class="blog" aria-labelledby="blog-title">
+    <header class="blog__head">
+        <p class="post__kicker"><span>§</span> <span class="sep">·</span> <span>napkin journal</span></p>
+        <h1 class="blog__title" id="blog-title">Notes from the smokehouse.</h1>
+        <p class="blog__lede">
+            Posts on Swift 6 concurrency, iOS app architecture, dependency injection, actor testing, and the design choices behind <a href="/documentation/napkin/" class="link">napkin</a>.
+        </p>
+    </header>
+
+    <ol class="blog__list">
+        <li class="post-card">
+            <p class="post-card__meta">2026 · 05 · 15</p>
+            <div class="post-card__body">
+                <h2 class="post-card__title"><a href="/blog/swift-6-ribs-replacement/">A RIBs alternative for Swift Concurrency, without RxSwift: meet napkin</a></h2>
+                <p class="post-card__excerpt">Uber's RIBs is alive, well, and actively developed. It's also built on RxSwift and ships a runtime leak detector. napkin is the same Router-Interactor-Builder pattern written for Swift Concurrency, without either — Clean Architecture on a napkin.</p>
+                <a class="post-card__tag" href="/blog/swift-6-ribs-replacement/">Read</a>
+            </div>
+        </li>
+
+        <li class="post-card">
+            <p class="post-card__meta">2026 · 05 · 12</p>
+            <div class="post-card__body">
+                <h2 class="post-card__title"><a href="/blog/swift-6-actor-isolation-architecture/">Actor isolation for iOS app architecture in Swift 6</a></h2>
+                <p class="post-card__excerpt">Swift 6 makes you declare where every piece of code runs. That's an architecture decision in disguise. Here's the four-ring isolation map napkin uses and why business logic belongs off the main actor.</p>
+                <a class="post-card__tag" href="/blog/swift-6-actor-isolation-architecture/">Read</a>
+            </div>
+        </li>
+
+        <li class="post-card">
+            <p class="post-card__meta">2026 · 05 · 08</p>
+            <div class="post-card__body">
+                <h2 class="post-card__title"><a href="/blog/swiftui-dependency-injection-without-libraries/">Dependency injection in SwiftUI without third-party libraries</a></h2>
+                <p class="post-card__excerpt">SwiftUI's <code>@Environment</code> wasn't designed for services, and <code>@EnvironmentObject</code> crashes at runtime when you forget. There's a third option that's been around since RIBs and works cleanly with actors.</p>
+                <a class="post-card__tag" href="/blog/swiftui-dependency-injection-without-libraries/">Read</a>
+            </div>
+        </li>
+
+        <li class="post-card">
+            <p class="post-card__meta">2026 · 05 · 05</p>
+            <div class="post-card__body">
+                <h2 class="post-card__title"><a href="/blog/testing-swift-actors-guide/">Testing Swift actors: a practical guide</a></h2>
+                <p class="post-card__excerpt">If your business logic is in <code>final actor</code> types, you can unit-test it without a simulator. Mock the protocols, drive the lifecycle, assert on recorded calls. Here's the pattern, with examples.</p>
+                <a class="post-card__tag" href="/blog/testing-swift-actors-guide/">Read</a>
+            </div>
+        </li>
+
+        <li class="post-card">
+            <p class="post-card__meta">2026 · 05 · 01</p>
+            <div class="post-card__body">
+                <h2 class="post-card__title"><a href="/blog/modular-ios-apps-swift-concurrency/">Modular iOS apps with Swift Concurrency</a></h2>
+                <p class="post-card__excerpt">Modularity isn't a build-system question. It's about whether features can be reasoned about in isolation. Here's how to compose an iOS app as a tree of small, isolated units in Swift 6 — no module-graph gymnastics required.</p>
+                <a class="post-card__tag" href="/blog/modular-ios-apps-swift-concurrency/">Read</a>
+            </div>
+        </li>
+    </ol>
+</section>
+
+</main>
+
+<footer class="colophon" role="contentinfo">
+    <div class="colophon__inner">
+        <p class="colophon__line">
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin">napkin</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/LICENSE.md">Apache&#8209;2.0</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md">CHANGELOG</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/">Blog</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/feed.xml" type="application/atom+xml">RSS</a>
+        </p>
+        <p class="colophon__line colophon__line--right">
+            Made with 🌲🌲🌲 in Cascadia
+        </p>
+    </div>
+</footer>
+
+</body>
+</html>
