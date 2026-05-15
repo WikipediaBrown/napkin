@@ -296,7 +296,11 @@ Standard UIKit child-view-controller plumbing.
 
 ## Step 4: A child napkin (LoggedOutNapkin)
 
-The children follow the same six-file shape as the parent but in miniature.
+The children follow the same six-file shape as the parent but in miniature. Here's what we're building visually — paper-cream background, editorial kicker, serif-italic hero, hairline rule, ink button:
+
+![A screenshot of the LoggedOut napkin on iPhone, showing a kicker "§ 00 · WELCOME" in monospace, a large serif headline "Step inside the smokehouse" with smokehouse in italics, a lede "Sign in to see what's on the tray today.", a hairline rule, and a dark ink LOGIN button with an arrow.](rib-house-logged-out)
+
+> Tip: This screenshot is the exact reference image used by the snapshot test in `Examples/RibHouse/SnapshotTests/LoggedOutNapkinViewSnapshotTests.swift`. Any change to the view that affects the rendering breaks the test and fails CI.
 
 ### Dependency, Component, Builder
 
@@ -379,7 +383,9 @@ The `dispatch { ... }` helper is napkin's bridge from `@MainActor` SwiftUI actio
 
 ## Step 5: The other child napkin (LoggedInNapkin)
 
-LoggedInNapkin is the same shape, with two notable differences.
+LoggedInNapkin is the same shape, with two notable differences. The visual flip: dark paper background, the user's name in serif italic, the foods rendered as a numbered spec-list (mirroring the homepage's `01 · / 02 · /…` pattern), and a ghost outline LOGOUT button.
+
+![A screenshot of the LoggedIn napkin on iPhone, dark green-black background, a kicker "§ ∞ · SIGNED IN" in cream monospace, the name "Smokey Joe" in large italic cream serif, a hairline, a "BARBECUE FOODS" subtitle in monospace caps, then a numbered list 01 Brisket / 02 Pulled Pork / 03 St. Louis Ribs / 04 Burnt Ends / 05 Smoked Sausage, and a cream-outlined LOGOUT pill button at the bottom.](rib-house-logged-in)
 
 ### Dependency declares the AuthService
 
@@ -462,6 +468,82 @@ The bootstrap is three steps:
 1. Build the `AppComponent` (the dependency root).
 2. Build the root router via `LaunchNapkinBuilder`.
 3. Call `launch(from: window)`, which installs the root view controller, activates the interactor, and starts the tree.
+
+## Step 7: Snapshot testing the views
+
+The example app uses [Point-Free's swift-snapshot-testing](https://github.com/pointfreeco/swift-snapshot-testing) to pin each napkin view's appearance. A regression in any view — wrong palette token, dropped spacing, broken layout — flips the test red.
+
+The package is declared in `Examples/RibHouse/project.yml`:
+
+```yaml
+packages:
+  swift-snapshot-testing:
+    url: https://github.com/pointfreeco/swift-snapshot-testing
+    from: "1.18.0"
+```
+
+And the `RibHouseSnapshotTests` target depends on the `SnapshotTesting` product:
+
+```yaml
+RibHouseSnapshotTests:
+  type: bundle.unit-test
+  platform: iOS
+  sources:
+    - path: SnapshotTests
+  dependencies:
+    - target: RibHouse
+    - package: swift-snapshot-testing
+      product: SnapshotTesting
+```
+
+Each test file mounts the SwiftUI view in a `UIHostingController` and hands it to `assertSnapshot`:
+
+```swift
+import SnapshotTesting
+import SwiftUI
+import XCTest
+@testable import RibHouse
+
+@MainActor
+final class LoggedOutNapkinViewSnapshotTests: XCTestCase {
+    func testLoggedOutNapkinView() {
+        let view = LoggedOutNapkinView()
+        let vc = UIHostingController(rootView: view)
+        assertSnapshot(of: vc, as: .image(on: .iPhone13Pro))
+    }
+}
+```
+
+> Note: First run *records* — `assertSnapshot` writes a PNG into `__Snapshots__/<TestClass>/<testMethod>.1.png` next to the test file and reports the test as failed with the message "No reference was found on disk. Automatically recorded snapshot." Re-run the same test and it asserts against the freshly-recorded reference; that's the green state.
+
+The recorded reference PNGs are committed to source control (under `Examples/RibHouse/SnapshotTests/__Snapshots__/`), so the test compares the runtime render against a known-good image rather than depending on the developer to record locally.
+
+> Important: Snapshot stability requires a fixed device. The example pins to `.iPhone13Pro` because Point-Free's library ships preset device configurations for it (matching iPhone 17 Pro's logical resolution closely enough for our purposes). Running the same test against `.iPhoneX` or `.iPadPro12_9` would produce a different image — every device needs its own recorded reference.
+
+If you change a view intentionally, re-record with one of:
+
+@Row {
+    @Column {
+        **Per-test, in code**
+        ```swift
+        // SnapshotTesting 1.18+
+        withSnapshotTesting(record: .all) {
+            assertSnapshot(of: vc, as: .image(on: .iPhone13Pro))
+        }
+        ```
+    }
+    @Column {
+        **All tests, environment variable**
+        ```bash
+        env SNAPSHOT_TESTING_RECORD=all \
+          xcodebuild ... \
+            -only-testing:RibHouseSnapshotTests \
+            test
+        ```
+    }
+}
+
+Then commit the regenerated PNGs alongside the view change.
 
 ## Wrapping up
 

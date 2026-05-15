@@ -9,12 +9,16 @@
     "theme": {
         "color": {
             "documentation-intro-accent": {
-                "light": "#0058a3",
-                "dark": "#5ea0ff"
+                "light": "#356847",
+                "dark": "#7eb88a"
+            },
+            "documentation-intro-fill": {
+                "light": "#f6f1e3",
+                "dark": "#0e1410"
             },
             "link": {
-                "light": "#0058a3",
-                "dark": "#5ea0ff"
+                "light": "#356847",
+                "dark": "#7eb88a"
             }
         }
     }
