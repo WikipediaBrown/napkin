@@ -640,15 +640,13 @@ bundle exec fastlane unit_test
 
 ### Runnable example app
 
-A minimal iOS app under [`Examples/LaunchNapkinApp`](Examples/) demonstrates the framework end-to-end. It is verified working on iPhone 17 / iOS 26.4 simulator. Requires [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`):
+**Napkin's Rib House** under [`Examples/RibHouse`](Examples/RibHouse) is a runnable iOS app demonstrating the framework end-to-end: a headless `LaunchNapkin` holds an `AuthService`, swapping between a `LoggedOutNapkin` (Login button) and a `LoggedInNapkin` (user name + barbecue list). The `.xcodeproj` is tracked, so just:
 
 ```bash
-cd Examples/LaunchNapkinApp
-xcodegen
-open LaunchNapkinApp.xcodeproj
+open Examples/RibHouse/RibHouse.xcodeproj
 ```
 
-See [`Examples/README.md`](Examples/README.md) for details.
+Walkthrough: <https://getnapkin.to/documentation/napkin/tutorialbuildingaloginflow>
 
 ## Tooling
 
