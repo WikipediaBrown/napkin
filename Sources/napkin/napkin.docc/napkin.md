@@ -64,6 +64,12 @@ A runnable end-to-end reference, **Napkin's Rib House**, lives at `Examples/RibH
 - <doc:DefiningAFeature>
 - <doc:MigratingFromV0>
 
+### Tutorials
+
+- <doc:TestingANapkin>
+- <doc:AddingANetworkedService>
+- <doc:TabBarNapkin>
+
 ### Architecture Reference
 
 - <doc:ProtocolCompositionOverInheritance>
