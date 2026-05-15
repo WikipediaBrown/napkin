@@ -1,6 +1,17 @@
 # Napkin's Rib House
 
-A runnable iOS app that demonstrates napkin end-to-end through a login/logout flow:
+A runnable iOS app that demonstrates napkin end-to-end through a login/logout flow.
+
+<p align="center">
+  <img src="SnapshotTests/__Snapshots__/LoggedOutNapkinViewSnapshotTests/testLoggedOutNapkinView.1.png" alt="LoggedOut napkin: paper-cream background, '§ 00 · WELCOME' kicker, large serif 'Step inside the smokehouse' headline, lede, and ink LOGIN button." width="300">
+  &nbsp;&nbsp;
+  <img src="SnapshotTests/__Snapshots__/LoggedInNapkinViewSnapshotTests/testLoggedInNapkinView.1.png" alt="LoggedIn napkin: dark background, '§ ∞ · SIGNED IN' kicker, italic 'Smokey Joe' wordmark, a 'BARBECUE FOODS' subtitle, and a numbered list of foods with an outlined LOGOUT button." width="300">
+</p>
+
+<p align="center"><em>Left:</em> <code>LoggedOutNapkin</code> &nbsp;·&nbsp; <em>Right:</em> <code>LoggedInNapkin</code> (snapshot-test reference images, recorded by <code>RibHouseSnapshotTests</code>)</p>
+
+## How it works
+
 
 - **LaunchNapkin** (headless, holds an `AuthService`) starts by attaching the **LoggedOutNapkin**.
 - **LoggedOutNapkin** shows a single **Login** button. Tapping it sends `loggedOutDidTapLogin()` up to the Launch interactor via the listener pattern.

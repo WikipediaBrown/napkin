@@ -640,7 +640,17 @@ bundle exec fastlane unit_test
 
 ### Runnable example app
 
-**Napkin's Rib House** under [`Examples/RibHouse`](Examples/RibHouse) is a runnable iOS app demonstrating the framework end-to-end: a headless `LaunchNapkin` holds an `AuthService`, swapping between a `LoggedOutNapkin` (Login button) and a `LoggedInNapkin` (user name + barbecue list). The `.xcodeproj` is tracked, so just:
+**Napkin's Rib House** under [`Examples/RibHouse`](Examples/RibHouse) is a runnable iOS app demonstrating the framework end-to-end: a headless `LaunchNapkin` holds an `AuthService`, swapping between a `LoggedOutNapkin` (Login button) and a `LoggedInNapkin` (user name + barbecue list).
+
+<p align="center">
+  <img src="Sources/napkin/napkin.docc/Resources/rib-house-logged-out.png" alt="LoggedOut napkin: paper-cream background with kicker '§ 00 · WELCOME', large serif headline 'Step inside the smokehouse', a lede, and an ink LOGIN button." width="300">
+  &nbsp;&nbsp;
+  <img src="Sources/napkin/napkin.docc/Resources/rib-house-logged-in.png" alt="LoggedIn napkin: dark green-black background, '§ ∞ · SIGNED IN' kicker, italic 'Smokey Joe' wordmark, a numbered list of barbecue foods, and an outlined LOGOUT button." width="300">
+</p>
+
+<p align="center"><em>Left:</em> <code>LoggedOutNapkin</code> &nbsp;·&nbsp; <em>Right:</em> <code>LoggedInNapkin</code></p>
+
+Both screenshots are the **reference images** from the example's snapshot tests (`Examples/RibHouse/SnapshotTests/__Snapshots__/`) — any visual regression in either view flips the test red. The `.xcodeproj` is tracked, so just:
 
 ```bash
 open Examples/RibHouse/RibHouse.xcodeproj
