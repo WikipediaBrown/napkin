@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" role="img" aria-labelledby="napkin-card-title napkin-card-desc">
+  <title id="napkin-card-title">napkin — a Swift framework for clean architecture</title>
+  <desc id="napkin-card-desc">Apps as a tree of small, isolated, composable units. Swift 6.2, iOS 26 / macOS 26, modeled on RIBs. getnapkin.to, made with three trees in Cascadia.</desc>
   <!-- Background: paper tone with subtle grid (matches site palette) -->
   <defs>
     <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
