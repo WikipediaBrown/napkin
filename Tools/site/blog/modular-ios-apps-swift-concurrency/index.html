@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modular iOS apps with Swift Concurrency</title>
+    <meta name="description" content="Modularity isn't a build-system question. It's about whether features can be reasoned about in isolation. Here's how to compose an iOS app as a tree of small isolated units in Swift 6 — no module-graph gymnastics required.">
+    <meta name="theme-color" content="#f6f1e3" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0e1410" media="(prefers-color-scheme: dark)">
+
+    <meta property="og:title" content="Modular iOS apps with Swift Concurrency">
+    <meta property="og:description" content="Compose iOS apps as a tree of isolated units in Swift 6 — feature-level boundaries without module-graph gymnastics.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://getnapkin.to/blog/modular-ios-apps-swift-concurrency/">
+    <meta property="og:image" content="https://getnapkin.to/social-preview.png">
+    <meta property="article:published_time" content="2026-05-01">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://getnapkin.to/blog/modular-ios-apps-swift-concurrency/">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="/napkin-icon.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/napkin-icon@2x.png">
+    <link rel="apple-touch-icon" href="/napkin-icon@2x.png">
+    <link rel="alternate" type="application/atom+xml" title="napkin blog" href="/blog/feed.xml">
+    <link rel="stylesheet" href="/styles.css">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "Modular iOS apps with Swift Concurrency",
+        "description": "Compose iOS apps as a tree of isolated units in Swift 6 — feature-level boundaries without module-graph gymnastics.",
+        "datePublished": "2026-05-01",
+        "author": { "@type": "Organization", "name": "napkin" },
+        "publisher": { "@type": "Organization", "name": "napkin", "url": "https://getnapkin.to/" },
+        "image": "https://getnapkin.to/social-preview.png",
+        "mainEntityOfPage": "https://getnapkin.to/blog/modular-ios-apps-swift-concurrency/"
+    }
+    </script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="masthead" role="banner">
+    <div class="masthead__inner">
+        <a class="masthead__brand" href="/" aria-label="napkin — home">
+            <span class="masthead__mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4 H20 V20 L4 20 L4 4 Z" />
+                    <path d="M4 14 L14 14 L14 20" />
+                </svg>
+            </span>
+            <span class="masthead__wordmark">napkin</span>
+        </a>
+        <nav class="masthead__nav" aria-label="Primary">
+            <ul>
+                <li><a href="/documentation/napkin/">Docs</a></li>
+                <li><a href="/#example">Example</a></li>
+                <li><a href="/blog/" aria-current="page">Blog</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md">Changelog</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin">GitHub</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main id="main">
+<article class="post">
+    <p class="post__kicker"><span>§ 05</span> <span class="sep">·</span> <span>2026 · 05 · 01</span> <span class="sep">·</span> <span>Modularity</span></p>
+    <h1 class="post__title">Modular iOS apps with Swift Concurrency</h1>
+    <p class="post__lede">Modularity isn't a build-system question. It's about whether features can be reasoned about in isolation — read alone, tested alone, replaced alone.</p>
+
+    <div class="post__body">
+        <p>Ask three iOS developers what "modular" means and you'll get three answers. One will talk about <code>Package.swift</code> targets and binary-framework boundaries. Another will mention "feature modules" with <code>FooKit</code>, <code>BarKit</code>, and a top-level glue package. The third — usually the most senior — will say something like "I just want each screen to make sense without reading the rest of the app."</p>
+
+        <p>The third answer is the only one that scales. Build-system modularity helps with compile times. It doesn't help with feature comprehension; you can have a perfectly factored package graph where every feature still reaches into a god-object <code>AppCoordinator</code> and reads from a singleton <code>UserSession</code>. The graph is modular; the runtime isn't.</p>
+
+        <h2>Modularity by tree, not by graph</h2>
+
+        <p>What you actually want is for each feature to:</p>
+
+        <ul>
+            <li><strong>Declare its needs.</strong> A list of services it requires from above. Compile-time check, not "I'll grab a singleton."</li>
+            <li><strong>Own its outputs.</strong> The intents it can produce. Other features observe these explicitly, not via a global event bus.</li>
+            <li><strong>Be replaceable.</strong> Swapping a feature for a different one shouldn't require touching unrelated parts of the app.</li>
+            <li><strong>Be removable.</strong> Deleting a feature should remove a self-contained chunk of code and exactly its references.</li>
+        </ul>
+
+        <p>The pattern that gives you this — independent of build-system choices — is the dependency-tree architecture: every feature is a unit, units compose into a tree, dependencies flow down, intents flow up. Uber's RIBs made this concrete in 2017. napkin is the Swift 6 version: <code>final actor</code> for business logic, <code>@MainActor</code> for routing, protocol composition for "inheritance."</p>
+
+        <h2>What a feature looks like</h2>
+
+        <p>Every feature is a "napkin": one folder, 5–6 files. The shape is identical across the app:</p>
+
+        <figure class="code-card" aria-label="A napkin folder structure">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">CartNapkin/</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>CartNapkin/
+├── CartNapkinBuilder.swift              # Dependency + Component + Builder
+├── CartNapkinInteractor.swift           # Routing/Listener/Presentable protocols + actor
+├── CartNapkinRouter.swift               # ViewControllable + Router
+├── CartNapkinView.swift                 # SwiftUI view
+└── CartNapkinHostingViewController.swift # UIHostingController + PresentableListener
+</code></pre>
+        </figure>
+
+        <p>Open the folder, read those five files in order, and you know what the cart does. The dependency protocol tells you what it needs from above. The listener protocol tells you what it sends to its parent. The interactor tells you the business logic. The router tells you what children it can spawn. The view tells you what it renders.</p>
+
+        <p>That's modularity at the unit you actually care about — the feature — not at the unit your build system happens to operate on.</p>
+
+        <h2>What composition looks like</h2>
+
+        <p>The tree assembles top-down. Each parent's <code>Component</code> conforms to its children's <code>Dependency</code> protocols:</p>
+
+        <figure class="code-card" aria-label="Component conforming to children dependency protocols">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">RootBuilder.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>final class RootComponent: Component&lt;RootDependency&gt;, @unchecked Sendable {
+    var authService: AuthService { dependency.authService }
+    var analyticsService: AnalyticsService { dependency.analyticsService }
+}
+
+extension RootComponent: HomeDependency, ProfileDependency, CartDependency {}
+</code></pre>
+        </figure>
+
+        <p>Adding a new feature is a four-line change to the parent: import the builder, add its <code>Dependency</code> protocol to the component's conformance list, instantiate it, attach it. The compiler enforces the dependency contract — if Cart's <code>CartDependency</code> requires a <code>PaymentService</code> and Root doesn't satisfy it, Root won't compile.</p>
+
+        <h2>You don't need a binary framework per feature</h2>
+
+        <p>One trap to avoid: splitting every feature into its own SwiftPM target. It feels modular and it kills your build time for years.</p>
+
+        <p>Targets-per-feature only helps when (a) features genuinely have no cross-references, and (b) the build system can parallelize across them. In practice, features have cross-listeners and cross-types ("home wants to push to profile"), and you end up with a binary-framework graph that <em>still</em> has every feature talking to every other through a shared "interfaces" module. You've added build-system complexity without buying isolation.</p>
+
+        <p>The dependency-tree pattern gives you runtime isolation without build-system isolation. Every feature is in one folder of the same target, and the type system enforces the contracts. If your build is slow, fix it with module structure later, when you understand the dependency graph well enough to know which seams are real.</p>
+
+        <h2>Removing a feature</h2>
+
+        <p>Pull a feature's builder out of its parent's component conformance list and delete the feature's folder. The compiler will tell you about every remaining reference. There should be zero — listeners are protocols, the parent stops conforming, the dependency is gone.</p>
+
+        <p>That's the test of whether your modularity is real. If deleting a feature feels safe and the diff is local, you have it. If you'd have to grep half the app to find the references, you don't.</p>
+
+        <h2>Try it</h2>
+
+        <p>The <a href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse">RibHouse example</a> is a three-feature tree: a Launch parent, a LoggedOut child, a LoggedIn child. ~600 lines of Swift, every file in its own folder, every dependency declared. Delete a child, the build complains in one place, and the parent's <code>extension RootComponent: ...</code> tells you which conformance to remove. <a href="/documentation/napkin/tutorialbuildingaloginflow">The tutorial</a> walks through how each piece composes.</p>
+
+        <p>You don't need napkin to do this. The pattern is older than napkin. But you do need <em>some</em> framework — or to roll your own — to get the protocol-composition pieces right under Swift 6 strict concurrency. napkin is one option, and it ships with the Xcode templates so the boilerplate stays cheap.</p>
+    </div>
+
+    <footer class="post__footer">
+        <p><a href="/blog/">← All posts</a></p>
+        <p>napkin · <a href="/documentation/napkin/">Docs</a> · <a href="https://github.com/WikipediaBrown/napkin">GitHub</a></p>
+    </footer>
+</article>
+</main>
+
+<footer class="colophon" role="contentinfo">
+    <div class="colophon__inner">
+        <p class="colophon__line">
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin">napkin</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/LICENSE.md">Apache&#8209;2.0</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md">CHANGELOG</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/">Blog</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/feed.xml" type="application/atom+xml">RSS</a>
+        </p>
+        <p class="colophon__line colophon__line--right">
+            Made with 🌲🌲🌲 in Cascadia
+        </p>
+    </div>
+</footer>
+
+<script>
+(function() {
+    document.querySelectorAll('button[data-copy]').forEach(function(btn) {
+        btn.addEventListener('click', async function() {
+            var card = btn.closest('.code-card');
+            var code = card && card.querySelector('pre code');
+            if (!code) return;
+            try {
+                await navigator.clipboard.writeText(code.innerText);
+                var prev = btn.textContent;
+                btn.setAttribute('data-state', 'copied');
+                btn.textContent = 'Copied';
+                setTimeout(function() {
+                    btn.removeAttribute('data-state');
+                    btn.textContent = prev;
+                }, 1400);
+            } catch (e) { btn.textContent = 'Copy failed'; }
+        });
+    });
+})();
+</script>
+
+</body>
+</html>

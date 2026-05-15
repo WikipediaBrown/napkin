@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dependency injection in SwiftUI without third-party libraries</title>
+    <meta name="description" content="SwiftUI's @Environment wasn't designed for services and @EnvironmentObject crashes at runtime. There's a third option that's been around since RIBs and works cleanly with Swift 6 actors.">
+    <meta name="theme-color" content="#f6f1e3" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0e1410" media="(prefers-color-scheme: dark)">
+
+    <meta property="og:title" content="Dependency injection in SwiftUI without third-party libraries">
+    <meta property="og:description" content="Swap @Environment / @EnvironmentObject for a typed dependency tree that doesn't crash at runtime and tests cleanly. The pattern is older than SwiftUI itself.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://getnapkin.to/blog/swiftui-dependency-injection-without-libraries/">
+    <meta property="og:image" content="https://getnapkin.to/social-preview.png">
+    <meta property="article:published_time" content="2026-05-08">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://getnapkin.to/blog/swiftui-dependency-injection-without-libraries/">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="/napkin-icon.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/napkin-icon@2x.png">
+    <link rel="apple-touch-icon" href="/napkin-icon@2x.png">
+    <link rel="alternate" type="application/atom+xml" title="napkin blog" href="/blog/feed.xml">
+    <link rel="stylesheet" href="/styles.css">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "Dependency injection in SwiftUI without third-party libraries",
+        "description": "Swap @Environment / @EnvironmentObject for a typed dependency tree that doesn't crash at runtime and tests cleanly.",
+        "datePublished": "2026-05-08",
+        "author": { "@type": "Organization", "name": "napkin" },
+        "publisher": { "@type": "Organization", "name": "napkin", "url": "https://getnapkin.to/" },
+        "image": "https://getnapkin.to/social-preview.png",
+        "mainEntityOfPage": "https://getnapkin.to/blog/swiftui-dependency-injection-without-libraries/"
+    }
+    </script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="masthead" role="banner">
+    <div class="masthead__inner">
+        <a class="masthead__brand" href="/" aria-label="napkin — home">
+            <span class="masthead__mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4 H20 V20 L4 20 L4 4 Z" />
+                    <path d="M4 14 L14 14 L14 20" />
+                </svg>
+            </span>
+            <span class="masthead__wordmark">napkin</span>
+        </a>
+        <nav class="masthead__nav" aria-label="Primary">
+            <ul>
+                <li><a href="/documentation/napkin/">Docs</a></li>
+                <li><a href="/#example">Example</a></li>
+                <li><a href="/blog/" aria-current="page">Blog</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md">Changelog</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin">GitHub</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main id="main">
+<article class="post">
+    <p class="post__kicker"><span>§ 03</span> <span class="sep">·</span> <span>2026 · 05 · 08</span> <span class="sep">·</span> <span>DI</span></p>
+    <h1 class="post__title">Dependency injection in SwiftUI without third-party libraries</h1>
+    <p class="post__lede">SwiftUI's <code>@Environment</code> wasn't designed for services. <code>@EnvironmentObject</code> crashes at runtime when you forget. There's a third option that's been around since RIBs and works cleanly with Swift 6 actors.</p>
+
+    <div class="post__body">
+        <p>SwiftUI ships two dependency-injection-ish mechanisms. Both have sharp edges.</p>
+
+        <h2>The two SwiftUI mechanisms</h2>
+
+        <p><code>@Environment</code> works through a key path on <code>EnvironmentValues</code>. You define a key with a default, register it, then read with <code>@Environment(\.myKey)</code>. It's typed, compile-checked, and reasonable for small leaf values like a color scheme or a locale. It's awkward for anything stateful, and the default-value requirement makes it tedious for services that don't have one.</p>
+
+        <p><code>@EnvironmentObject</code> threads a reference-type observable through the view tree by class. You write <code>.environmentObject(myService)</code> at some ancestor; descendants read <code>@EnvironmentObject var myService: MyService</code>. It's flexible, but the lookup is by type and the safety is runtime: forget the <code>.environmentObject(...)</code> call and the app crashes with "no ObservableObject of type MyService" the moment a descendant tries to read it. The crash isn't even at app launch — it's the first time the affected view tries to render.</p>
+
+        <p>Neither is what you want for the things you actually need to inject: networking, auth, persistence, analytics. Those are <em>services</em>, not values. They have one canonical instance per scope. They need to be testable. They shouldn't crash if a developer reorders the view tree.</p>
+
+        <h2>The pattern: components own services, the tree threads them down</h2>
+
+        <p>The DI model napkin uses (inherited from Uber's RIBs) is older than SwiftUI by years. Every feature has a <strong>Dependency</strong> protocol that says what it needs from above. Every feature has a <strong>Component</strong> class that conforms to its <em>children's</em> dependency protocols. The root component holds the actual service instances; children read them from their parent's component.</p>
+
+        <figure class="code-card" aria-label="Dependency protocol and component">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">HomeBuilder.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>protocol HomeDependency: Dependency {
+    var authService: AuthService { get }
+}
+
+final class HomeComponent: Component&lt;HomeDependency&gt;, @unchecked Sendable {
+    var authService: AuthService { dependency.authService }
+}
+
+// The children's Dependency protocols are bridged by extension:
+extension HomeComponent: ProfileDependency, FeedDependency {}
+</code></pre>
+        </figure>
+
+        <p>Three properties that make this work better than the SwiftUI environment:</p>
+
+        <ul>
+            <li><strong>Compile-time checks.</strong> If a feature declares <code>authService</code> in its dependency protocol and the parent component doesn't satisfy it, the code doesn't compile. No runtime crash.</li>
+            <li><strong>Explicit interfaces.</strong> Every feature lists what it needs in one place — the dependency protocol. Read that protocol and you know what the feature touches.</li>
+            <li><strong>Test-friendly.</strong> In a test, construct a hand-built component with mock services and pass it to the builder. The feature is exercised the same way as in production.</li>
+        </ul>
+
+        <h2>The bootstrap</h2>
+
+        <p>The root of the tree — usually inside the scene delegate — instantiates a top-level <code>AppComponent</code> that owns the real service implementations:</p>
+
+        <figure class="code-card" aria-label="App component bootstrap">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">SceneDelegate.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>final class AppComponent: Component&lt;EmptyDependency&gt;,
+                          LaunchNapkinDependency,
+                          @unchecked Sendable {
+    let authService: AuthService
+
+    init() {
+        self.authService = URLSessionAuthService(baseURL: API.production)
+        super.init(dependency: EmptyComponent())
+    }
+}
+
+// In the scene delegate:
+let builder = LaunchNapkinBuilder(dependency: AppComponent())
+let router = await builder.build(withListener: AppListener())
+await router.launch(from: window)
+</code></pre>
+        </figure>
+
+        <p>One <code>AuthService</code> instance, one <code>AppComponent</code>, both alive for the app's lifetime. Below the root, each feature constructs its own component from its parent's, declaring what new internal scope it owns. A network service stays a single instance; a per-screen view-model is fresh each time.</p>
+
+        <h2>What you don't get</h2>
+
+        <p>This pattern doesn't auto-discover anything. There's no <code>@Inject</code> magic, no annotation processor, no runtime container. If a feature needs a new service, you add it to the dependency protocol and provide it at the root. That sounds like more work; in practice it's the difference between an architecture you can read in a graph diagram and one you can only debug at runtime.</p>
+
+        <p>It also doesn't work well with views that aren't part of a napkin tree. If you have a one-off SwiftUI sheet that doesn't justify its own napkin, <code>@Environment</code> is still the right tool. The dependency-tree pattern earns its keep when services need to thread through many screens.</p>
+
+        <h2>Try it</h2>
+
+        <p>The <a href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse">RibHouse example app</a> uses this pattern end-to-end with a single service (<code>AuthService</code>). The <a href="/documentation/napkin/tutorialbuildingaloginflow">tutorial walkthrough</a> shows where each piece slots in. If you've worked with Swinject, Resolver, Factory, or any of the runtime containers, the difference is that the type system does the work — the container is just classes you write.</p>
+    </div>
+
+    <footer class="post__footer">
+        <p><a href="/blog/">← All posts</a></p>
+        <p>napkin · <a href="/documentation/napkin/">Docs</a> · <a href="https://github.com/WikipediaBrown/napkin">GitHub</a></p>
+    </footer>
+</article>
+</main>
+
+<footer class="colophon" role="contentinfo">
+    <div class="colophon__inner">
+        <p class="colophon__line">
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin">napkin</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/LICENSE.md">Apache&#8209;2.0</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md">CHANGELOG</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/">Blog</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/feed.xml" type="application/atom+xml">RSS</a>
+        </p>
+        <p class="colophon__line colophon__line--right">
+            Made with 🌲🌲🌲 in Cascadia
+        </p>
+    </div>
+</footer>
+
+<script>
+(function() {
+    document.querySelectorAll('button[data-copy]').forEach(function(btn) {
+        btn.addEventListener('click', async function() {
+            var card = btn.closest('.code-card');
+            var code = card && card.querySelector('pre code');
+            if (!code) return;
+            try {
+                await navigator.clipboard.writeText(code.innerText);
+                var prev = btn.textContent;
+                btn.setAttribute('data-state', 'copied');
+                btn.textContent = 'Copied';
+                setTimeout(function() {
+                    btn.removeAttribute('data-state');
+                    btn.textContent = prev;
+                }, 1400);
+            } catch (e) { btn.textContent = 'Copy failed'; }
+        });
+    });
+})();
+</script>
+
+</body>
+</html>
