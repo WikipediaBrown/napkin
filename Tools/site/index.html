@@ -46,7 +46,7 @@
         <nav class="masthead__nav" aria-label="Primary">
             <ul>
                 <li><a href="/documentation/napkin/">Docs</a></li>
-                <li><a href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse">Example</a></li>
+                <li><a href="#example">Example</a></li>
                 <li><a href="https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md">Changelog</a></li>
                 <li><a href="https://github.com/WikipediaBrown/napkin">GitHub</a></li>
             </ul>
@@ -237,6 +237,102 @@
 <section class="rule" aria-hidden="true"></section>
 
 
+<section class="example" id="example" aria-labelledby="example-title">
+    <div class="example__copy">
+        <p class="kicker"><span class="kicker__num">§ 04</span><span class="kicker__sep">·</span>See it in motion</p>
+        <h2 class="example__title" id="example-title">A real app, the napkin way.</h2>
+        <p class="example__lede">
+            <strong>Napkin&#8217;s Rib House</strong> is a runnable iOS app: a headless <code>LaunchNapkin</code> holds an <code>AuthService</code>, then swaps a <code>LoggedOutNapkin</code> for a <code>LoggedInNapkin</code> on tap. Snapshots and code march in lockstep below.
+        </p>
+        <div class="cta-row">
+            <a class="btn btn--ink" href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse">
+                <span>Open the project</span>
+                <span class="btn__arrow" aria-hidden="true">→</span>
+            </a>
+            <a class="btn btn--ghost" href="/documentation/napkin/tutorialbuildingaloginflow">
+                <span>Read the tutorial</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="example__demo" aria-label="A four-step animated tutorial of the auth flow">
+        <div class="example__phone-wrap">
+            <div class="phone" role="img" aria-label="iPhone-shaped frame cycling between the LoggedOut and LoggedIn napkin views">
+                <div class="phone__notch" aria-hidden="true"></div>
+                <img class="phone__shot phone__shot--out is-visible" src="rib-house-logged-out.png" alt="LoggedOut napkin: paper-cream background with kicker, smokehouse headline, and LOGIN button.">
+                <img class="phone__shot phone__shot--in" src="rib-house-logged-in.png" alt="LoggedIn napkin: dark background with Smokey Joe's name and a numbered list of barbecue foods.">
+            </div>
+        </div>
+
+        <ol class="example__steps">
+            <li class="step is-active">
+                <p class="step__head"><span class="step__num">01</span><span class="step__sep">·</span><span class="step__file"><span class="step__folder">LoggedOutNapkin/</span>LoggedOutNapkinView.swift</span></p>
+                <pre class="code"><code><span class="line"><span class="tk-key">struct</span> <span class="tk-typ">LoggedOutNapkinView</span>: <span class="tk-typ">View</span> {</span>
+<span class="line">    <span class="tk-key">weak</span> <span class="tk-key">var</span> listener: <span class="tk-typ">PresentableListener</span>?</span>
+<span class="line"></span>
+<span class="line">    <span class="tk-key">var</span> body: <span class="tk-key">some</span> <span class="tk-typ">View</span> {</span>
+<span class="line">        <span class="tk-typ">Button</span>(<span class="tk-str">"Login"</span>) {</span>
+<span class="line">            <span class="tk-fn">dispatch</span> { <span class="tk-key">await</span> listener?.<span class="tk-fn">didTapLogin</span>() }</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line">}</span></code></pre>
+            </li>
+
+            <li class="step">
+                <p class="step__head"><span class="step__num">02</span><span class="step__sep">·</span><span class="step__file"><span class="step__folder">LoggedOutNapkin/</span>LoggedOutNapkinInteractor.swift</span></p>
+                <pre class="code"><code><span class="line"><span class="tk-key">final</span> <span class="tk-key">actor</span> <span class="tk-typ">LoggedOutNapkinInteractor</span>: <span class="tk-typ">PresentableListener</span> {</span>
+<span class="line">    <span class="tk-key">weak</span> <span class="tk-key">var</span> listener: <span class="tk-typ">LoggedOutNapkinListener</span>?</span>
+<span class="line"></span>
+<span class="line">    <span class="tk-cmt">// View talks down to me; I talk up to my parent.</span></span>
+<span class="line">    <span class="tk-key">func</span> <span class="tk-fn">didTapLogin</span>() <span class="tk-key">async</span> {</span>
+<span class="line">        <span class="tk-key">await</span> listener?.<span class="tk-fn">loggedOutDidTapLogin</span>()</span>
+<span class="line">    }</span>
+<span class="line">}</span></code></pre>
+            </li>
+
+            <li class="step">
+                <p class="step__head"><span class="step__num">03</span><span class="step__sep">·</span><span class="step__file"><span class="step__folder">LaunchNapkin/</span>LaunchNapkinInteractor.swift</span></p>
+                <pre class="code"><code><span class="line"><span class="tk-key">final</span> <span class="tk-key">actor</span> <span class="tk-typ">LaunchNapkinInteractor</span>: <span class="tk-typ">LoggedOutNapkinListener</span> {</span>
+<span class="line">    <span class="tk-key">nonisolated</span> <span class="tk-key">let</span> authService: <span class="tk-typ">AuthService</span></span>
+<span class="line">    <span class="tk-key">weak</span> <span class="tk-key">var</span> router: <span class="tk-typ">LaunchNapkinRouting</span>?</span>
+<span class="line"></span>
+<span class="line">    <span class="tk-key">func</span> <span class="tk-fn">loggedOutDidTapLogin</span>() <span class="tk-key">async</span> {</span>
+<span class="line">        <span class="tk-key">let</span> user = <span class="tk-key">try</span> <span class="tk-key">await</span> authService.<span class="tk-fn">login</span>()</span>
+<span class="line">        <span class="tk-key">await</span> router?.<span class="tk-fn">attachLoggedIn</span>(user: user)</span>
+<span class="line">    }</span>
+<span class="line">}</span></code></pre>
+            </li>
+
+            <li class="step">
+                <p class="step__head"><span class="step__num">04</span><span class="step__sep">·</span><span class="step__file"><span class="step__folder">LoggedInNapkin/</span>LoggedInNapkinView.swift</span></p>
+                <pre class="code"><code><span class="line"><span class="tk-key">struct</span> <span class="tk-typ">LoggedInNapkinView</span>: <span class="tk-typ">View</span> {</span>
+<span class="line">    <span class="tk-key">let</span> user: <span class="tk-typ">User</span></span>
+<span class="line"></span>
+<span class="line">    <span class="tk-key">var</span> body: <span class="tk-key">some</span> <span class="tk-typ">View</span> {</span>
+<span class="line">        <span class="tk-typ">VStack</span> {</span>
+<span class="line">            <span class="tk-typ">Text</span>(user.name).<span class="tk-fn">italic</span>()</span>
+<span class="line">            <span class="tk-typ">ForEach</span>(user.barbecueFoods, id: \.self) { food <span class="tk-key">in</span></span>
+<span class="line">                <span class="tk-typ">Text</span>(food)</span>
+<span class="line">            }</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line">}</span></code></pre>
+            </li>
+        </ol>
+
+        <div class="example__progress" role="tablist" aria-label="Tutorial step">
+            <button class="dot is-active" type="button" data-step="0" role="tab" aria-selected="true" aria-label="Step 1: LoggedOut view"></button>
+            <button class="dot" type="button" data-step="1" role="tab" aria-selected="false" aria-label="Step 2: LoggedOut interactor"></button>
+            <button class="dot" type="button" data-step="2" role="tab" aria-selected="false" aria-label="Step 3: Launch interactor"></button>
+            <button class="dot" type="button" data-step="3" role="tab" aria-selected="false" aria-label="Step 4: LoggedIn view"></button>
+        </div>
+    </div>
+</section>
+
+
+<section class="rule" aria-hidden="true"></section>
+
+
 <section class="closing" aria-labelledby="closing-title">
     <div class="closing__inner">
         <p class="kicker"><span class="kicker__num">§ ∞</span><span class="kicker__sep">·</span>Get started</p>
@@ -279,6 +375,52 @@
         </p>
     </div>
 </footer>
+
+<script>
+// Tiny vanilla-JS controller for the Example section's auto-cycling tutorial.
+// Honors prefers-reduced-motion by laying every step out at once and stopping
+// the rotation. Click any dot to jump to a step; the timer re-arms.
+(function() {
+    var section = document.querySelector('.example');
+    if (!section) return;
+    var steps = section.querySelectorAll('.step');
+    var shots = section.querySelectorAll('.phone__shot');
+    var dots  = section.querySelectorAll('.dot');
+    if (!steps.length) return;
+
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        section.classList.add('example--static');
+        return;
+    }
+
+    // Step → which phone screenshot to show (0=LoggedOut, 1=LoggedIn).
+    var shotForStep = [0, 0, 1, 1];
+    var i = 0;
+    var timer;
+    function go(target) {
+        i = ((target % steps.length) + steps.length) % steps.length;
+        for (var s = 0; s < steps.length; s++) {
+            steps[s].classList.toggle('is-active', s === i);
+            dots[s].classList.toggle('is-active', s === i);
+            dots[s].setAttribute('aria-selected', s === i ? 'true' : 'false');
+        }
+        for (var p = 0; p < shots.length; p++) {
+            shots[p].classList.toggle('is-visible', p === shotForStep[i]);
+        }
+    }
+    function arm() {
+        clearInterval(timer);
+        // Slightly longer than the longest line-stagger so the user can read it.
+        timer = setInterval(function() { go(i + 1); }, 6000);
+    }
+    for (var d = 0; d < dots.length; d++) {
+        (function(idx) {
+            dots[idx].addEventListener('click', function() { go(idx); arm(); });
+        })(d);
+    }
+    arm();
+})();
+</script>
 
 </body>
 </html>
