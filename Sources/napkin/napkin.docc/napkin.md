@@ -76,6 +76,7 @@ A runnable end-to-end reference, **Napkin's Rib House**, lives at `Examples/RibH
 - <doc:CrossIsolationPatterns>
 - <doc:HeadlessNapkins>
 - <doc:SwiftUIIntegration>
+- <doc:Glossary>
 
 ### Defining a Napkin
 

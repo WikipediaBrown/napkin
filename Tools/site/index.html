@@ -25,7 +25,44 @@
     <link rel="icon" type="image/png" sizes="96x96" href="napkin-icon@2x.png">
     <link rel="apple-touch-icon" href="napkin-icon@2x.png">
     <link rel="alternate" type="application/atom+xml" title="napkin releases" href="https://github.com/WikipediaBrown/napkin/releases.atom">
+    <link rel="canonical" href="https://getnapkin.to/">
     <link rel="stylesheet" href="styles.css">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareSourceCode",
+        "name": "napkin",
+        "alternateName": "napkin Swift framework",
+        "description": "A Swift 6.2 framework for building iOS and macOS apps as a tree of small, isolated, composable units. Modeled on Uber's RIBs, rebuilt around Swift Concurrency. Business logic in final actor interactors; @MainActor routing and presentation; explicit isolation crossings. Clean Architecture on a napkin.",
+        "url": "https://getnapkin.to/",
+        "codeRepository": "https://github.com/WikipediaBrown/napkin",
+        "programmingLanguage": [
+            { "@type": "ComputerLanguage", "name": "Swift", "alternateName": "Swift 6.2" }
+        ],
+        "runtimePlatform": ["iOS 26", "macOS 26"],
+        "license": "https://www.apache.org/licenses/LICENSE-2.0",
+        "keywords": "Swift, iOS, macOS, RIBs, Clean Architecture, Swift Concurrency, actor, dependency injection, SwiftUI",
+        "image": "https://getnapkin.to/social-preview.png",
+        "author": { "@type": "Organization", "name": "napkin", "url": "https://getnapkin.to/" }
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "napkin",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "iOS 26, macOS 26",
+        "url": "https://getnapkin.to/",
+        "downloadUrl": "https://github.com/WikipediaBrown/napkin",
+        "softwareVersion": "2.0",
+        "license": "https://www.apache.org/licenses/LICENSE-2.0",
+        "description": "A Swift 6.2 framework for Clean Architecture iOS / macOS apps — Router-Interactor-Builder pattern rebuilt around Swift Concurrency, without RxSwift.",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    }
+    </script>
 </head>
 <body>
 
@@ -48,7 +85,7 @@
                 <li><a href="/documentation/napkin/">Docs</a></li>
                 <li><a href="#example">Example</a></li>
                 <li><a href="/blog/">Blog</a></li>
-                <li><a href="https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md">Changelog</a></li>
+                <li><a href="/faq/">FAQ</a></li>
                 <li><a href="https://github.com/WikipediaBrown/napkin">GitHub</a></li>
             </ul>
 
@@ -370,6 +407,10 @@
             <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md">CHANGELOG</a>
             <span aria-hidden="true" class="colophon__sep">·</span>
             <a class="link link--mono" href="/blog/">Blog</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/faq/">FAQ</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/recipes/">Recipes</a>
             <span aria-hidden="true" class="colophon__sep">·</span>
             <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/releases.atom" type="application/atom+xml">RSS</a>
         </p>

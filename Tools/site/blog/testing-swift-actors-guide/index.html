@@ -36,6 +36,28 @@
         "mainEntityOfPage": "https://getnapkin.to/blog/testing-swift-actors-guide/"
     }
     </script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": "How to unit-test a Swift actor",
+        "description": "Mock an actor's collaborators (presenter, router, listener, service) with final classes that record calls, then drive the actor by calling its async methods directly from an async test.",
+        "totalTime": "PT15M",
+        "tool": [
+            { "@type": "HowToTool", "name": "Xcode 26+" },
+            { "@type": "HowToTool", "name": "Swift 6.2 toolchain" },
+            { "@type": "HowToTool", "name": "XCTest" }
+        ],
+        "step": [
+            { "@type": "HowToStep", "name": "Write a service mock", "text": "Define a final class that conforms to your service protocol with a Result-based stub and call counters." },
+            { "@type": "HowToStep", "name": "Write a presenter mock", "text": "Make a @MainActor final class conforming to your Presentable protocol that records every update call." },
+            { "@type": "HowToStep", "name": "Write a router or listener mock", "text": "Same shape — final class, conformance, recorded calls." },
+            { "@type": "HowToStep", "name": "Drive the actor", "text": "From an async test method, instantiate the interactor with the mocks, await its methods directly, then assert on the mocks' recorded state." },
+            { "@type": "HowToStep", "name": "Run the lifecycle directly", "text": "Call didBecomeActive() and willResignActive() like any other async method. Assert on the side effects each fires." }
+        ]
+    }
+    </script>
 </head>
 <body>
 
