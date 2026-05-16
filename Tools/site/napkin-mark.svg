@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Canonical napkin mark. Source of truth for the favicon, DocC icon, and
+     every Xcode template icon. The mark itself is the same square-with-tab
+     glyph used inline in the site masthead, set on an opaque paper tile so
+     it reads on light OR dark backgrounds (Xcode template list, DocC cards,
+     browser tab). Render to PNG with: rsvg-convert -w N -h N napkin-mark.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="napkin">
+  <title>napkin</title>
+  <rect width="512" height="512" rx="108" fill="#f6f1e3"/>
+  <rect x="5" y="5" width="502" height="502" rx="103" fill="none" stroke="#e3d6ba" stroke-width="3"/>
+  <g transform="translate(31 31) scale(18.75)"
+     fill="none" stroke="#356847" stroke-width="1.3"
+     stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 4 H20 V20 L4 20 L4 4 Z"/>
+    <path d="M4 14 L14 14 L14 20"/>
+  </g>
+</svg>
