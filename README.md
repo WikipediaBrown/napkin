@@ -12,7 +12,7 @@
 [![License: Apache 2.0](https://img.shields.io/github/license/WikipediaBrown/napkin?color=blue)](https://github.com/WikipediaBrown/napkin/blob/main/LICENSE.md)
 [![Docs](https://img.shields.io/badge/docs-getnapkin.to-2dbe60)](https://getnapkin.to/documentation/napkin/)
 
-napkin is a fork of Uber's [RIBs](https://github.com/uber/RIBs) rebuilt on Swift 6.2 native concurrency. It structures iOS and macOS applications as a tree of modular units using the Router-Interactor-Builder pattern, with business logic running off the main actor and routing/presentation pinned to it.
+napkin is a fork of Uber's [RIBs](https://github.com/uber/ribs-ios) rebuilt on Swift 6.2 native concurrency. It structures iOS and macOS applications as a tree of modular units using the Router-Interactor-Builder pattern, with business logic running off the main actor and routing/presentation pinned to it.
 
 ## Table of Contents
 
