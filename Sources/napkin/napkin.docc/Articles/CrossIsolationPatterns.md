@@ -141,6 +141,23 @@ final actor HomeInteractor: PresentableInteractable, ProfileListener {
 
 **When you reach for it.** Whenever a child needs to tell its parent something happened that the parent owns the response to: a flow completed, the user dismissed a modal, a deep link resolved. The child never reaches up directly into the parent or its siblings; everything goes through the listener.
 
+## Why the view-facing seam is sound under Swift 6
+
+Patterns 3 and 4 both involve a "listener", but the two sit in different isolation domains — and that distinction is what keeps them clear of the Swift 6 conformance error *"Main actor-isolated property 'listener' cannot be used to satisfy nonisolated protocol requirement."*
+
+The **view-facing** listener (Pattern 3) is reached through a feature's ``Presentable`` protocol, and napkin's base ``Presentable`` is annotated `@MainActor`:
+
+```swift
+@MainActor
+public protocol Presentable: AnyObject {}
+```
+
+Every feature presentable refines it, so the whole protocol — including any `var listener` requirement declared on it — is `@MainActor`-isolated by inheritance. The conforming view controller is `@MainActor` too. Requirement and witness share one isolation domain, so the conformance is sound *by construction*: there is no per-feature isolation annotation to remember, and no nonisolated requirement for a main-actor witness to fail against.
+
+The **child-to-parent** listener (Pattern 4) is not a protocol a view witnesses across a boundary at all. It is a stored `weak var` on the interactor actor, and the listener protocol is `Sendable` with `async` methods, so calling it is an ordinary explicit crossing into the parent's actor. It never had the isolation-mismatch problem because it was never a cross-isolation protocol witness.
+
+The general lesson: assign the view-facing seam an isolation domain *at the base protocol*, once, and every refinement inherits a sound conformance. See <doc:ProtocolCompositionOverInheritance> for the same principle applied to the interactor.
+
 ## When to use `task(_:)` vs an unstructured `Task`
 
 Inside an interactor you have two ways to spawn concurrent work. They are not interchangeable.

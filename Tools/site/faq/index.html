@@ -104,6 +104,11 @@
             },
             {
                 "@type": "Question",
+                "name": "Does napkin hit the Swift 6 'Main actor-isolated property cannot be used to satisfy nonisolated protocol requirement' error?",
+                "acceptedAnswer": { "@type": "Answer", "text": "No, and it cannot. napkin's base Presentable protocol is annotated @MainActor, so every feature's presentable seam — including any var listener requirement on it — inherits that isolation. The @MainActor view controller that witnesses the requirement is then in the same isolation domain, so the error is structurally impossible rather than suppressed. This is the headline Swift 6 question on Uber's actively-maintained RIBs-iOS (issue #43); napkin's whole-protocol @MainActor design avoids it by construction. The other listener seam, child-to-parent, is a separate thing — an actor-isolated weak property behind a Sendable async protocol — and never had the problem. Full write-up at https://getnapkin.to/blog/swift-6-mainactor-protocol-conformance/." }
+            },
+            {
+                "@type": "Question",
                 "name": "Where can I find the docs?",
                 "acceptedAnswer": { "@type": "Answer", "text": "Full documentation at https://getnapkin.to/documentation/napkin/. Architecture articles (Cross-Isolation Patterns, Protocol Composition Over Inheritance), tutorials (Building a Login Flow, Testing a Napkin, Adding a Networked Service, Tab Bar Napkin), and full API reference. The repository is at https://github.com/WikipediaBrown/napkin." }
             }
@@ -191,6 +196,9 @@
 
         <h2>How does napkin handle Swift 6 strict concurrency?</h2>
         <p>By design, not by suppression. Every cross-isolation crossing is explicit: actor → <code>@MainActor</code> uses <code>await</code>, view → actor uses the <code>dispatch</code> helper, parent listener calls use <code>await</code>. There are no <code>@unchecked Sendable</code> hacks on the hot path. The compiler errors that Swift 6 raises are taken as architecture signals — they tell you where data flows between isolation domains, which is exactly where the boundaries should be.</p>
+
+        <h2>Does napkin hit the Swift 6 &ldquo;Main actor-isolated property cannot be used to satisfy nonisolated protocol requirement&rdquo; error?</h2>
+        <p>No, and it can&rsquo;t. napkin&rsquo;s base <code>Presentable</code> protocol is annotated <code>@MainActor</code>, so every feature&rsquo;s presentable seam — including any <code>var listener</code> requirement on it — inherits that isolation. The <code>@MainActor</code> view controller that witnesses the requirement is then in the same isolation domain, so the error is <em>structurally impossible</em> rather than suppressed. This is the headline Swift 6 question on Uber&rsquo;s actively-maintained <a href="https://github.com/uber/ribs-ios/issues/43">RIBs-iOS (issue&nbsp;#43)</a>; napkin&rsquo;s whole-protocol <code>@MainActor</code> design avoids it by construction. The child-to-parent listener is a separate seam — an actor-isolated <code>weak</code> property behind a <code>Sendable</code> <code>async</code> protocol — and never had the problem. Full write-up: <a href="/blog/swift-6-mainactor-protocol-conformance/">The Swift 6 @MainActor listener-conformance error</a>.</p>
 
         <h2>Where can I find the docs?</h2>
         <p>Full documentation at <a href="/documentation/napkin/">getnapkin.to/documentation/napkin/</a>. Architecture articles (<a href="/documentation/napkin/crossisolationpatterns">Cross-Isolation Patterns</a>, <a href="/documentation/napkin/protocolcompositionoverinheritance">Protocol Composition Over Inheritance</a>), tutorials (<a href="/documentation/napkin/tutorialbuildingaloginflow">Building a Login Flow</a>, <a href="/documentation/napkin/testinganapkin">Testing a Napkin</a>, <a href="/documentation/napkin/addinganetworkedservice">Adding a Networked Service</a>, <a href="/documentation/napkin/tabbarnapkin">Tab Bar Napkin</a>), and full API reference. The repository is at <a href="https://github.com/WikipediaBrown/napkin">github.com/WikipediaBrown/napkin</a>.</p>
