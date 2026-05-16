@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipes — napkin</title>
+    <meta name="description" content="Named code recipes for common napkin patterns: add a child napkin, inject a service, swap napkins on tap, test an interactor, build a headless container, fetch data on activate.">
+    <meta name="theme-color" content="#f6f1e3" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0e1410" media="(prefers-color-scheme: dark)">
+
+    <meta property="og:title" content="Recipes — napkin">
+    <meta property="og:description" content="Named code recipes for common napkin patterns.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://getnapkin.to/recipes/">
+    <meta property="og:image" content="https://getnapkin.to/social-preview.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://getnapkin.to/recipes/">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="/napkin-icon.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/napkin-icon@2x.png">
+    <link rel="apple-touch-icon" href="/napkin-icon@2x.png">
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="masthead" role="banner">
+    <div class="masthead__inner">
+        <a class="masthead__brand" href="/" aria-label="napkin — home">
+            <span class="masthead__mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4 H20 V20 L4 20 L4 4 Z" />
+                    <path d="M4 14 L14 14 L14 20" />
+                </svg>
+            </span>
+            <span class="masthead__wordmark">napkin</span>
+        </a>
+        <nav class="masthead__nav" aria-label="Primary">
+            <ul>
+                <li><a href="/documentation/napkin/">Docs</a></li>
+                <li><a href="/#example">Example</a></li>
+                <li><a href="/blog/">Blog</a></li>
+                <li><a href="/faq/">FAQ</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin">GitHub</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main id="main">
+<section class="post" aria-labelledby="recipes-title">
+    <p class="post__kicker"><span>§</span> <span class="sep">·</span> <span>Cookbook</span></p>
+    <h1 class="post__title" id="recipes-title">Recipes.</h1>
+    <p class="post__lede">Short, named patterns for common napkin shapes. Copy, paste, rename.</p>
+
+    <div class="post__body">
+
+        <h2 id="add-child">Attach a child napkin</h2>
+        <p>The parent's router builds the child, attaches it (which activates its lifecycle), and adds the child's view to the parent's hierarchy.</p>
+        <figure class="code-card" aria-label="Router attaching a child">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">ParentRouter.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>func routeToProfile() async {
+    let router = await profileBuilder.build(withListener: interactor)
+    self.profileRouter = router
+    await attachChild(router)
+    viewController.embed(router.viewControllable)
+}
+</code></pre>
+        </figure>
+
+        <h2 id="inject-service">Inject a service through the dependency tree</h2>
+        <p>The feature declares what it needs; the parent component satisfies it. Compile-checked, no runtime container.</p>
+        <figure class="code-card" aria-label="Service injection via dependency protocol">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">HomeBuilder.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>protocol HomeDependency: Dependency {
+    var authService: AuthService { get }
+}
+
+final class HomeComponent: Component&lt;HomeDependency&gt;, @unchecked Sendable {
+    var authService: AuthService { dependency.authService }
+}
+
+// The parent's component conforms to HomeDependency:
+extension AppComponent: HomeDependency {}
+</code></pre>
+        </figure>
+
+        <h2 id="swap-napkins">Swap two child napkins on tap</h2>
+        <p>Two children, only one attached at a time. Each <code>attachX</code> tears down the other first.</p>
+        <figure class="code-card" aria-label="Swap pattern in the router">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">SwapRouter.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>func attachA() async {
+    await detachBIfNeeded()
+    guard aRouter == nil else { return }
+    let router = await aBuilder.build(withListener: interactor)
+    aRouter = router
+    await attachChild(router)
+    viewController.embed(router.viewControllable)
+}
+
+private func detachBIfNeeded() async {
+    guard let router = bRouter else { return }
+    bRouter = nil
+    viewController.detach(router.viewControllable)
+    await detachChild(router)
+}
+</code></pre>
+        </figure>
+
+        <h2 id="headless-parent">Headless parent (orchestrator with no view)</h2>
+        <p>For napkins that route between children without rendering their own UI. The view controller is a plain <code>UIViewController</code> with <code>embed</code>/<code>detach</code> for the active child.</p>
+        <figure class="code-card" aria-label="Headless parent view controller">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">ParentViewController.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>@MainActor
+final class ParentViewController: UIViewController, ParentViewControllable {
+
+    func embed(_ child: ViewControllable) {
+        let vc = child.uiviewController
+        addChild(vc)
+        vc.view.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(vc.view)
+        NSLayoutConstraint.activate([
+            vc.view.topAnchor.constraint(equalTo: view.topAnchor),
+            vc.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            vc.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            vc.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+        ])
+        vc.didMove(toParent: self)
+    }
+
+    func detach(_ child: ViewControllable) {
+        let vc = child.uiviewController
+        vc.willMove(toParent: nil)
+        vc.view.removeFromSuperview()
+        vc.removeFromParent()
+    }
+}
+</code></pre>
+        </figure>
+
+        <h2 id="view-to-interactor">Forward a tap from SwiftUI to the interactor</h2>
+        <p>Use the <code>dispatch</code> helper, not inline <code>Task { }</code> — it captures the listener weakly and handles cancellation.</p>
+        <figure class="code-card" aria-label="SwiftUI button forwarding to actor">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">HomeView.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>struct HomeView: View {
+    weak var listener: HomePresentableListener?
+
+    var body: some View {
+        Button("Refresh") {
+            dispatch { [listener] in await listener?.didTapRefresh() }
+        }
+    }
+}
+</code></pre>
+        </figure>
+
+        <h2 id="upward-listener">Send an intent up the tree</h2>
+        <p>Children never import their parent. They call a method on a <code>&lt;Self&gt;NapkinListener</code> the parent's interactor conforms to.</p>
+        <figure class="code-card" aria-label="Child interactor calling listener">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">CounterInteractor.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>protocol CounterNapkinListener: AnyObject, Sendable {
+    func counterDidFinish() async
+}
+
+final actor CounterInteractor: ..., CounterPresentableListener {
+    weak var listener: CounterNapkinListener?
+
+    func didTapDone() async {
+        await listener?.counterDidFinish()
+    }
+}
+</code></pre>
+        </figure>
+
+        <h2 id="fetch-on-active">Fetch data when the napkin becomes active</h2>
+        <p>Lifecycle hooks are just async methods on the actor. Cancellation is automatic when the napkin deactivates.</p>
+        <figure class="code-card" aria-label="Fetch in didBecomeActive">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">ProfileInteractor.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>func didBecomeActive() async {
+    do {
+        let profile = try await profileService.fetchProfile()
+        await presenter.update(profile)
+    } catch is CancellationError {
+        // Napkin was deactivated mid-fetch — bail.
+    } catch {
+        await presenter.update(.error(error))
+    }
+}
+</code></pre>
+        </figure>
+
+        <h2 id="test-interactor">Test an interactor</h2>
+        <p>Mock the protocols, call methods directly. No simulator, no <code>XCTestExpectation</code>.</p>
+        <figure class="code-card" aria-label="Unit-test pattern">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">CartInteractorTests.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>@MainActor
+final class CartInteractorTests: XCTestCase {
+    func testAddItem_updatesPresenter() async {
+        let presenter = MockCartPresentable()
+        let sut = CartInteractor(presenter: presenter)
+
+        await sut.didTapAddItem(.brisket)
+
+        XCTAssertEqual(presenter.updateCalls.count, 1)
+        XCTAssertEqual(presenter.updateCalls.last?.items, [.brisket])
+    }
+}
+</code></pre>
+        </figure>
+
+        <h2 id="bootstrap">Bootstrap the root napkin from SceneDelegate</h2>
+        <p>Build the app component, build the launch router, call <code>launch(from:)</code>. Three lines of meaningful code.</p>
+        <figure class="code-card" aria-label="Scene delegate bootstrap">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">SceneDelegate.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options: ...) {
+    guard let windowScene = scene as? UIWindowScene else { return }
+    let window = UIWindow(windowScene: windowScene)
+    self.window = window
+
+    Task { @MainActor in
+        let builder = LaunchNapkinBuilder(dependency: AppComponent())
+        let router = await builder.build(withListener: AppListener())
+        self.launchRouter = router
+        await router.launch(from: window)
+    }
+}
+</code></pre>
+        </figure>
+
+        <h2 id="passing-data">Pass data through to a child router</h2>
+        <p>Builder takes data as a parameter on <code>build(...)</code>. The router holds it as <code>let user: User</code>; the interactor and view receive it via the builder.</p>
+        <figure class="code-card" aria-label="Data passed through builder">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">LoggedInBuilder.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>protocol LoggedInBuildable: Buildable {
+    @MainActor func build(
+        withListener listener: LoggedInListener,
+        user: User
+    ) async -&gt; LoggedInRouting
+}
+
+@MainActor
+func build(withListener listener: LoggedInListener, user: User) async -&gt; LoggedInRouting {
+    let viewController = LoggedInViewController(user: user)
+    let interactor = LoggedInInteractor(presenter: viewController, user: user)
+    await interactor.set(listener: listener)
+    let router = LoggedInRouter(interactor: interactor, viewController: viewController, user: user)
+    await interactor.set(router: router)
+    return router
+}
+</code></pre>
+        </figure>
+
+    </div>
+
+    <footer class="post__footer">
+        <p><a href="/blog/">← Blog</a> &nbsp;·&nbsp; <a href="/faq/">FAQ</a></p>
+        <p>napkin · <a href="/documentation/napkin/">Docs</a> · <a href="https://github.com/WikipediaBrown/napkin">GitHub</a></p>
+    </footer>
+</section>
+</main>
+
+<footer class="colophon" role="contentinfo">
+    <div class="colophon__inner">
+        <p class="colophon__line">
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin">napkin</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/LICENSE.md">Apache&#8209;2.0</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md">CHANGELOG</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/">Blog</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/feed.xml" type="application/atom+xml">RSS</a>
+        </p>
+        <p class="colophon__line colophon__line--right">
+            Made with 🌲🌲🌲 in Cascadia
+        </p>
+    </div>
+</footer>
+
+<script>
+(function() {
+    document.querySelectorAll('button[data-copy]').forEach(function(btn) {
+        btn.addEventListener('click', async function() {
+            var card = btn.closest('.code-card');
+            var code = card && card.querySelector('pre code');
+            if (!code) return;
+            try {
+                await navigator.clipboard.writeText(code.innerText);
+                var prev = btn.textContent;
+                btn.setAttribute('data-state', 'copied');
+                btn.textContent = 'Copied';
+                setTimeout(function() {
+                    btn.removeAttribute('data-state');
+                    btn.textContent = prev;
+                }, 1400);
+            } catch (e) { btn.textContent = 'Copy failed'; }
+        });
+    });
+})();
+</script>
+
+</body>
+</html>

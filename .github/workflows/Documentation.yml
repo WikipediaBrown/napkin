@@ -207,6 +207,13 @@ jobs:
           cp Tools/site/robots.txt docs/robots.txt
           # Custom 404 page. GitHub Pages serves /404.html on any 404.
           cp Tools/site/404.html docs/404.html
+          # FAQ page (FAQPage JSON-LD) + recipes cookbook (named patterns).
+          mkdir -p docs/faq docs/recipes
+          cp Tools/site/faq/index.html docs/faq/index.html
+          cp Tools/site/recipes/index.html docs/recipes/index.html
+          # /.well-known/security.txt — security disclosure pointer.
+          mkdir -p docs/.well-known
+          cp Tools/site/.well-known/security.txt docs/.well-known/security.txt
           # Blog: 5 SEO-targeted long-form articles + listing page + Atom feed.
           # Hand-rolled HTML (no static-site-generator). Each post lives in
           # its own folder so the URL is `/blog/<slug>/`.
