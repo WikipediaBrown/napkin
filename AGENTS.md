@@ -4,7 +4,7 @@ Instructions for AI coding agents working in the napkin repository. Follow these
 
 ## What this project is
 
-napkin is a Swift 6.2 framework for clean-architecture iOS / macOS apps. It's a Swift Concurrency rewrite of Uber's [RIBs](https://github.com/uber/RIBs) — actors instead of base classes, `@MainActor` for routing/presentation, `Sendable` for everything that crosses an isolation boundary.
+napkin is a Swift 6.2 framework for clean-architecture iOS / macOS apps. It's a Swift Concurrency rewrite of Uber's [RIBs](https://github.com/uber/ribs-ios) — actors instead of base classes, `@MainActor` for routing/presentation, `Sendable` for everything that crosses an isolation boundary.
 
 Every feature is a **napkin**: a small unit composed of a fixed set of "rings" — Builder, Component, Interactor, Router, and (when there's a view) Presenter + ViewController. The pattern repeats across the framework; once you've written one napkin you've written all of them.
 

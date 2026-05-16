@@ -146,7 +146,7 @@
 
     <div class="post__body">
         <h2>What is napkin?</h2>
-        <p>napkin is a Swift 6.2 framework for building iOS and macOS apps as a tree of small, isolated, composable units called <em>napkins</em>. Each napkin is a Router-Interactor-Builder unit, modeled on Uber's <a href="https://github.com/uber/RIBs">RIBs</a> but rebuilt around Swift Concurrency. Business logic lives in <code>final actor</code> interactors. Routing and presentation are <code>@MainActor</code>. Crossings between isolation domains are explicit.</p>
+        <p>napkin is a Swift 6.2 framework for building iOS and macOS apps as a tree of small, isolated, composable units called <em>napkins</em>. Each napkin is a Router-Interactor-Builder unit, modeled on Uber's <a href="https://github.com/uber/ribs-ios">RIBs</a> but rebuilt around Swift Concurrency. Business logic lives in <code>final actor</code> interactors. Routing and presentation are <code>@MainActor</code>. Crossings between isolation domains are explicit.</p>
 
         <h2>How does napkin differ from Uber's RIBs?</h2>
         <p>napkin keeps the same vocabulary (Router, Interactor, Builder, Component, Listener, Presentable) and the same tree composition. It changes the underlying mechanics to fit Swift 6: interactors are <code>final actor</code> types instead of subclasses of an <code>open class</code>; routing protocols are <code>@MainActor</code> with <code>async</code> methods; reactive streams are <code>AsyncStream</code> instead of RxSwift <code>Observable</code>; there is no runtime leak detector. Both frameworks ship the same architecture pattern but make different trade-offs underneath.</p>
