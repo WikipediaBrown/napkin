@@ -214,6 +214,11 @@ jobs:
           # /.well-known/security.txt — security disclosure pointer.
           mkdir -p docs/.well-known
           cp Tools/site/.well-known/security.txt docs/.well-known/security.txt
+          # GitHub Pages runs a Jekyll-style filter that excludes any path
+          # starting with `.` or `_` (so `.well-known/` would 404). A
+          # zero-byte `.nojekyll` at the site root disables that filter and
+          # serves every file verbatim.
+          touch docs/.nojekyll
           # Blog: 5 SEO-targeted long-form articles + listing page + Atom feed.
           # Hand-rolled HTML (no static-site-generator). Each post lives in
           # its own folder so the URL is `/blog/<slug>/`.
