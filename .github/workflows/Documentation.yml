@@ -208,9 +208,12 @@ jobs:
           # Custom 404 page. GitHub Pages serves /404.html on any 404.
           cp Tools/site/404.html docs/404.html
           # FAQ page (FAQPage JSON-LD) + recipes cookbook (named patterns).
-          mkdir -p docs/faq docs/recipes
+          mkdir -p docs/faq docs/recipes docs/changelog
           cp Tools/site/faq/index.html docs/faq/index.html
           cp Tools/site/recipes/index.html docs/recipes/index.html
+          # Changelog: generated fresh from CHANGELOG.md so the styled
+          # /changelog/ page always mirrors the GitHub source of truth.
+          python3 Tools/site/changelog.py CHANGELOG.md > docs/changelog/index.html
           # security.txt at the site ROOT (not /.well-known/). GitHub Pages
           # reserves the /.well-known/ namespace for its own ACME / domain
           # verification on custom domains and 404s anything else there

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Changelog — napkin</title>
+    <meta name="description" content="Release notes for napkin, the Swift 6 framework for Clean Architecture iOS / macOS apps. Mirrors the GitHub CHANGELOG; Keep a Changelog format, Semantic Versioning.">
+    <meta name="theme-color" content="#f6f1e3" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0e1410" media="(prefers-color-scheme: dark)">
+    <meta property="og:title" content="Changelog — napkin">
+    <meta property="og:description" content="Release notes for napkin. Keep a Changelog format, Semantic Versioning.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://getnapkin.to/changelog/">
+    <meta property="og:image" content="https://getnapkin.to/social-preview.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://getnapkin.to/changelog/">
+    <link rel="icon" type="image/png" sizes="48x48" href="/napkin-icon.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/napkin-icon@2x.png">
+    <link rel="apple-touch-icon" href="/napkin-icon@2x.png">
+    <link rel="alternate" type="application/atom+xml" title="napkin releases" href="https://github.com/WikipediaBrown/napkin/releases.atom">
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="masthead" role="banner">
+    <div class="masthead__inner">
+        <a class="masthead__brand" href="/" aria-label="napkin — home">
+            <span class="masthead__mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4 H20 V20 L4 20 L4 4 Z" />
+                    <path d="M4 14 L14 14 L14 20" />
+                </svg>
+            </span>
+            <span class="masthead__wordmark">napkin</span>
+        </a>
+        <nav class="masthead__nav" aria-label="Primary">
+            <ul>
+                <li><a href="/documentation/napkin/">Docs</a></li>
+                <li><a href="/#example">Example</a></li>
+                <li><a href="/blog/">Blog</a></li>
+                <li><a href="/changelog/" aria-current="page">Changelog</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin">GitHub</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main id="main">
+<section class="post changelog" aria-labelledby="cl-title">
+    <p class="post__kicker"><span>§</span> <span class="sep">·</span> <span>Release notes</span></p>
+    <h1 class="post__title" id="cl-title">Changelog.</h1>
+    <p class="post__lede">Mirrors the <a class="link" href="https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md">GitHub CHANGELOG</a>. <a class="link" href="https://keepachangelog.com/en/1.1.0/">Keep a Changelog</a> format; <a class="link" href="https://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
+
+    <div class="post__body cl__body">
+<p>All notable changes to napkin are documented here. Format follows <a href="https://keepachangelog.com/en/1.1.0/">Keep a Changelog</a>; versioning follows <a href="https://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
+<h2 class="cl__ver">[Unreleased]</h2>
+<h3 class="cl__cat">Added</h3>
+<ul>
+<li><code>AGENTS.md</code> at the repo root — conventions for AI coding agents working in the codebase (napkin folder layout, isolation patterns, listener protocols, <code>dispatch { }</code> vs <code>Task { }</code>, file naming, iCloud-Drive artifact warning).</li>
+<li><code>getnapkin.to/llms.txt</code> and <code>/llms-full.txt</code> — emerging conventions for LLM-readable site maps. The full variant is generated at deploy time from the DocC <code>.md</code> files so it stays in sync with the catalog.</li>
+<li><code>Sources/napkin/napkin.docc/Articles/TutorialBuildingALoginFlow.md</code> — guided walkthrough of the runnable example app (Napkin's Rib House) through the napkin pattern, end to end. Uses <code>@TabNavigator</code>, <code>@Row</code>/<code>@Column</code>, asides, and <code>@Links(visualStyle: detailedGrid)</code>.</li>
+<li>"Step 7: Snapshot testing the views" section in the tutorial — covers declaring the package, target wiring, record-then-verify workflow, and the two ways to opt into re-record mode.</li>
+<li><code>Examples/RibHouse/SnapshotTests/</code> — Point-Free <a href="https://github.com/pointfreeco/swift-snapshot-testing">swift-snapshot-testing</a> target. Reference PNGs under <code>__Snapshots__/</code> pin each view's appearance. The same PNGs are committed to <code>Sources/napkin/napkin.docc/Resources/</code> and <code>Tools/site/</code> so the tutorial and homepage display the exact images CI compares against.</li>
+<li>New "§ 04 · See it in motion" section on the homepage — auto-cycling 4-step tutorial: iPhone-framed snapshot fades between LoggedOut and LoggedIn while code blocks stagger their lines in like an editor typing them out. Pure CSS animation + ~30 lines of vanilla JS; <code>prefers-reduced-motion</code> stacks the four steps statically.</li>
+</ul>
+<h3 class="cl__cat">Changed</h3>
+<ul>
+<li><code>Examples/LaunchNapkinApp</code> renamed to <code>Examples/RibHouse</code> ("Napkin's Rib House") with a barbecue-themed <code>AuthService</code> mock. Display name is <code>Napkin's Rib House</code>; bundle ID is <code>com.napkin.example.RibHouse</code>.</li>
+<li>The example app's source tree is now organized one-napkin-per-folder (<code>App/</code>, <code>Shared/</code>, <code>LaunchNapkin/</code>, <code>LoggedOutNapkin/</code>, <code>LoggedInNapkin/</code>). UI test file renamed to <code>RibHouseUITests.swift</code>.</li>
+<li>The example app's <code>.xcodeproj</code> is now <strong>tracked in source control</strong> — the project opens via <code>open Examples/RibHouse/RibHouse.xcodeproj</code> without an XcodeGen step. <code>.gitignore</code> un-ignores the project explicitly while still ignoring user state.</li>
+<li>Example app architecture pivoted from the prior Counter + Quote demo to a login/logout flow that exercises service injection: a headless <code>LaunchNapkin</code> holds an <code>AuthService</code> (declared in the dependency protocol) and swaps a <code>LoggedOutNapkin</code> (single Login button) for a <code>LoggedInNapkin</code> (user name + barbecue food list) on tap. The <code>User</code> object flows through the full interactor → router → builder → child router chain.</li>
+<li>LoggedOut and LoggedIn views restyled with editorial vocabulary matching the marketing site — kicker (<code>§ 00 · WELCOME</code>), serif-italic headlines, hairline rules, spec-list pattern for the foods, ink + ghost buttons. Palette tokens in <code>Shared/Palette.swift</code> are derived from the site's OKLCH design tokens.</li>
+<li><code>Sources/napkin/napkin.docc/theme-settings.json</code> link + intro-accent colors flipped from blue to moss-green so the docs and homepage read as the same design system.</li>
+<li><code>social-preview.svg</code> now has <code>role="img"</code> + <code>&lt;title&gt;</code> + <code>&lt;desc&gt;</code> + <code>aria-labelledby</code> so screen readers reading the inline SVG get the same description as sighted users.</li>
+<li><code>Gemfile.lock</code>: <code>activesupport</code> 8.1.2 → 8.1.3 (clears 3 moderate Dependabot alerts on Rails CVEs in <code>number_to_delimited</code>, <code>SafeBuffer#%</code>, and number helpers — fastlane transitive dep).</li>
+<li><code>.github/workflows/Documentation.yml</code>: <code>actions/checkout</code> uses shallow + tags + explicit <code>ref: main</code>, fixing the APFS case-collision that masked deploys when <code>ci/...</code> namespaced branches existed alongside the stale <code>CI</code> branch.</li>
+<li><code>.github/workflows/Release.yml</code>: narrows <code>remote.origin.fetch</code> to <code>main</code> before fastlane's <code>git_pull(only_tags: true)</code> to avoid the same case-collision.</li>
+<li><code>.github/workflows/CodeQL.yml</code>: switched from <code>autobuild</code> to manual <code>swift build</code> after autobuild repeatedly tripped on a stale SPM cache reference to <code>swift-docc-plugin</code>.</li>
+<li><code>CONTRIBUTING.md</code> paths updated for the RibHouse rename and the tracked-xcodeproj workflow (xcodegen is now optional).</li>
+</ul>
+<h3 class="cl__cat">Removed</h3>
+<ul>
+<li><code>Examples/LaunchNapkinApp/</code> (renamed; see Changed).</li>
+<li>The "Counter" and "Quote" child napkins from the example app (replaced by LoggedOut and LoggedIn).</li>
+<li>Stale local-only <code>Sources/napkin/PresentableInteractor.swift</code> orphan — a pre-rearchitecture class-based interactor that referenced types removed in 2.0.0. Was untracked but present in iCloud-synced clones.</li>
+<li>The original <code>CI</code>, <code>Adding-Templates</code>, <code>Fastlane</code>, <code>TemplateFix</code>, and <code>swift-concurrency-rearchitecture</code> branches on origin (stale, all predate the v2 rearchitecture).</li>
+</ul>
+<h3 class="cl__cat">Infrastructure</h3>
+<ul>
+<li>Migrated public site to a custom domain: <strong>https://getnapkin.to/</strong>. Apex A records target GitHub Pages' anycast IPs; <code>www.getnapkin.to</code> CNAMEs to <code>wikipediabrown.github.io</code>; HTTPS enforced; cert covers both apex and <code>www</code>. <code>wikipediabrown.github.io/napkin/</code> 301s to the custom domain.</li>
+<li>Enabled GitHub Sponsors button via <code>.github/FUNDING.yml</code>.</li>
+<li>Enabled repository security analysis: secret scanning, push protection, Dependabot security updates, and private vulnerability reporting.</li>
+<li>Added branch protection on <code>main</code> and <code>develop</code> (block force-push and deletions; regular pushes still allowed).</li>
+<li>Repo About panel: homepage URL now <code>https://getnapkin.to/</code>; obsolete <code>combine</code> topic dropped; <code>swift-6</code> and <code>structured-concurrency</code> topics added.</li>
+<li>New CI workflow <code>.github/workflows/CodeQL.yml</code> runs weekly + on push/PR for Swift static analysis on the <code>macos-26</code> runner.</li>
+</ul>
+<h2 class="cl__ver">[2.0.8]</h2>
+<h3 class="cl__cat">Changed</h3>
+<ul>
+<li>Homepage footer reflows onto two lines: framework attribution on the first line, copyright + license on the second. The version is now a single hyperlink to the GitHub release page; the duplicate "view release on GitHub" link has been dropped.</li>
+</ul>
+<h2 class="cl__ver">[2.0.7]</h2>
+<h3 class="cl__cat">Added</h3>
+<ul>
+<li><code>Tools/site/</code> — version stamping mechanism. The Documentation workflow resolves the latest git tag via <code>git describe --tags --abbrev=0</code> and substitutes <code>__NAPKIN_VERSION__</code> placeholders in <code>index.html</code> at deploy time so the footer always reflects the currently-shipping release.</li>
+</ul>
+<h3 class="cl__cat">Changed</h3>
+<ul>
+<li>Homepage footer rewritten with framework attribution, copyright, license link, and "view release" link. Replaces the placeholder footer shipped in 2.0.6.</li>
+<li><code>Examples/LaunchNapkinApp/</code> consolidated: the app shell (<code>AppDelegate</code>/<code>SceneDelegate</code>/<code>Info.plist</code>) and the napkin implementations (<code>Launch</code>/<code>Counter</code>/<code>Quote</code>) now live side by side in <code>Sources/</code> rather than in separate sub-trees. Build product paths in <code>project.yml</code> updated accordingly.</li>
+</ul>
+<h2 class="cl__ver">[2.0.6]</h2>
+<h3 class="cl__cat">Added</h3>
+<ul>
+<li><code>Tools/site/index.html</code>, <code>styles.css</code>, <code>napkin-icon*.png</code> — hand-crafted homepage that replaces DocC's missing root <code>index.html</code> with a real landing page (nav bar, hero, feature grid, footer). The Documentation workflow copies this into <code>./docs/</code> after the DocC build.</li>
+<li><code>Sources/napkin/napkin.docc/header.html</code> — top-nav injected into every DocC page via <code>--experimental-enable-custom-templates</code>, so symbol and article pages share the homepage's navigation chrome.</li>
+</ul>
+<h2 class="cl__ver">[2.0.5]</h2>
+<h3 class="cl__cat">Changed</h3>
+<ul>
+<li>Replaced the ASCII-art isolation map in <code>IsolationModel.md</code> with a hand-drawn SVG diagram. Ships a light variant and a dark variant; DocC selects the appropriate one based on the reader's color scheme.</li>
+</ul>
+<h2 class="cl__ver">[2.0.4]</h2>
+<h3 class="cl__cat">Added</h3>
+<ul>
+<li>Hero metadata on the <code>napkin.md</code> landing page (<code>@PageImage</code>, <code>@CallToAction</code>, <code>@Available</code> directives) so the docs root renders with a hero card on the modern DocC renderer.</li>
+<li><code>theme-settings.json</code> enabling DocC's <code>quickNavigation</code> (cmd-K fuzzy-search across symbols) and pinning the accent color to the napkin blue palette.</li>
+</ul>
+<h3 class="cl__cat">Changed</h3>
+<ul>
+<li>Two article pages (<code>IsolationModel.md</code>, <code>WorkingWithCombine.md</code>) use <code>@Row</code> / <code>@Column</code> for side-by-side before/after code snippets.</li>
+<li><code>DefiningAFeature.md</code> adopts <code>@Snippet(path:)</code> for the five major Profile code blocks instead of inlining the Swift source.</li>
+</ul>
+<h2 class="cl__ver">[2.0.3]</h2>
+<h3 class="cl__cat">Changed</h3>
+<ul>
+<li>Corrected the etymology of the name "napkin" in the <code>GettingStarted</code> article — the framework is named after the noun "napkin" (as in back-of-the-napkin sketches of a feature's architecture), not a verb.</li>
+</ul>
+<h2 class="cl__ver">[2.0.2]</h2>
+<h3 class="cl__cat">Added</h3>
+<ul>
+<li><code>.github/workflows/Documentation.yml</code> — builds the DocC catalog with <code>swift package generate-documentation</code> and deploys the static site to GitHub Pages via <code>actions/deploy-pages</code>. Site is live at <code>https://wikipediabrown.github.io/napkin/documentation/napkin/</code>.</li>
+</ul>
+<h2 class="cl__ver">[2.0.1]</h2>
+<h3 class="cl__cat">Added</h3>
+<ul>
+<li><code>Sources/napkin/napkin.docc/</code> — DocC catalog with a landing page (<code>napkin.md</code>) and seven articles in <code>Articles/</code>: GettingStarted, DefiningAFeature, IsolationModel, RouterTree, ComponentsAndScopes, TestingAsyncFeatures, WorkingWithCombine.</li>
+<li>Comprehensive inline DocC comments on every public type and method in <code>Sources/napkin/</code>.</li>
+</ul>
+<h2 class="cl__ver">[2.0.0]</h2>
+<p>Major rearchitecture: native Swift 6.2 concurrency, Combine removed.</p>
+<p>This release breaks every public API surface and raises the deployment floor to iOS 26 / macOS 26. There is no incremental migration path; consumers re-adopt against the new shape.</p>
+<h3 class="cl__cat">Added</h3>
+<ul>
+<li><code>Interactable</code> protocol — feature interactors are now <code>final actor</code> types conforming to it instead of subclasses of an <code>Interactor</code> base class. Swift actors cannot be subclassed (SE-0306); protocol composition replaces inheritance.</li>
+<li><code>InteractorLifecycle</code> helper — single <code>final class @unchecked Sendable</code> that holds mutex-protected lifecycle state. Each <code>Interactable</code> declares <code>nonisolated let lifecycle = InteractorLifecycle()</code>. Default protocol extensions delegate <code>activate</code> / <code>deactivate</code> / <code>task(_:)</code> / <code>isActive</code> / <code>isActiveStream</code> to it.</li>
+<li><code>PresentableInteractable</code> protocol — refines <code>Interactable</code> and adds a <code>nonisolated var presenter: PresenterType { get }</code> requirement. Replaces the old <code>PresentableInteractor&lt;PresenterType&gt;</code> base class.</li>
+<li><code>Interactor.task(_:)</code> helper — spawns a <code>Task</code> whose lifetime is bound to the active scope (cancelled automatically in <code>deactivate()</code>). Napkin's analog of upstream RIBs's <code>disposeOnDeactivate</code>.</li>
+<li><code>dispatch(_:)</code> helper — <code>@MainActor</code> function for forwarding async work from synchronous view callbacks (SwiftUI button handlers, UIKit <code>@objc</code> actions) into a <code>Task</code>.</li>
+<li><code>Examples/LaunchNapkinApp</code> — minimal runnable iOS app generated by XcodeGen. Verified working on iPhone 17 / iOS 26.4.1 simulator.</li>
+<li><code>isolated deinit</code> on <code>Router</code> (Swift 6.2 / iOS 26) — synchronous teardown on the main actor's executor without <code>Task.detached</code> workarounds.</li>
+</ul>
+<h3 class="cl__cat">Changed</h3>
+<ul>
+<li><strong>Deployment floor:</strong> iOS 13.0+ / macOS 10.15+ → iOS 26.0+ / macOS 26.0+.</li>
+<li><strong><code>Router</code>, <code>ViewableRouter</code>, <code>LaunchRouter</code>, <code>Routing</code>:</strong> all <code>@MainActor</code>-isolated. <code>attachChild</code> / <code>detachChild</code> / <code>load</code> / <code>loaded</code> / <code>launch</code> are now <code>async</code>.</li>
+<li><strong><code>loaded() async</code></strong> on <code>Router</code> replaces the <code>lifecycle: AnyPublisher&lt;RouterLifecycle, Never&gt;</code> Combine publisher. The <code>RouterLifecycle</code> enum has been removed.</li>
+<li><strong><code>Presenter</code>:</strong> <code>@MainActor @Observable open class</code>. Subclasses' stored properties are observable to SwiftUI views via <code>@Bindable</code> and to UIKit views via <code>Observations { presenter.foo }</code>. The <code>Presentable</code> protocol is <code>@MainActor</code>.</li>
+<li><strong><code>Component</code>:</strong> <code>Synchronization.Mutex</code> replaces <code>NSRecursiveLock</code> for shared-instance storage. <code>Component</code> and <code>EmptyComponent</code> are <code>@unchecked Sendable</code>.</li>
+<li><strong><code>Builder</code>, <code>ComponentizedBuilder</code>, <code>MultiStageComponentizedBuilder</code>, <code>Buildable</code>:</strong> <code>Sendable</code>. Concrete <code>build(...)</code> overloads should be <code>async @MainActor</code> when they construct a view controller.</li>
+<li><strong><code>Listener</code> / <code>Routing</code> / <code>Presentable</code> protocol methods are <code>async</code></strong> — every cross-isolation call (interactor → router, interactor → presenter, parent's listener) goes through an explicit <code>await</code>.</li>
+<li><strong><code>Dependency</code> protocol</strong> is now <code>Sendable</code>.</li>
+<li><strong>Xcode templates</strong> rewritten to emit code matching the new API — <code>final actor</code> interactors, <code>@MainActor</code> routers, async listener/presentable protocols, the <code>lifecycle</code> declaration.</li>
+</ul>
+<h3 class="cl__cat">Removed</h3>
+<ul>
+<li>All Combine usage. No <code>import Combine</code> in the framework, tests, examples, or templates.</li>
+<li><code>Interactor</code> open class. Replaced by <code>Interactable</code> protocol + <code>InteractorLifecycle</code> helper.</li>
+<li><code>PresentableInteractor&lt;P&gt;</code> open class. Replaced by <code>PresentableInteractable</code> protocol.</li>
+<li><code>RouterLifecycle</code> enum, <code>RouterScope.lifecycle</code> publisher, <code>InteractorScope.isActiveStream</code> (Combine variant). The <code>isActiveStream</code> getter still exists but now returns <code>AsyncStream&lt;Bool&gt;</code>.</li>
+<li>The recursive <code>bindSubtreeActiveState</code> cascade in <code>Router</code>. Activation now flows explicitly through <code>attachChild</code> / <code>detachChild</code>.</li>
+</ul>
+<h3 class="cl__cat">Migration guide</h3>
+<p>For each feature:</p>
+<p>1. Replace <code>final class HomeInteractor: PresentableInteractor&lt;HomePresentable&gt;</code> with <code>final actor HomeInteractor: PresentableInteractable</code>. 2. Add <code>nonisolated let lifecycle = InteractorLifecycle()</code> and <code>nonisolated let presenter: HomePresentable</code> as stored properties; remove the <code>super.init(presenter:)</code> call. 3. Drop <code>override</code> keyword from <code>didBecomeActive</code> / <code>willResignActive</code> (they're protocol default implementations now, not class overrides). Mark them <code>async</code>. 4. Replace <code>cancellables</code> and Combine <code>.sink { … }</code> subscriptions with <code>task { for await … in Observations { … } }</code> inside <code>didBecomeActive</code>. The task is auto-cancelled on <code>deactivate</code>. 5. Mark routing protocol methods <code>async</code>. Remove every <code>Task { @MainActor in }</code> wrapper from routing method bodies — routers are already <code>@MainActor</code>. 6. Mark listener and presentable protocol methods <code>async</code>. Conform listener protocols to <code>Sendable</code>. 7. SwiftUI views: replace <code>@ObservedObject var viewModel: HomeViewModel</code> with <code>@Bindable var presenter: HomePresenter</code>. Replace event handlers with <code>dispatch { await listener?.didTapX() }</code>. 8. <code>Builder.build(...)</code> becomes <code>async @MainActor</code> when it constructs a view controller.</p>
+<p>See <code>Examples/LaunchNapkinApp</code> and the rewritten <code>README.md</code> for working reference code.</p>
+<h3 class="cl__cat">Divergence from upstream Uber RIBs-iOS</h3>
+<p>Uber's <code>RIBs-iOS</code> PR #49 unifies the framework on <code>@MainActor</code> (Interactor included). napkin deliberately keeps Interactors off the main actor so business logic is not pinned to the main thread. The cost is an explicit <code>await</code> at every cross-layer call; the benefit is enforced clean-architecture isolation of business logic.</p>
+<h2 class="cl__ver">[0.0.18] and earlier</h2>
+<p>See <a href="https://github.com/WikipediaBrown/napkin/releases">GitHub Releases</a> for prior changelog entries (auto-generated from git history).</p>
+    </div>
+
+    <footer class="post__footer">
+        <p><a href="/blog/">← Blog</a> &nbsp;·&nbsp; <a href="/faq/">FAQ</a></p>
+        <p><a href="https://github.com/WikipediaBrown/napkin/releases">GitHub releases</a> · <a href="https://github.com/WikipediaBrown/napkin/releases.atom">RSS</a></p>
+    </footer>
+</section>
+</main>
+
+<footer class="colophon" role="contentinfo">
+    <div class="colophon__inner">
+        <p class="colophon__line">
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin">napkin</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/LICENSE.md">Apache&#8209;2.0</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/changelog/">CHANGELOG</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/">Blog</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/faq/">FAQ</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/recipes/">Recipes</a>
+        </p>
+        <p class="colophon__line colophon__line--right">
+            Made with 🌲🌲🌲 in Cascadia
+        </p>
+    </div>
+</footer>
+
+</body>
+</html>

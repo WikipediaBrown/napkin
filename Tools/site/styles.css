@@ -202,7 +202,13 @@ strong {
 .masthead__inner {
     max-width: var(--col-max);
     margin: 0 auto;
-    padding: var(--s-3) var(--gutter);
+    padding: var(--s-2) var(--gutter);
+    /* Pin the bar height so it's identical on every page regardless of
+       whether the version <select> (homepage only) is present — it's
+       slightly taller than the plain text links and was making the
+       homepage header taller than the others. align-items: center
+       keeps everything vertically centered within this fixed height. */
+    min-height: 3.5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1503,6 +1509,43 @@ strong {
     text-decoration: none;
 }
 .post__footer a:hover { text-decoration: underline; }
+
+/* ---------- Changelog ---------- */
+/* Generated from CHANGELOG.md at deploy time. Version headings are big
+   serif markers; category headings (Added/Changed/Removed) are mono
+   eyebrows; bullets are a tight list. */
+
+.cl__body .cl__ver {
+    font-family: var(--font-serif);
+    font-size: var(--step-2);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin: 2.2em 0 0.2em;
+    padding-top: 0.8em;
+    border-top: 1px solid var(--rule);
+}
+.cl__body .cl__ver:first-of-type {
+    margin-top: 0.5em;
+    border-top: 0;
+    padding-top: 0;
+}
+.cl__body .cl__cat {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--moss);
+    margin: 1.5em 0 0.5em;
+}
+.cl__body ul {
+    margin: 0 0 1em;
+    padding-left: 1.2em;
+}
+.cl__body li {
+    margin-bottom: 0.45em;
+    line-height: 1.55;
+}
+.cl__body p { margin: 0 0 1em; }
 
 /* ---------- Print ---------- */
 
