@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Swift 6 @MainActor listener-conformance error, and a seam that sidesteps it</title>
+    <meta name="description" content="&quot;Main actor-isolated property 'listener' cannot be used to satisfy nonisolated protocol requirement&quot; is the error every RIB-shaped listener seam hits under Swift 6. Here's why it happens and the whole-protocol @MainActor design that makes it structurally impossible.">
+    <meta name="theme-color" content="#f6f1e3" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0e1410" media="(prefers-color-scheme: dark)">
+
+    <meta property="og:title" content="The Swift 6 @MainActor listener-conformance error, and a seam that sidesteps it">
+    <meta property="og:description" content="Why the RIB listener seam hits &quot;Main actor-isolated property cannot be used to satisfy nonisolated protocol requirement&quot; under Swift 6 — and the whole-protocol @MainActor design that makes it structurally impossible.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://getnapkin.to/blog/swift-6-mainactor-protocol-conformance/">
+    <meta property="og:image" content="https://getnapkin.to/social-preview.png">
+    <meta property="article:published_time" content="2026-05-16">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://getnapkin.to/blog/swift-6-mainactor-protocol-conformance/">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="/napkin-icon.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/napkin-icon@2x.png">
+    <link rel="apple-touch-icon" href="/napkin-icon@2x.png">
+    <link rel="alternate" type="application/atom+xml" title="napkin blog" href="/blog/feed.xml">
+    <link rel="stylesheet" href="/styles.css">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "The Swift 6 @MainActor listener-conformance error, and a seam that sidesteps it",
+        "description": "Why the RIB listener seam hits \"Main actor-isolated property cannot be used to satisfy nonisolated protocol requirement\" under Swift 6, and the whole-protocol @MainActor design that makes it structurally impossible.",
+        "datePublished": "2026-05-16",
+        "author": { "@type": "Organization", "name": "napkin" },
+        "publisher": { "@type": "Organization", "name": "napkin", "url": "https://getnapkin.to/" },
+        "image": "https://getnapkin.to/social-preview.png",
+        "mainEntityOfPage": "https://getnapkin.to/blog/swift-6-mainactor-protocol-conformance/"
+    }
+    </script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="masthead" role="banner">
+    <div class="masthead__inner">
+        <a class="masthead__brand" href="/" aria-label="napkin — home">
+            <span class="masthead__mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4 H20 V20 L4 20 L4 4 Z" />
+                    <path d="M4 14 L14 14 L14 20" />
+                </svg>
+            </span>
+            <span class="masthead__wordmark">napkin</span>
+        </a>
+        <nav class="masthead__nav" aria-label="Primary">
+            <ul>
+                <li><a href="/documentation/napkin/">Docs</a></li>
+                <li><a href="/#example">Example</a></li>
+                <li><a href="/blog/" aria-current="page">Blog</a></li>
+                <li><a href="/changelog/">Changelog</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin">GitHub</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main id="main">
+<article class="post">
+    <p class="post__kicker"><span>§ 01</span> <span class="sep">·</span> <span>2026 · 05 · 16</span> <span class="sep">·</span> <span>Concurrency</span></p>
+    <h1 class="post__title">The Swift 6 @MainActor listener-conformance error, and a seam that sidesteps it</h1>
+    <p class="post__lede">If you've migrated a Router-Interactor-Builder codebase to Swift 6, you've probably met this one: <em>"Main actor-isolated property 'listener' cannot be used to satisfy nonisolated protocol requirement."</em> It's not a bug in your code. It's a seam that was never assigned an isolation domain — and there's a way to design it so the error can't occur.</p>
+
+    <div class="post__body">
+        <p>The Router-Interactor-Builder pattern has a listener seam: a view forwards user events "up" to the unit that owns the decision. The classic shape is a presentable protocol the view conforms to, plus a back-reference to a listener it calls. It compiled cleanly for years. Under Swift 6 strict concurrency it often doesn't:</p>
+
+        <figure class="code-card" aria-label="The Swift 6 conformance error">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">error</span>
+            </figcaption>
+<pre><code>Main actor-isolated property 'listener' cannot be used
+to satisfy nonisolated protocol requirement
+</code></pre>
+        </figure>
+
+        <p>This is not a niche edge case. It's the headline open Swift 6 question on Uber's actively-maintained <a href="https://github.com/uber/ribs-ios/issues/43">RIBs-iOS issue #43</a>, and it shows up in nearly every codebase that adopts a RIB-shaped listener seam and then turns on the Swift 6 language mode.</p>
+
+        <h2>Why the seam triggers it</h2>
+
+        <p>The error is the compiler asking a question the original design never answered: <em>which isolation domain does the listener live in?</em></p>
+
+        <p>The view layer is <code>@MainActor</code> — that part was never in doubt; UIKit and SwiftUI require it. So when a view controller conforms to a presentable protocol, the view controller's members are main-actor-isolated. But the <em>protocol requirement</em> it's satisfying — <code>var listener: PresentableListener? { get set }</code>, declared on a protocol with no isolation annotation — is <code>nonisolated</code>. Swift 6 will not let a main-actor-isolated property be the witness for a nonisolated requirement, because a caller holding only the protocol type could touch <code>listener</code> from any executor.</p>
+
+        <figure class="code-card" aria-label="The shape that fails under Swift 6">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">Fails under Swift 6</span>
+            </figcaption>
+<pre><code>// No isolation on the protocol → requirement is nonisolated.
+protocol HomePresentable: AnyObject {
+    var listener: HomePresentableListener? { get set }
+}
+
+@MainActor                                  // views must be @MainActor
+final class HomeViewController: UIViewController, HomePresentable {
+    weak var listener: HomePresentableListener?
+    // ❌ Main actor-isolated property 'listener' cannot be used
+    //    to satisfy nonisolated protocol requirement
+}
+</code></pre>
+        </figure>
+
+        <p>You can paper over it — annotate the witness <code>nonisolated</code>, sprinkle <code>@preconcurrency</code>, or hop through a <code>Task&nbsp;{&nbsp;@MainActor&nbsp;in&nbsp;… }</code>. Each one trades a compiler error for a runtime question mark, and the seam still has no declared home. The real fix is to give it one.</p>
+
+        <h2>The fix everyone converges on</h2>
+
+        <p>The view-facing seam should be <code>@MainActor</code>. That's not a workaround — it's the truth. The presenter, the view controller, and the listener handle that the view holds all live where the view lives. RIBs-iOS is landing exactly this conclusion: <a href="https://github.com/uber/ribs-ios/issues/43">issue #43</a>'s research and the follow-on PR move the framework's view-side types onto <code>@MainActor</code>. It's the right call, and it's a non-trivial one to retrofit into a framework whose API has to stay source-compatible for everyone already shipping on it.</p>
+
+        <p>napkin had the advantage of starting after Swift 6, so it could make that decision once, at the bottom, and never special-case it again.</p>
+
+        <h2>napkin's version: annotate the base protocol, once</h2>
+
+        <p>napkin's base <code>Presentable</code> protocol is a single annotated line:</p>
+
+        <figure class="code-card" aria-label="napkin's base Presentable protocol">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">Presenter.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>@MainActor
+public protocol Presentable: AnyObject {}
+</code></pre>
+        </figure>
+
+        <p>Every feature's presentable seam refines that protocol — so it inherits the isolation. There is no per-feature, per-property annotation to remember and no place to forget one:</p>
+
+        <figure class="code-card" aria-label="A feature presentable inherits @MainActor">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">HomePresentable.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>// Refines Presentable → the whole protocol, including any
+// `var listener` requirement, is @MainActor by inheritance.
+protocol HomePresentable: Presentable {
+    func presentUser(_ user: User) async
+}
+
+@MainActor
+final class HomeViewController: UIViewController, HomePresentable {
+    weak var listener: HomePresentableListener?
+    // ✅ requirement is @MainActor; witness is @MainActor. No mismatch.
+}
+</code></pre>
+        </figure>
+
+        <p>The requirement and the witness are now in the same isolation domain by construction. The error isn't suppressed — it's <em>unreachable</em>. You cannot write the failing shape in napkin without first un-annotating a framework protocol.</p>
+
+        <h2>Two listeners, two directions, both sound</h2>
+
+        <p>"Listener" means two different seams in a RIB tree, and it's worth being precise about which one the error is about.</p>
+
+        <ol>
+            <li><strong>View → interactor</strong> — the <em>presentable</em> listener. The view holds it and forwards taps. This is the one that hit the Swift 6 error, and it's sound in napkin because the whole <code>Presentable</code> protocol is <code>@MainActor</code>.</li>
+            <li><strong>Interactor → parent</strong> — the <em>child-to-parent</em> listener. A child interactor signals an event up to whichever parent built it.</li>
+        </ol>
+
+        <p>The second one never had the problem, for a different structural reason. It isn't a protocol requirement a view witnesses across an isolation boundary — it's a plain stored property on the interactor actor, and the listener protocol itself is <code>Sendable</code> with <code>async</code> methods so the call legitimately crosses into the parent's actor:</p>
+
+        <figure class="code-card" aria-label="Child-to-parent listener seam">
+            <figcaption class="code-card__cap">
+                <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="code-card__name">ProfileInteractor.swift</span>
+                <button class="code-card__copy" type="button" data-copy>Copy</button>
+            </figcaption>
+<pre><code>protocol ProfileListener: AnyObject, Sendable {
+    func profileDidFinish() async
+}
+
+final actor ProfileInteractor: PresentableInteractable {
+    weak var listener: ProfileListener?          // actor-isolated property
+
+    func didTapDone() async {
+        await listener?.profileDidFinish()       // explicit crossing
+    }
+}
+</code></pre>
+        </figure>
+
+        <p>Neither direction can produce the nonisolated-witness error: one because the seam is uniformly <code>@MainActor</code>, the other because it isn't a cross-isolation protocol witness at all. <a href="/documentation/napkin/crossisolationpatterns">The full pattern reference is in the docs.</a></p>
+
+        <h2>Where napkin agrees with RIBs-iOS, and where it doesn't</h2>
+
+        <p>napkin and RIBs-iOS reach the same conclusion about the <em>view</em> seam: it belongs on the main actor. The deliberate divergence is one ring deeper. RIBs-iOS's modernization unifies the framework on <code>@MainActor</code> including the interactor; napkin keeps the interactor as a <code>final actor</code> <em>off</em> the main actor, so business logic is never scheduled behind UIKit's executor.</p>
+
+        <p>That's the Clean Architecture dependency rule expressed in Swift's isolation system: UI (outer) may depend on business rules (inner), never the reverse. Putting the interactor on <code>@MainActor</code> would compile, but it would structurally bind every decision your app makes to the UI thread — the inversion the architecture exists to prevent. The cost of keeping them separate is an <code>await</code> at each crossing; the benefit is that the boundary is real and the compiler enforces it. <a href="/documentation/napkin/protocolcompositionoverinheritance">The reasoning is laid out in full here.</a></p>
+
+        <p>Both frameworks ship the same pattern. RIBs is alive, well, and actively working through Swift 6 adoption on a public API it has to keep stable. napkin is the same Router-Interactor-Builder shape with the isolation decisions made up front — Clean Architecture on a napkin.</p>
+
+        <h2>The takeaway</h2>
+
+        <p>If you're hitting <em>"cannot be used to satisfy nonisolated protocol requirement"</em> on your own listener seam, the durable fix isn't a <code>nonisolated</code> annotation on the witness — it's deciding, once, that the view-facing protocol is <code>@MainActor</code>, and annotating it at the lowest point so every refinement inherits it. Suppress the error and the seam still has no home; annotate the protocol and the question is answered everywhere at once.</p>
+
+        <p>Want to see it end to end? The <a href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse">Rib House example</a> is a few hundred lines, and the <a href="/documentation/napkin/tutorialbuildingaloginflow">tutorial walks the seam</a>.</p>
+    </div>
+
+    <footer class="post__footer">
+        <p><a href="/blog/">← All posts</a></p>
+        <p>napkin · <a href="/documentation/napkin/">Docs</a> · <a href="https://github.com/WikipediaBrown/napkin">GitHub</a></p>
+    </footer>
+</article>
+</main>
+
+<footer class="colophon" role="contentinfo">
+    <div class="colophon__inner">
+        <p class="colophon__line">
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin">napkin</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/LICENSE.md">Apache&#8209;2.0</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/changelog/">CHANGELOG</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/">Blog</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/feed.xml" type="application/atom+xml">RSS</a>
+        </p>
+        <p class="colophon__line colophon__line--right">
+            Made with 🌲🌲🌲 in Cascadia
+        </p>
+    </div>
+</footer>
+
+<script>
+(function() {
+    document.querySelectorAll('button[data-copy]').forEach(function(btn) {
+        btn.addEventListener('click', async function() {
+            var card = btn.closest('.code-card');
+            var code = card && card.querySelector('pre code');
+            if (!code) return;
+            try {
+                await navigator.clipboard.writeText(code.innerText);
+                var prev = btn.textContent;
+                btn.setAttribute('data-state', 'copied');
+                btn.textContent = 'Copied';
+                setTimeout(function() {
+                    btn.removeAttribute('data-state');
+                    btn.textContent = prev;
+                }, 1400);
+            } catch (e) { btn.textContent = 'Copy failed'; }
+        });
+    });
+})();
+</script>
+
+</body>
+</html>

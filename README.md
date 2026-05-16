@@ -112,6 +112,8 @@ Swift actors do not support inheritance (SE-0306). Rather than fall back to `@Ma
 
 Uber's `RIBs-iOS` PR #49 unifies the framework on `@MainActor` (Interactor included). napkin deliberately keeps the Interactor off the main actor so business logic is not pinned to the main thread. The cost is `await` at every cross-layer call; the benefit is enforced clean-architecture isolation.
 
+Both frameworks agree the *view-facing* seam belongs on `@MainActor`. napkin's base `Presentable` protocol is annotated `@MainActor`, so every feature's presentable (and any `var listener` it requires) inherits that isolation. The Swift 6 conformance error a RIB-shaped listener seam otherwise hits — *"Main actor-isolated property 'listener' cannot be used to satisfy nonisolated protocol requirement"* ([RIBs-iOS #43](https://github.com/uber/ribs-ios/issues/43)) — is therefore structurally impossible in napkin: the requirement and its `@MainActor` view-controller witness are always in the same isolation domain. The child-to-parent listener is a separate seam (an actor-isolated `weak var` behind a `Sendable async` protocol) and never had the problem. Full write-up: [The Swift 6 @MainActor listener-conformance error](https://getnapkin.to/blog/swift-6-mainactor-protocol-conformance/).
+
 ## Core Components
 
 ### Builder
