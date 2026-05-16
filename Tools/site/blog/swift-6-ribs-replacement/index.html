@@ -68,10 +68,10 @@
 <article class="post">
     <p class="post__kicker"><span>§ 01</span> <span class="sep">·</span> <span>2026 · 05 · 15</span> <span class="sep">·</span> <span>Architecture</span></p>
     <h1 class="post__title">A RIBs alternative for Swift Concurrency, without RxSwift: meet napkin</h1>
-    <p class="post__lede">Uber's <a href="https://github.com/uber/RIBs">RIBs</a> is alive, well, and actively developed. It's also built on RxSwift and ships a runtime leak detector. napkin is the same Router-Interactor-Builder pattern written for Swift Concurrency, without either — Clean Architecture on a napkin.</p>
+    <p class="post__lede">Uber's <a href="https://github.com/uber/ribs-ios">RIBs</a> is alive, well, and actively developed. It's also built on RxSwift and ships a runtime leak detector. napkin is the same Router-Interactor-Builder pattern written for Swift Concurrency, without either — Clean Architecture on a napkin.</p>
 
     <div class="post__body">
-        <p>If you've shipped a non-trivial iOS app in the last five years, you've probably worked with <a href="https://github.com/uber/RIBs">RIBs</a>. The pattern is simple to describe and hard to fully internalize: every feature is a unit of <strong>Router</strong>, <strong>Interactor</strong>, and <strong>Builder</strong>, composed into a tree. The interactor is the unit's brain; the router owns the subtree; the builder constructs everything. A view, when there is one, lives behind a <code>Presentable</code> protocol that the interactor talks to.</p>
+        <p>If you've shipped a non-trivial iOS app in the last five years, you've probably worked with <a href="https://github.com/uber/ribs-ios">RIBs</a>. The pattern is simple to describe and hard to fully internalize: every feature is a unit of <strong>Router</strong>, <strong>Interactor</strong>, and <strong>Builder</strong>, composed into a tree. The interactor is the unit's brain; the router owns the subtree; the builder constructs everything. A view, when there is one, lives behind a <code>Presentable</code> protocol that the interactor talks to.</p>
 
         <p>RIBs is good. Uber still maintains it. Teams ship with it every day. This post isn't a "RIBs is dead" pitch — it isn't, and any post that tries to sell you that is selling something.</p>
 

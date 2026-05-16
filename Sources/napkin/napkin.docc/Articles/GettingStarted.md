@@ -44,7 +44,7 @@ The napkin lifecycle is asynchronous from end to end:
 
 The name has two layers, both about being *clean*:
 
-1. napkin is a fork of Uber's [RIBs](https://github.com/uber/RIBs) with RxSwift removed — clean of Rx.
+1. napkin is a fork of Uber's [RIBs](https://github.com/uber/ribs-ios) with RxSwift removed — clean of Rx.
 2. napkin is an implementation of Clean Architecture — its dependency rule and isolation boundaries are enforced by Swift's type system and actor model.
 
 A "napkin," then, is a single feature unit composed of a builder, interactor, router, and (when the unit owns a view) a presenter and view. A napkin tree is just napkins composed under one another, with each parent attaching children and routing between them.

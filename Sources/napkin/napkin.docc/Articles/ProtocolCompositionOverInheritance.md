@@ -4,7 +4,7 @@ Why napkin's interactors are protocol-conforming `final actor`s rather than subc
 
 ## Overview
 
-If you've used Uber's [RIBs](https://github.com/uber/RIBs) or any of its descendants, you remember the shape: `class FooInteractor: PresentableInteractor<FooPresentable> { override func didBecomeActive() { super.didBecomeActive(); … } }`. That base class held active-state, managed a disposable bag, and provided lifecycle hooks for subclasses to override.
+If you've used Uber's [RIBs](https://github.com/uber/ribs-ios) or any of its descendants, you remember the shape: `class FooInteractor: PresentableInteractor<FooPresentable> { override func didBecomeActive() { super.didBecomeActive(); … } }`. That base class held active-state, managed a disposable bag, and provided lifecycle hooks for subclasses to override.
 
 That shape is no longer available in modern Swift. This article is the complete reasoning behind the shape napkin landed on — protocol composition over inheritance — and the small kit of primitives that make it feel as ergonomic as the base class did.
 
