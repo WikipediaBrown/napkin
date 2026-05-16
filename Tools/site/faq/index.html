@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ — napkin</title>
+    <meta name="description" content="Common questions about napkin, the Swift 6 framework for Clean Architecture iOS / macOS apps: how it differs from RIBs, when to use it, why no RxSwift, how testing works, deployment targets, and more.">
+    <meta name="theme-color" content="#f6f1e3" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0e1410" media="(prefers-color-scheme: dark)">
+
+    <meta property="og:title" content="FAQ — napkin">
+    <meta property="og:description" content="Common questions about napkin, the Swift 6 framework for Clean Architecture iOS / macOS apps.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://getnapkin.to/faq/">
+    <meta property="og:image" content="https://getnapkin.to/social-preview.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://getnapkin.to/faq/">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="/napkin-icon.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/napkin-icon@2x.png">
+    <link rel="apple-touch-icon" href="/napkin-icon@2x.png">
+    <link rel="alternate" type="application/atom+xml" title="napkin releases" href="https://github.com/WikipediaBrown/napkin/releases.atom">
+    <link rel="stylesheet" href="/styles.css">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "What is napkin?",
+                "acceptedAnswer": { "@type": "Answer", "text": "napkin is a Swift 6.2 framework for building iOS and macOS apps as a tree of small, isolated, composable units called napkins. Each napkin is a Router-Interactor-Builder unit, modeled on Uber's RIBs but rebuilt around Swift Concurrency. Business logic lives in final actor interactors, routing and presentation are @MainActor, and crossings between isolation domains are explicit." }
+            },
+            {
+                "@type": "Question",
+                "name": "How does napkin differ from Uber's RIBs?",
+                "acceptedAnswer": { "@type": "Answer", "text": "napkin keeps the same vocabulary (Router, Interactor, Builder, Component, Listener, Presentable) and the same tree composition. It changes the underlying mechanics to fit Swift 6: interactors are final actor types instead of subclasses of an open class; routing protocols are @MainActor with async methods; reactive streams are AsyncStream instead of RxSwift Observable; there is no runtime leak detector. Both frameworks ship the same architecture pattern but make different trade-offs underneath." }
+            },
+            {
+                "@type": "Question",
+                "name": "Why doesn't napkin use RxSwift?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Swift Concurrency provides native primitives for everything RxSwift offered the RIBs pattern: async/await for cross-boundary calls, AsyncStream for pushed sequences, structured task cancellation, and Sendable for safe cross-actor data transfer. Adding RxSwift would mean another transitive dependency, another idiom set to learn, and a parallel cancellation model. napkin uses the language built-ins so the framework stays small and the surface stays familiar to Swift developers learning concurrency." }
+            },
+            {
+                "@type": "Question",
+                "name": "Does napkin replace RIBs?",
+                "acceptedAnswer": { "@type": "Answer", "text": "No. Uber's RIBs is actively maintained and ships in many large iOS apps. napkin is an alternative for teams that want the RIBs pattern without RxSwift or the runtime leak detector. Use RIBs if you have an existing RIBs codebase, your team is fluent in RxSwift, or you specifically want the leak detector. Use napkin if you're starting fresh on Swift 6 and prefer compile-time guarantees." }
+            },
+            {
+                "@type": "Question",
+                "name": "What does Clean Architecture have to do with napkin?",
+                "acceptedAnswer": { "@type": "Answer", "text": "napkin enforces the Clean Architecture dependency rule by isolation: business logic (interactors) is on its own actor and depends only on Sendable protocols; UI (routers, presenters, views) is @MainActor and depends on those protocols, never on concrete interactor types. The name 'napkin' refers to the classic back-of-the-napkin architecture sketch — the framework is small enough to fit on one." }
+            },
+            {
+                "@type": "Question",
+                "name": "Can I use napkin with SwiftUI?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Yes. SwiftUI views are wrapped in a UIHostingController that conforms to a feature's Presentable protocol. The view's button actions call a dispatch helper which bridges from @MainActor SwiftUI closures into the interactor actor: dispatch { [listener] in await listener?.didTap() }. The dispatch helper captures the listener weakly and handles cancellation cleanly. See the SwiftUIIntegration article in the docs for the full pattern." }
+            },
+            {
+                "@type": "Question",
+                "name": "How do I unit-test an actor interactor?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Mock the protocols, not the actor. Each interactor talks to its collaborators through protocols (presenter, router, service, listener). In a test, replace each protocol with a final class that records calls. Then drive the actor by calling its async methods directly from an async test method. The actor's serial executor guarantees ordering; you don't need XCTestExpectation or scheduler tricks. See the TestingANapkin article for full examples." }
+            },
+            {
+                "@type": "Question",
+                "name": "What are napkin's platform requirements?",
+                "acceptedAnswer": { "@type": "Answer", "text": "iOS 26 or macOS 26 minimum, Swift 6.2 toolchain (Xcode 26 or later). napkin uses isolated deinit (Swift 6.2 / iOS 26) for synchronous teardown on the main actor's executor, and it relies on actor isolation features that landed in Swift 6. There is no incremental migration path from older Swift / OS versions." }
+            },
+            {
+                "@type": "Question",
+                "name": "How do I install napkin?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Add napkin as a Swift Package dependency. In Xcode: File > Add Package Dependencies > paste https://github.com/WikipediaBrown/napkin and select a version (2.0 or later). In Package.swift: .package(url: \"https://github.com/WikipediaBrown/napkin\", from: \"2.0.0\") and add \"napkin\" to your target's dependencies." }
+            },
+            {
+                "@type": "Question",
+                "name": "Is there an example app?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Yes. Napkin's Rib House (Examples/RibHouse in the repo) is a runnable iOS app demonstrating napkin end-to-end: a headless LaunchNapkin holds an AuthService and swaps between a LoggedOutNapkin (single Login button) and a LoggedInNapkin (user name + barbecue food list) on tap. The xcodeproj is tracked in source control so the project opens directly without running xcodegen first." }
+            },
+            {
+                "@type": "Question",
+                "name": "Does napkin support Mac Catalyst?",
+                "acceptedAnswer": { "@type": "Answer", "text": "The framework compiles for Mac Catalyst because it uses standard UIKit / AppKit primitives. The example app currently targets iOS only, but adopting Catalyst is a project-level setting change and a few view-layer adjustments — the napkin tree itself is platform-agnostic." }
+            },
+            {
+                "@type": "Question",
+                "name": "How does dependency injection work in napkin?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Each feature declares a Dependency protocol listing what it needs from above. Each feature has a Component class that satisfies its children's Dependency protocols (via extension conformance). The root component owns the service instances. The whole graph is checked at compile time — there is no runtime container and no annotation processor. Services injected at the root reach every leaf without anyone hand-rolling a singleton." }
+            },
+            {
+                "@type": "Question",
+                "name": "Why are there listener protocols in every napkin?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Listeners are how children talk to their parents. Each napkin defines a NapkinListener protocol with the methods it can call upward (e.g. counterDidFinish). The parent's interactor conforms to that protocol. When the parent builds the child, it passes itself as the listener. Children never import or reference their parent — they only know the listener protocol. This is what makes any napkin replaceable in isolation." }
+            },
+            {
+                "@type": "Question",
+                "name": "Can a napkin have no view?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Yes — these are called headless napkins. The parent in the example app (LaunchNapkin) is headless: it has an interactor and a router but no Presentable. Its view controller is a plain UIViewController that just embeds whichever child is active. Headless napkins are useful for orchestrators that route between siblings without rendering their own UI." }
+            },
+            {
+                "@type": "Question",
+                "name": "How does napkin handle Swift 6 strict concurrency?",
+                "acceptedAnswer": { "@type": "Answer", "text": "By design, not by suppression. Every cross-isolation crossing is explicit: actor → @MainActor uses await, view → actor uses the dispatch helper, parent listener calls use await. There are no @unchecked Sendable hacks on the hot path. The compiler errors that Swift 6 raises are taken as architecture signals — they tell you where data flows between isolation domains, which is exactly where the boundaries should be." }
+            },
+            {
+                "@type": "Question",
+                "name": "Where can I find the docs?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Full documentation at https://getnapkin.to/documentation/napkin/. Architecture articles (Cross-Isolation Patterns, Protocol Composition Over Inheritance), tutorials (Building a Login Flow, Testing a Napkin, Adding a Networked Service, Tab Bar Napkin), and full API reference. The repository is at https://github.com/WikipediaBrown/napkin." }
+            }
+        ]
+    }
+    </script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="masthead" role="banner">
+    <div class="masthead__inner">
+        <a class="masthead__brand" href="/" aria-label="napkin — home">
+            <span class="masthead__mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4 H20 V20 L4 20 L4 4 Z" />
+                    <path d="M4 14 L14 14 L14 20" />
+                </svg>
+            </span>
+            <span class="masthead__wordmark">napkin</span>
+        </a>
+        <nav class="masthead__nav" aria-label="Primary">
+            <ul>
+                <li><a href="/documentation/napkin/">Docs</a></li>
+                <li><a href="/#example">Example</a></li>
+                <li><a href="/blog/">Blog</a></li>
+                <li><a href="/faq/" aria-current="page">FAQ</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin">GitHub</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main id="main">
+<section class="post" aria-labelledby="faq-title">
+    <p class="post__kicker"><span>§</span> <span class="sep">·</span> <span>Frequently asked</span></p>
+    <h1 class="post__title" id="faq-title">Common questions.</h1>
+    <p class="post__lede">Short answers. Long answers live in <a class="link" href="/documentation/napkin/">the docs</a>.</p>
+
+    <div class="post__body">
+        <h2>What is napkin?</h2>
+        <p>napkin is a Swift 6.2 framework for building iOS and macOS apps as a tree of small, isolated, composable units called <em>napkins</em>. Each napkin is a Router-Interactor-Builder unit, modeled on Uber's <a href="https://github.com/uber/RIBs">RIBs</a> but rebuilt around Swift Concurrency. Business logic lives in <code>final actor</code> interactors. Routing and presentation are <code>@MainActor</code>. Crossings between isolation domains are explicit.</p>
+
+        <h2>How does napkin differ from Uber's RIBs?</h2>
+        <p>napkin keeps the same vocabulary (Router, Interactor, Builder, Component, Listener, Presentable) and the same tree composition. It changes the underlying mechanics to fit Swift 6: interactors are <code>final actor</code> types instead of subclasses of an <code>open class</code>; routing protocols are <code>@MainActor</code> with <code>async</code> methods; reactive streams are <code>AsyncStream</code> instead of RxSwift <code>Observable</code>; there is no runtime leak detector. Both frameworks ship the same architecture pattern but make different trade-offs underneath.</p>
+
+        <h2>Why doesn't napkin use RxSwift?</h2>
+        <p>Swift Concurrency provides native primitives for everything RxSwift offered the RIBs pattern: <code>async/await</code> for cross-boundary calls, <code>AsyncStream</code> for pushed sequences, structured task cancellation, and <code>Sendable</code> for safe cross-actor data transfer. Adding RxSwift would mean another transitive dependency, another idiom set to learn, and a parallel cancellation model. napkin uses the language built-ins so the framework stays small and the surface stays familiar to Swift developers learning concurrency.</p>
+
+        <h2>Does napkin replace RIBs?</h2>
+        <p>No. Uber's RIBs is actively maintained and ships in many large iOS apps. napkin is an alternative for teams that want the RIBs pattern without RxSwift or the runtime leak detector. Use RIBs if you have an existing RIBs codebase, your team is fluent in RxSwift, or you specifically want the leak detector. Use napkin if you're starting fresh on Swift 6 and prefer compile-time guarantees.</p>
+
+        <h2>What does Clean Architecture have to do with napkin?</h2>
+        <p>napkin enforces the Clean Architecture dependency rule by isolation: business logic (interactors) is on its own actor and depends only on <code>Sendable</code> protocols; UI (routers, presenters, views) is <code>@MainActor</code> and depends on those protocols, never on concrete interactor types. The name <em>napkin</em> refers to the classic back-of-the-napkin architecture sketch — the framework is small enough to fit on one.</p>
+
+        <h2>Can I use napkin with SwiftUI?</h2>
+        <p>Yes. SwiftUI views are wrapped in a <code>UIHostingController</code> that conforms to a feature's <code>Presentable</code> protocol. The view's button actions call a <code>dispatch</code> helper which bridges from <code>@MainActor</code> SwiftUI closures into the interactor actor: <code>dispatch { [listener] in await listener?.didTap() }</code>. The dispatch helper captures the listener weakly and handles cancellation cleanly. See <a href="/documentation/napkin/swiftuiintegration">the SwiftUIIntegration article</a> for the full pattern.</p>
+
+        <h2>How do I unit-test an actor interactor?</h2>
+        <p>Mock the protocols, not the actor. Each interactor talks to its collaborators through protocols (presenter, router, service, listener). In a test, replace each protocol with a final class that records calls. Then drive the actor by calling its async methods directly from an async test method. The actor's serial executor guarantees ordering; you don't need <code>XCTestExpectation</code> or scheduler tricks. See <a href="/documentation/napkin/testinganapkin">TestingANapkin</a> for full examples.</p>
+
+        <h2>What are napkin's platform requirements?</h2>
+        <p>iOS 26 or macOS 26 minimum, Swift 6.2 toolchain (Xcode 26 or later). napkin uses <code>isolated deinit</code> (Swift 6.2 / iOS 26) for synchronous teardown on the main actor's executor, and it relies on actor isolation features that landed in Swift 6. There is no incremental migration path from older Swift / OS versions.</p>
+
+        <h2>How do I install napkin?</h2>
+        <p>Add napkin as a Swift Package dependency. In Xcode: <strong>File &gt; Add Package Dependencies</strong>, then paste <code>https://github.com/WikipediaBrown/napkin</code> and pick a version (2.0 or later). Or in <code>Package.swift</code>:</p>
+        <pre><code>.package(url: "https://github.com/WikipediaBrown/napkin", from: "2.0.0")</code></pre>
+        <p>and add <code>"napkin"</code> to your target's dependencies.</p>
+
+        <h2>Is there an example app?</h2>
+        <p>Yes. <strong>Napkin's Rib House</strong> (<a href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse"><code>Examples/RibHouse</code></a> in the repo) is a runnable iOS app demonstrating napkin end-to-end: a headless <code>LaunchNapkin</code> holds an <code>AuthService</code> and swaps between a <code>LoggedOutNapkin</code> (single Login button) and a <code>LoggedInNapkin</code> (user name + barbecue food list) on tap. The xcodeproj is tracked in source control so the project opens directly without running xcodegen first.</p>
+
+        <h2>Does napkin support Mac Catalyst?</h2>
+        <p>The framework compiles for Mac Catalyst because it uses standard UIKit / AppKit primitives. The example app currently targets iOS only, but adopting Catalyst is a project-level setting change and a few view-layer adjustments — the napkin tree itself is platform-agnostic.</p>
+
+        <h2>How does dependency injection work in napkin?</h2>
+        <p>Each feature declares a <code>Dependency</code> protocol listing what it needs from above. Each feature has a <code>Component</code> class that satisfies its children's <code>Dependency</code> protocols (via extension conformance). The root component owns the service instances. The whole graph is checked at compile time — there is no runtime container and no annotation processor. Services injected at the root reach every leaf without anyone hand-rolling a singleton.</p>
+
+        <h2>Why are there listener protocols in every napkin?</h2>
+        <p>Listeners are how children talk to their parents. Each napkin defines a <code>&lt;Self&gt;NapkinListener</code> protocol with the methods it can call upward (e.g. <code>counterDidFinish</code>). The parent's interactor conforms to that protocol. When the parent builds the child, it passes itself as the listener. Children never import or reference their parent — they only know the listener protocol. This is what makes any napkin replaceable in isolation.</p>
+
+        <h2>Can a napkin have no view?</h2>
+        <p>Yes — these are called <em>headless napkins</em>. The parent in the example app (<code>LaunchNapkin</code>) is headless: it has an interactor and a router but no <code>Presentable</code>. Its view controller is a plain <code>UIViewController</code> that just embeds whichever child is active. Headless napkins are useful for orchestrators that route between siblings without rendering their own UI. See <a href="/documentation/napkin/headlessnapkins">HeadlessNapkins</a>.</p>
+
+        <h2>How does napkin handle Swift 6 strict concurrency?</h2>
+        <p>By design, not by suppression. Every cross-isolation crossing is explicit: actor → <code>@MainActor</code> uses <code>await</code>, view → actor uses the <code>dispatch</code> helper, parent listener calls use <code>await</code>. There are no <code>@unchecked Sendable</code> hacks on the hot path. The compiler errors that Swift 6 raises are taken as architecture signals — they tell you where data flows between isolation domains, which is exactly where the boundaries should be.</p>
+
+        <h2>Where can I find the docs?</h2>
+        <p>Full documentation at <a href="/documentation/napkin/">getnapkin.to/documentation/napkin/</a>. Architecture articles (<a href="/documentation/napkin/crossisolationpatterns">Cross-Isolation Patterns</a>, <a href="/documentation/napkin/protocolcompositionoverinheritance">Protocol Composition Over Inheritance</a>), tutorials (<a href="/documentation/napkin/tutorialbuildingaloginflow">Building a Login Flow</a>, <a href="/documentation/napkin/testinganapkin">Testing a Napkin</a>, <a href="/documentation/napkin/addinganetworkedservice">Adding a Networked Service</a>, <a href="/documentation/napkin/tabbarnapkin">Tab Bar Napkin</a>), and full API reference. The repository is at <a href="https://github.com/WikipediaBrown/napkin">github.com/WikipediaBrown/napkin</a>.</p>
+    </div>
+
+    <footer class="post__footer">
+        <p><a href="/blog/">← All posts</a></p>
+        <p>napkin · <a href="/documentation/napkin/">Docs</a> · <a href="https://github.com/WikipediaBrown/napkin">GitHub</a></p>
+    </footer>
+</section>
+</main>
+
+<footer class="colophon" role="contentinfo">
+    <div class="colophon__inner">
+        <p class="colophon__line">
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin">napkin</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/LICENSE.md">Apache&#8209;2.0</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md">CHANGELOG</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/">Blog</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/feed.xml" type="application/atom+xml">RSS</a>
+        </p>
+        <p class="colophon__line colophon__line--right">
+            Made with 🌲🌲🌲 in Cascadia
+        </p>
+    </div>
+</footer>
+
+</body>
+</html>
