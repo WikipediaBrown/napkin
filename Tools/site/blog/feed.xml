@@ -5,12 +5,21 @@
     <link rel="alternate" href="https://getnapkin.to/blog/"/>
     <link rel="self" href="https://getnapkin.to/blog/feed.xml"/>
     <id>https://getnapkin.to/blog/</id>
-    <updated>2026-05-15T00:00:00Z</updated>
+    <updated>2026-05-16T00:00:00Z</updated>
     <icon>https://getnapkin.to/napkin-icon.png</icon>
     <author>
         <name>napkin</name>
         <uri>https://getnapkin.to/</uri>
     </author>
+
+    <entry>
+        <title>The Swift 6 @MainActor listener-conformance error, and a seam that sidesteps it</title>
+        <link href="https://getnapkin.to/blog/swift-6-mainactor-protocol-conformance/"/>
+        <id>https://getnapkin.to/blog/swift-6-mainactor-protocol-conformance/</id>
+        <updated>2026-05-16T00:00:00Z</updated>
+        <published>2026-05-16T00:00:00Z</published>
+        <summary>"Main actor-isolated property 'listener' cannot be used to satisfy nonisolated protocol requirement" is the error every RIB-shaped listener seam hits under Swift 6. Why it happens, and the whole-protocol @MainActor design that makes it structurally impossible.</summary>
+    </entry>
 
     <entry>
         <title>A RIBs alternative for Swift Concurrency, without RxSwift: meet napkin</title>

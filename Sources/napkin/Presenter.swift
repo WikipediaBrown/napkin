@@ -19,6 +19,15 @@ import Observation
 /// typically `async`: the interactor is an `actor`, the presenter is
 /// `@MainActor`, and crossing isolation domains requires `await`.
 ///
+/// Because the annotation lives on this base protocol, every feature
+/// `Presentable` — and any `var listener` requirement it declares — is
+/// `@MainActor`-isolated by inheritance. A `@MainActor` view controller
+/// therefore satisfies the conformance with requirement and witness in the
+/// same isolation domain, so the Swift 6 diagnostic *"Main actor-isolated
+/// property 'listener' cannot be used to satisfy nonisolated protocol
+/// requirement"* cannot arise for this seam. See
+/// <doc:CrossIsolationPatterns> for the full reasoning.
+///
 /// You have two options for who conforms to a feature-specific `Presentable`:
 ///
 /// - A dedicated ``Presenter`` subclass (recommended when there is non-trivial
