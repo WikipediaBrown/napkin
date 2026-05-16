@@ -40,7 +40,8 @@
 - [Latest release](https://github.com/WikipediaBrown/napkin/releases/latest)
 - [Releases feed (Atom)](https://github.com/WikipediaBrown/napkin/releases.atom)
 - [License: Apache 2.0](https://github.com/WikipediaBrown/napkin/blob/main/LICENSE.md)
-- [CHANGELOG](https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md)
+- [Changelog](https://getnapkin.to/changelog/): styled release-notes page, mirrors the GitHub CHANGELOG (Keep a Changelog / SemVer).
+- [CHANGELOG (raw)](https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md)
 - [AGENTS.md (conventions for AI agents)](https://github.com/WikipediaBrown/napkin/blob/main/AGENTS.md)
 
 ## Optional
