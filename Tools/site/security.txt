@@ -2,6 +2,6 @@ Contact: https://github.com/WikipediaBrown/napkin/security/advisories/new
 Contact: mailto:security@spookylabs.ai
 Expires: 2027-12-31T23:59:59Z
 Preferred-Languages: en
-Canonical: https://getnapkin.to/.well-known/security.txt
+Canonical: https://getnapkin.to/security.txt
 Policy: https://github.com/WikipediaBrown/napkin/blob/main/SECURITY.md
 Acknowledgments: https://github.com/WikipediaBrown/napkin/blob/main/SECURITY.md
