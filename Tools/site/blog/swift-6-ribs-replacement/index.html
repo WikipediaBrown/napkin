@@ -184,7 +184,7 @@ final actor HomeInteractor: PresentableInteractable,
 
         <h3>No leak detector</h3>
 
-        <p>napkin doesn't ship one. The framework relies on Swift 6's compile-time guarantees: <code>weak var listener</code> is enforced; <code>detachChild</code> deactivates the child's lifecycle deterministically; <code>isolated deinit</code> (iOS 26+) ensures teardown happens on the right executor. Patterns that would have tripped the RIBs leak detector are either caught by the compiler or impossible to express.</p>
+        <p>napkin doesn't ship one. The framework relies on Swift 6's compile-time guarantees: <code>weak var listener</code> is enforced; <code>detachChild</code> deactivates the child's lifecycle deterministically; <code>isolated deinit</code> (SE-0371, Swift 6.2) ensures teardown happens on the right executor. Patterns that would have tripped the RIBs leak detector are either caught by the compiler or impossible to express.</p>
 
         <p>If you ship without the leak detector and worry about subtle leaks, run Instruments. The point isn't that leaks can't happen — it's that the framework doesn't carry a runtime memory-heuristic to find them.</p>
 
