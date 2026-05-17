@@ -65,7 +65,7 @@
             {
                 "@type": "Question",
                 "name": "What are napkin's platform requirements?",
-                "acceptedAnswer": { "@type": "Answer", "text": "iOS 26 or macOS 26 minimum, Swift 6.2 toolchain (Xcode 26 or later). napkin uses isolated deinit (Swift 6.2 / iOS 26) for synchronous teardown on the main actor's executor, and it relies on actor isolation features that landed in Swift 6. There is no incremental migration path from older Swift / OS versions." }
+                "acceptedAnswer": { "@type": "Answer", "text": "iOS 26 / macOS 26 and the Swift 6.2 toolchain (Xcode 26 or later). That is a deliberate support target, not the hard compiler minimum: the sources type-check down to iOS 18 / macOS 15, bounded by Mutex from the Synchronization module. The project tracks only the current OS generation so the actor model and isolated deinit teardown (SE-0371, Swift 6.2) run on a single current Swift runtime rather than a back-deployment matrix." }
             },
             {
                 "@type": "Question",
@@ -172,7 +172,7 @@
         <p>Mock the protocols, not the actor. Each interactor talks to its collaborators through protocols (presenter, router, service, listener). In a test, replace each protocol with a final class that records calls. Then drive the actor by calling its async methods directly from an async test method. The actor's serial executor guarantees ordering; you don't need <code>XCTestExpectation</code> or scheduler tricks. See <a href="/documentation/napkin/testinganapkin">TestingANapkin</a> for full examples.</p>
 
         <h2>What are napkin's platform requirements?</h2>
-        <p>iOS 26 or macOS 26 minimum, Swift 6.2 toolchain (Xcode 26 or later). napkin uses <code>isolated deinit</code> (Swift 6.2 / iOS 26) for synchronous teardown on the main actor's executor, and it relies on actor isolation features that landed in Swift 6. There is no incremental migration path from older Swift / OS versions.</p>
+        <p>iOS 26 / macOS 26 and the Swift 6.2 toolchain (Xcode 26 or later). That's a deliberate support target, not the hard compiler minimum: the sources type-check down to iOS 18 / macOS 15, bounded by <code>Mutex</code> from the <code>Synchronization</code> module. The project tracks only the current OS generation so the actor model and <code>isolated deinit</code> teardown (<a class="link" href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0371-isolated-synchronous-deinit.md">SE-0371</a>, Swift 6.2) run on a single current Swift runtime rather than a back-deployment matrix.</p>
 
         <h2>How do I install napkin?</h2>
         <p>Add napkin as a Swift Package dependency. In Xcode: <strong>File &gt; Add Package Dependencies</strong>, then paste <code>https://github.com/WikipediaBrown/napkin</code> and pick a version (2.0 or later). Or in <code>Package.swift</code>:</p>

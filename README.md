@@ -42,6 +42,8 @@ napkin is a fork of Uber's [RIBs](https://github.com/uber/ribs-ios) rebuilt on S
 - iOS 26.0+
 - macOS 26.0+
 
+These are deliberate support targets, not the hard compiler minimum. napkin's sources type-check down to iOS 18 / macOS 15 (bounded by `Mutex` from the `Synchronization` module). The project intentionally tracks only the current OS generation so the actor model and `isolated deinit`-based teardown (SE-0371, Swift 6.2) run on a single current Swift runtime instead of a back-deployment matrix.
+
 ## Installation
 
 Add napkin via [Swift Package Manager](https://swift.org/package-manager/):
@@ -513,28 +515,23 @@ final class RootRouter: LaunchRouter<RootInteractor, RootViewControllable>,
 
 ## SwiftUI Integration
 
-Wrap SwiftUI views in a `UIHostingController` that conforms to `ViewControllable`. Use `@Observable` (not `ObservableObject`) on the presenter, and `@Bindable` to read it from the view:
+The simplest viewful pattern — the one the example app and the Xcode templates use — is to make the `UIHostingController` (or `NSHostingController` on macOS) conform to the feature's `Presentable` protocol directly. No separate `Presenter` class, and no presenter⟷view-controller construction cycle. The view holds a `weak` reference to the listener and forwards user events through it:
 
 ```swift
-@Observable
-@MainActor
-final class HomePresenter: Presenter<HomeViewController>, HomePresentable {
-    var userName: String = ""
-    func presentUser(_ user: User) async {
-        userName = "\(user.firstName) \(user.lastName)"
-    }
+protocol HomePresentableListener: AnyObject, Sendable {
+    func didTapProfile() async
+}
+
+protocol HomePresentable: Presentable, Sendable {
+    @MainActor var listener: HomePresentableListener? { get set }
 }
 
 struct HomeView: View {
-    @Bindable var presenter: HomePresenter
     weak var listener: HomePresentableListener?
 
     var body: some View {
-        VStack {
-            Text(presenter.userName)
-            Button("Profile") {
-                dispatch { await listener?.didTapProfile() }
-            }
+        Button("Profile") {
+            dispatch { [listener] in await listener?.didTapProfile() }
         }
     }
 }
@@ -542,34 +539,43 @@ struct HomeView: View {
 @MainActor protocol HomeViewControllable: ViewControllable {}
 
 @MainActor
-final class HomeViewController: UIHostingController<HomeView>,
-                                HomeViewControllable {
+final class HomeViewController: UIHostingController<HomeView>, HomePresentable {
 
-    init(presenter: HomePresenter) {
-        super.init(rootView: HomeView(presenter: presenter))
+    weak var listener: HomePresentableListener? {
+        didSet { rootView.listener = listener }
+    }
+
+    init() {
+        super.init(rootView: HomeView())
     }
 
     @MainActor required dynamic init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 }
+
+extension HomeViewController: HomeViewControllable {}
 ```
 
-The builder creates the presenter and view controller and wires them to the interactor:
+The builder constructs the view controller, hands it to the interactor as the presenter, and wires the tree — no placeholder, no cycle:
 
 ```swift
 @MainActor
 func build(withListener listener: HomeListener) async -> HomeRouting {
     let component = HomeComponent(dependency: dependency)
-    let presenter = HomePresenter(viewController: /* placeholder */ HomeViewController(presenter: stub))
-    let viewController = HomeViewController(presenter: presenter)
-    let interactor = HomeInteractor(presenter: presenter, userService: component.userService)
+    let viewController = HomeViewController()
+    let interactor = HomeInteractor(presenter: viewController,
+                                    userService: component.userService)
     await interactor.set(listener: listener)
     let router = HomeRouter(interactor: interactor, viewController: viewController)
     await interactor.set(router: router)
     return router
 }
 ```
+
+(To render formatted state, give the interactor a `nonisolated let presenter` and call `await presenter.presentUser(...)` — the separate `@Observable` `Presenter` shown in [Core Components](#core-components).)
+
+When you *do* want a separate `@Observable` presenter holding formatted view-state, use the `Presenter` base class as shown in [Core Components](#core-components) — it's parameterized over the `ViewControllable` protocol, which is what keeps that construction acyclic.
 
 Forward user actions to the interactor with `dispatch { await listener?.didTapX() }`. The `dispatch` helper is `@MainActor` and spawns an unstructured `Task` to call the actor-isolated listener — it's the bridge from a synchronous SwiftUI button handler to the async listener method:
 

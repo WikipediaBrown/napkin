@@ -83,7 +83,7 @@ to satisfy nonisolated protocol requirement
 </code></pre>
         </figure>
 
-        <p>This is not a niche edge case. It's the headline open Swift 6 question on Uber's actively-maintained <a href="https://github.com/uber/ribs-ios/issues/43">RIBs-iOS issue #43</a>, and it shows up in nearly every codebase that adopts a RIB-shaped listener seam and then turns on the Swift 6 language mode.</p>
+        <p>That's the diagnostic exactly as filed in Uber's actively-maintained <a href="https://github.com/uber/ribs-ios/issues/43">RIBs-iOS issue #43</a> (Swift 6.0). Later Swift versions reworded it — 6.3 reports it as a <code>#ConformanceIsolation</code> error, "conformance … crosses into main actor-isolated code" with a "cannot satisfy nonisolated requirement" note — but it is the same conformance problem, and it shows up in nearly every codebase that adopts a RIB-shaped listener seam and then turns on the Swift 6 language mode. It is not a niche edge case.</p>
 
         <h2>Why the seam triggers it</h2>
 
