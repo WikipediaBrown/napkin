@@ -8,6 +8,34 @@ napkin is an architecture framework for Apple-platform apps written in Swift 6.2
 
 A napkin is the smallest unit of feature in the app. If a piece of the UI has its own state, its own routing decisions, or its own listener contract with its parent, it is a napkin.
 
+## Swift 6 setup (read this first if you hit an isolation error)
+
+napkin's rings have **deliberate, mixed isolation**: ``Builder`` and ``Component`` are `nonisolated` (dependency-injection plumbing, off any actor), ``Router`` / ``ViewableRouter`` / ``LaunchRouter`` and ``Presentable`` are `@MainActor`, and interactors are `actor`s.
+
+Xcode 26's new App template sets the build setting **Default Actor Isolation** to `MainActor` (Swift's "approachable concurrency", [SE-0466](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0466-control-default-actor-isolation.md)). In a module with that default, your `Builder`/`Component` subclasses are inferred `@MainActor`, so their `init(dependency:)` override no longer matches napkin's `nonisolated` base initializer:
+
+```
+Main actor-isolated initializer 'init(dependency:)' has different
+actor isolation from nonisolated overridden declaration
+```
+
+This is not a napkin bug — it's the module default fighting the framework's intentional isolation. Two fixes:
+
+- **Per type (recommended):** mark each napkin `Builder`/`Component` subclass `nonisolated`. The bundled Xcode templates already generate this:
+
+  ```swift
+  nonisolated final class HomeComponent: Component<HomeDependency>, @unchecked Sendable {}
+
+  nonisolated final class HomeBuilder: Builder<HomeDependency>, HomeBuildable, @unchecked Sendable {
+      override init(dependency: HomeDependency) { super.init(dependency: dependency) }
+      // ...
+  }
+  ```
+
+  Routers and view controllers stay `@MainActor`; interactors stay `actor`s. Only the DI plumbing needs `nonisolated`.
+
+- **Per module:** set the target's **Default Actor Isolation** build setting to `nonisolated` (the pre-Xcode-26 behavior) if you'd rather opt the whole app out.
+
 ## The Five Rings
 
 Every viewable napkin is composed of these files:

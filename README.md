@@ -52,6 +52,8 @@ Add napkin via [Swift Package Manager](https://swift.org/package-manager/):
 2. Paste the repository URL: `https://github.com/WikipediaBrown/napkin.git`
 3. Click **Add Package**.
 
+> **Xcode 26 — Default Actor Isolation.** Xcode 26's App template sets the **Default Actor Isolation** build setting to `MainActor`. napkin's `Builder` and `Component` are deliberately `nonisolated` (DI plumbing, off any actor), so in a `MainActor`-default module a `Builder`/`Component` subclass will fail to compile with *"Main actor-isolated initializer 'init(dependency:)' has different actor isolation from nonisolated overridden declaration."* Mark each `Builder`/`Component` subclass `nonisolated` (the bundled Xcode templates already do — see the snippets below), or set the target's **Default Actor Isolation** to `nonisolated`. Routers and view controllers stay `@MainActor`; interactors stay `actor`s. Full explanation in [Getting Started](https://getnapkin.to/documentation/napkin/gettingstarted).
+
 ## Architecture Overview
 
 napkin structures your app as a tree of units called "napkins." Each napkin encapsulates a feature and consists of:
@@ -133,7 +135,7 @@ protocol HomeBuildable: Buildable {
     @MainActor func build(withListener listener: HomeListener) async -> HomeRouting
 }
 
-final class HomeBuilder: Builder<HomeDependency>, HomeBuildable {
+nonisolated final class HomeBuilder: Builder<HomeDependency>, HomeBuildable {
 
     @MainActor
     func build(withListener listener: HomeListener) async -> HomeRouting {
@@ -171,7 +173,7 @@ protocol HomeDependency: Dependency {
     var userSession: UserSession { get }
 }
 
-final class HomeComponent: Component<HomeDependency> {
+nonisolated final class HomeComponent: Component<HomeDependency> {
 
     // Passed through from parent
     var analyticsService: AnalyticsServiceProtocol {
@@ -193,7 +195,7 @@ final class HomeComponent: Component<HomeDependency> {
 The root napkin uses `EmptyDependency`:
 
 ```swift
-final class AppComponent: Component<EmptyDependency>, HomeDependency {
+nonisolated final class AppComponent: Component<EmptyDependency>, HomeDependency {
     var analyticsService: AnalyticsServiceProtocol {
         shared { AnalyticsService() }
     }
