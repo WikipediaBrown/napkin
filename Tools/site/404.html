@@ -24,8 +24,13 @@
             gap: var(--s-5);
             align-items: center;
         }
+        /* On phones (single column) the napkin leads; the copy + links
+           follow. DOM order stays copy-first, so screen readers and tab
+           focus still reach the navigation first. */
+        .napkin { order: -1; }
         @media (min-width: 860px) {
             .gone { grid-template-columns: 1fr 1fr; gap: var(--s-7); }
+            .gone__copy, .napkin { order: 0; }   /* side-by-side: copy left, napkin right */
         }
         .gone__title {
             font-family: var(--font-serif);
