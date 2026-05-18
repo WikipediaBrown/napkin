@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>404 — This napkin's been used</title>
-    <meta name="description" content="The page you're looking for got tossed in the smoker. Here's what's still on the tray.">
+    <meta name="description" content="The page you're looking for got tossed in the smoker. Grab a clean napkin and sketch the architecture you came for.">
     <meta name="theme-color" content="#f6f1e3" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0e1410" media="(prefers-color-scheme: dark)">
     <meta name="robots" content="noindex">
@@ -16,7 +16,7 @@
 
     <style>
         .gone {
-            max-width: 760px;
+            max-width: 880px;
             margin: 0 auto;
             padding: var(--s-7) clamp(1.25rem, 4vw, 4.5rem);
             display: grid;
@@ -24,10 +24,9 @@
             gap: var(--s-5);
             align-items: center;
         }
-        @media (min-width: 780px) {
+        @media (min-width: 860px) {
             .gone { grid-template-columns: 1fr 1fr; gap: var(--s-7); }
         }
-        .gone__copy {}
         .gone__title {
             font-family: var(--font-serif);
             font-size: var(--step-3);
@@ -43,71 +42,73 @@
             color: var(--ink-2);
             margin: 0 0 var(--s-4);
         }
-        .gone__list {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            border-top: 1px solid var(--rule);
-        }
-        .gone__list li {
-            border-bottom: 1px solid var(--rule);
-            padding: var(--s-3) 0;
-        }
+        .gone__list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
+        .gone__list li { border-bottom: 1px solid var(--rule); padding: var(--s-3) 0; }
         .gone__list a {
-            display: flex;
-            align-items: baseline;
-            justify-content: space-between;
-            gap: var(--s-3);
-            color: var(--ink);
-            text-decoration: none;
-            font-family: var(--font-serif);
-            font-size: var(--step-1);
+            display: flex; align-items: baseline; justify-content: space-between;
+            gap: var(--s-3); color: var(--ink); text-decoration: none;
+            font-family: var(--font-serif); font-size: var(--step-1);
             transition: color 0.2s var(--easing);
         }
         .gone__list a:hover { color: var(--moss); }
         .gone__list .arrow {
-            font-family: var(--font-mono);
-            font-size: var(--step--1);
-            color: var(--ink-3);
-            text-transform: uppercase;
-            letter-spacing: 0.18em;
+            font-family: var(--font-mono); font-size: var(--step--1);
+            color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.18em;
         }
         .gone__list a:hover .arrow { color: var(--moss); }
 
-        .gone__art {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: var(--s-4);
-        }
-        .gone__art svg {
-            width: 100%;
-            max-width: 320px;
-            height: auto;
-            color: var(--moss);
-        }
-
-        /* Tiny wobble on the napkin so it feels alive but doesn't shout. */
-        @media (prefers-reduced-motion: no-preference) {
-            .gone__art svg {
-                animation: napkin-wobble 6s var(--easing) infinite;
-                transform-origin: 50% 60%;
-            }
-        }
-        @keyframes napkin-wobble {
-            0%, 100% { transform: rotate(-1deg); }
-            50%      { transform: rotate(2deg); }
-        }
-
         .gone__big {
-            font-family: var(--font-serif);
-            font-style: italic;
-            font-size: clamp(6rem, 18vw, 12rem);
-            line-height: 1;
-            letter-spacing: -0.04em;
-            color: var(--moss);
-            margin: 0 0 var(--s-3);
-            opacity: 0.92;
+            font-family: var(--font-serif); font-style: italic;
+            font-size: clamp(5rem, 15vw, 10rem); line-height: 1;
+            letter-spacing: -0.04em; color: var(--moss);
+            margin: 0 0 var(--s-3); opacity: 0.92;
+        }
+
+        /* ---------- Interactive napkin ---------- */
+        .napkin { display: flex; flex-direction: column; gap: var(--s-3); }
+        .napkin__pad {
+            position: relative;
+            aspect-ratio: 1 / 1;
+            background: var(--paper-deep, var(--paper));
+            border: 1px solid var(--paper-edge, var(--rule));
+            border-radius: 14px;
+            box-shadow: var(--shadow, 0 1px 0 0 var(--rule));
+            overflow: hidden;
+            touch-action: none;            /* draw without scrolling the page */
+            cursor: crosshair;
+        }
+        /* Faint printed napkin mark + crease so the blank state still
+           reads as "a napkin" before anyone draws on it. */
+        .napkin__brand {
+            position: absolute; inset: 0;
+            color: var(--ink-3); opacity: 0.14;
+            pointer-events: none;
+        }
+        .napkin__brand svg { width: 100%; height: 100%; }
+        .napkin__canvas {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            display: block;
+        }
+        .napkin__hint {
+            position: absolute; left: 50%; bottom: var(--s-4);
+            transform: translateX(-50%);
+            font-family: var(--font-mono); font-size: var(--step--1);
+            letter-spacing: 0.18em; text-transform: uppercase;
+            color: var(--ink-3); opacity: 0.75;
+            pointer-events: none;
+            transition: opacity 0.25s var(--easing);
+            white-space: nowrap;
+        }
+        .napkin__pad[data-drawn="true"] .napkin__hint { opacity: 0; }
+        .napkin__bar {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: var(--s-3);
+        }
+        .napkin__cap {
+            font-family: var(--font-mono); font-size: var(--step--1);
+            letter-spacing: 0.14em; text-transform: uppercase;
+            color: var(--ink-3); margin: 0;
         }
     </style>
 </head>
@@ -145,41 +146,36 @@
         <p class="gone__big" aria-hidden="true">404</p>
         <h1 class="gone__title" id="gone-title">This napkin's been used.</h1>
         <p class="gone__lede">
-            Either the URL got tossed in the smoker or the page never existed. Either way, you're standing in the parking lot. Here's what's still on the tray:
+            The URL got tossed in the smoker, or the page never existed. But there's a clean napkin to your right — sketch the architecture you came for. (That's literally how this framework got its name.) Or grab something that's still on the tray:
         </p>
         <ul class="gone__list">
             <li><a href="/"><span>Homepage</span><span class="arrow">→ start over</span></a></li>
             <li><a href="/documentation/napkin/"><span>Documentation</span><span class="arrow">→ read the docs</span></a></li>
-            <li><a href="/blog/"><span>Blog</span><span class="arrow">→ five posts, real opinions</span></a></li>
+            <li><a href="/blog/"><span>Blog</span><span class="arrow">→ real opinions</span></a></li>
             <li><a href="/#example"><span>Napkin&#8217;s Rib House</span><span class="arrow">→ runnable example</span></a></li>
             <li><a href="https://github.com/WikipediaBrown/napkin"><span>GitHub</span><span class="arrow">→ source &amp; issues</span></a></li>
         </ul>
     </div>
 
-    <div class="gone__art" aria-hidden="true">
-        <!-- A wrinkled paper napkin, hand-drawn-ish. The napkin n-mark logo
-             with a tear running through the bottom corner. -->
-        <svg viewBox="0 0 280 280" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-            <!-- Outer napkin square, slightly wonky -->
-            <path d="M52 36 Q60 30 70 36 L222 38 Q232 40 232 50 L230 224 Q228 234 218 234 L62 230 Q50 230 50 218 L52 60 Z"
-                  stroke-width="2.4" />
-            <!-- Inner tab fold (the n-mark) -->
-            <path d="M58 156 L168 158 L170 224"
-                  stroke-width="2.4" />
-            <!-- Tear lines (where the page got smoked) -->
-            <path d="M170 230 L184 244 L176 252 L196 264 L188 274"
-                  stroke-width="1.8" stroke-dasharray="4 6" opacity="0.7" />
-            <!-- A wisp of smoke -->
-            <path d="M118 100 Q126 84 116 70 Q108 56 122 44"
-                  stroke-width="1.6" opacity="0.55" />
-            <path d="M148 108 Q156 92 146 78"
-                  stroke-width="1.4" opacity="0.4" />
-            <!-- "§" mark center, like a stamp -->
-            <text x="106" y="200"
-                  font-family="ui-serif, 'New York', Georgia, serif"
-                  font-style="italic" font-size="42" font-weight="500"
-                  fill="currentColor" stroke="none" opacity="0.85">n</text>
-        </svg>
+    <div class="napkin">
+        <div class="napkin__pad" id="pad">
+            <span class="napkin__brand" aria-hidden="true">
+                <svg viewBox="0 0 280 280" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M48 40 H232 V232 L48 232 L48 40 Z" />
+                    <path d="M48 168 L168 168 L168 232" />
+                </svg>
+            </span>
+            <canvas class="napkin__canvas" id="canvas"
+                    role="img"
+                    aria-label="A blank paper napkin you can doodle on with a mouse or finger. Decorative — use the links on the left to navigate."></canvas>
+            <span class="napkin__hint" id="hint">Sketch here</span>
+        </div>
+        <div class="napkin__bar">
+            <p class="napkin__cap">Back-of-the-napkin, literally</p>
+            <button type="button" class="btn btn--ghost" id="wipe">
+                Wipe the napkin <span class="btn__arrow" aria-hidden="true">↺</span>
+            </button>
+        </div>
     </div>
 </section>
 </main>
@@ -202,6 +198,116 @@
         </p>
     </div>
 </footer>
+
+<script>
+(function () {
+    var pad = document.getElementById('pad');
+    var canvas = document.getElementById('canvas');
+    var wipe = document.getElementById('wipe');
+    if (!pad || !canvas || !canvas.getContext) return;
+
+    var ctx = canvas.getContext('2d');
+    var dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 3));
+
+    // Resolve the brand "moss" ink to a concrete color the canvas accepts,
+    // and keep it in sync with light/dark mode.
+    function inkColor() {
+        var probe = document.createElement('span');
+        probe.style.color = 'var(--moss)';
+        probe.style.display = 'none';
+        document.body.appendChild(probe);
+        var c = getComputedStyle(probe).color;
+        probe.remove();
+        return c || '#356847';
+    }
+    var ink = inkColor();
+
+    function fitStroke() {
+        ctx.lineWidth = 2.6 * dpr;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = ink;
+    }
+
+    // Backing store = element box × DPR. Preserve the drawing across
+    // resizes (mobile URL bar, rotation).
+    function resize() {
+        var rect = pad.getBoundingClientRect();
+        var w = Math.round(rect.width), h = Math.round(rect.height);
+        if (w === 0 || h === 0) return;
+        var prev = canvas.width ? canvas.toDataURL() : null;
+        canvas.width = w * dpr;
+        canvas.height = h * dpr;
+        fitStroke();
+        if (prev) {
+            var img = new Image();
+            img.onload = function () { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); };
+            img.src = prev;
+        }
+    }
+
+    var drawing = false, lastX = 0, lastY = 0, hasDrawn = false;
+
+    function pos(e) {
+        var rect = canvas.getBoundingClientRect();
+        return {
+            x: (e.clientX - rect.left) * (canvas.width / rect.width),
+            y: (e.clientY - rect.top) * (canvas.height / rect.height)
+        };
+    }
+
+    function start(e) {
+        drawing = true;
+        var p = pos(e);
+        lastX = p.x; lastY = p.y;
+        ctx.beginPath();                                  // a dot, so a tap marks
+        ctx.arc(lastX, lastY, ctx.lineWidth / 2, 0, Math.PI * 2);
+        ctx.fillStyle = ink;
+        ctx.fill();
+        if (!hasDrawn) { hasDrawn = true; pad.setAttribute('data-drawn', 'true'); }
+        if (canvas.setPointerCapture && e.pointerId != null) {
+            try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+        }
+    }
+    function move(e) {
+        if (!drawing) return;
+        var p = pos(e);
+        var mx = (lastX + p.x) / 2, my = (lastY + p.y) / 2; // midpoint smoothing
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.quadraticCurveTo(lastX, lastY, mx, my);
+        ctx.stroke();
+        lastX = p.x; lastY = p.y;
+    }
+    function end() { drawing = false; }
+
+    canvas.addEventListener('pointerdown', function (e) { e.preventDefault(); start(e); });
+    canvas.addEventListener('pointermove', function (e) { e.preventDefault(); move(e); });
+    window.addEventListener('pointerup', end);
+    canvas.addEventListener('pointercancel', end);
+
+    wipe.addEventListener('click', function () {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        hasDrawn = false;
+        pad.removeAttribute('data-drawn');
+    });
+
+    // Re-resolve ink if the user flips system appearance mid-visit.
+    if (window.matchMedia) {
+        try {
+            window.matchMedia('(prefers-color-scheme: dark)')
+                .addEventListener('change', function () { ink = inkColor(); fitStroke(); });
+        } catch (_) {}
+    }
+
+    if (window.ResizeObserver) {
+        new ResizeObserver(resize).observe(pad);
+    } else {
+        window.addEventListener('resize', resize);
+    }
+    resize();
+})();
+</script>
 
 </body>
 </html>
