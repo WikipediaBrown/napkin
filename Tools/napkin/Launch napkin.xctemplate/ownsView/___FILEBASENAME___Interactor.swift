@@ -20,6 +20,8 @@ protocol ___VARIABLE_productName___Listener: AnyObject, Sendable {
     // Listener methods are async because the parent's interactor is an actor.
 }
 
+// MARK: - Interactor
+
 final actor ___VARIABLE_productName___Interactor: PresentableInteractable, ___VARIABLE_productName___PresentableListener {
 
     nonisolated let lifecycle = InteractorLifecycle()
@@ -34,6 +36,8 @@ final actor ___VARIABLE_productName___Interactor: PresentableInteractable, ___VA
         self.presenter = presenter
     }
 
+    // Called once by the builder, after the router is built, to set the
+    // interactor's weak back-references in a single hop.
     func wire(router: ___VARIABLE_productName___Routing?, listener: ___VARIABLE_productName___Listener?) {
         self.router = router
         self.listener = listener

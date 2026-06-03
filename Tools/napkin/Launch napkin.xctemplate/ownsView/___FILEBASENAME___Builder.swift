@@ -27,6 +27,8 @@ nonisolated final class ___VARIABLE_productName___Builder: Builder<___VARIABLE_p
     @MainActor
     func build(withListener listener: ___VARIABLE_productName___Listener) async -> ___VARIABLE_productName___Routing {
         let component = ___VARIABLE_productName___Component(dependency: dependency)
+        // `component` resolves this napkin's dependencies; it's unused until you
+        // add some, hence the discard.
         _ = component
         let viewController = ___VARIABLE_productName___ViewController()
         let interactor = ___VARIABLE_productName___Interactor(presenter: viewController)
