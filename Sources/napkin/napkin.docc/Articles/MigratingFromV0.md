@@ -115,8 +115,10 @@ A typical v0.x file set on the left, the v2.0.0 equivalent on the right. Treat e
                 self.userService = userService
             }
 
-            func set(router: HomeRouting?) { self.router = router }
-            func set(listener: HomeListener?) { self.listener = listener }
+            func wire(router: HomeRouting?, listener: HomeListener?) {
+                self.router = router
+                self.listener = listener
+            }
 
             func didBecomeActive() async {
                 await MainActor.run { presenter.listener = self }
@@ -236,7 +238,7 @@ The `Builder` and `Component` rings are largely the same:
 - ``Component`` is still `Component<DependencyType>` and still uses ``Component/shared(forCallerKey:_:)`` for cached singletons.
 - The dependency-protocol-as-the-public-shape pattern is unchanged.
 
-The only difference: a v2.0.0 builder's `build` method is `@MainActor func build(withListener:) async`. The `async` is needed because building a napkin involves an `await interactor.set(listener:)` call to wire the listener onto the actor.
+The only difference: a v2.0.0 builder's `build` method is `@MainActor func build(withListener:) async`. The `async` is needed because building a napkin involves an `await interactor.wire(router:listener:)` call to wire the router and listener onto the actor.
 
 ## A migration checklist
 

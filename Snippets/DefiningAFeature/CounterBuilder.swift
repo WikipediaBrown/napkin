@@ -29,14 +29,17 @@ protocol CounterRouting: ViewableRouting, Sendable {
 final actor CounterInteractor: PresentableInteractable, CounterPresentableListener {
     nonisolated let lifecycle = InteractorLifecycle()
     nonisolated let presenter: CounterPresentable
+    weak var router: CounterRouting?
     weak var listener: CounterListener?
 
     init(presenter: CounterPresentable) {
         self.presenter = presenter
     }
 
-    func set(router: CounterRouting?) {}
-    func set(listener: CounterListener?) { self.listener = listener }
+    func wire(router: CounterRouting?, listener: CounterListener?) {
+        self.router = router
+        self.listener = listener
+    }
     func didTapIncrement() async {}
     func didTapDecrement() async {}
     func didTapDone() async {}
@@ -104,9 +107,8 @@ final class CounterBuilder:
         _ = component
         let viewController = CounterViewController()
         let interactor = CounterInteractor(presenter: viewController)
-        await interactor.set(listener: listener)
         let router = CounterRouter(interactor: interactor, viewController: viewController)
-        await interactor.set(router: router)
+        await interactor.wire(router: router, listener: listener)
         return router
     }
 }

@@ -35,9 +35,8 @@ nonisolated final class ___VARIABLE_productName___Builder: Builder<___VARIABLE_p
     func build(withListener listener: ___VARIABLE_productName___Listener) async -> ___VARIABLE_productName___Routing {
         let component = ___VARIABLE_productName___Component(dependency: dependency)
         let interactor = ___VARIABLE_productName___Interactor()
-        await interactor.set(listener: listener)
         let router = ___VARIABLE_productName___Router(interactor: interactor, viewController: component.___VARIABLE_productName___ViewController)
-        await interactor.set(router: router)
+        await interactor.wire(router: router, listener: listener)
         return router
     }
 }

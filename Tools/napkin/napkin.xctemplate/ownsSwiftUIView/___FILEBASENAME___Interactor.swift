@@ -34,13 +34,12 @@ final actor ___VARIABLE_productName___Interactor: PresentableInteractable, ___VA
         self.presenter = presenter
     }
 
-    func set(router: ___VARIABLE_productName___Routing?) {
+    func wire(router: ___VARIABLE_productName___Routing?, listener: ___VARIABLE_productName___Listener?) {
         self.router = router
-    }
-
-    func set(listener: ___VARIABLE_productName___Listener?) {
         self.listener = listener
     }
+
+    // MARK: - Lifecycle
 
     func didBecomeActive() async {
         // TODO: Implement business logic here.
