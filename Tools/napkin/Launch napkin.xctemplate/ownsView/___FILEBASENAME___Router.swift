@@ -7,6 +7,8 @@ protocol ___VARIABLE_productName___ViewControllable: ViewControllable {
     // TODO: Declare methods the router invokes to manipulate the view hierarchy.
 }
 
+// MARK: - Router
+
 @MainActor
 final class ___VARIABLE_productName___Router:
     LaunchRouter<___VARIABLE_productName___Interactor, ___VARIABLE_productName___ViewControllable>,

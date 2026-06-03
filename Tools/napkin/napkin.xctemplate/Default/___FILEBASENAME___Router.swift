@@ -9,6 +9,8 @@ protocol ___VARIABLE_productName___ViewControllable: ViewControllable {
     // napkin's ancestor napkins' view.
 }
 
+// MARK: - Router
+
 @MainActor
 final class ___VARIABLE_productName___Router: Router<___VARIABLE_productName___Interactor>, ___VARIABLE_productName___Routing {
 
