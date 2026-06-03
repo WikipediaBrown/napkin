@@ -28,7 +28,7 @@ A **napkin** is one node in your application tree. Every napkin is built from a 
 
 Earlier RIBs frameworks shipped an `open class PresentableInteractor<P>` that subclasses extended. Swift Concurrency removes that option. Per [SE-0306](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0306-actors.md), actors cannot be subclassed; per [SE-0316](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0316-global-actors.md), only Apple-blessed types like `MainActor` may be `@globalActor`. A `@MainActor open class` base would put business logic on the main actor, violating the dependency rule of clean architecture.
 
-napkin's answer is protocol composition. ``Interactable`` is a protocol that refines `Actor`; conforming types are `final actor`. A protocol extension on ``Interactable`` provides default implementations of every lifecycle method, forwarding state to a single shared helper, ``InteractorLifecycle``. The result behaves exactly like a base class — overrides, inherited defaults, polymorphic dispatch — without the inheritance.
+napkin's answer is protocol composition. ``Interactable`` is a protocol that refines `Actor`; conforming types are `final actor`. A protocol extension on ``Interactable`` provides default implementations of every lifecycle method, forwarding each call to ``InteractorLifecycle`` — the shared object that owns the active-state machine and its concurrency contract (see <doc:Lifecycle>). The result behaves exactly like a base class — overrides, inherited defaults, polymorphic dispatch — without the inheritance.
 
 See <doc:ProtocolCompositionOverInheritance> for the full reasoning, including the primitives table and links to Apple's evolution proposals.
 
@@ -50,6 +50,7 @@ See <doc:CrossIsolationPatterns> for the full set of directional patterns and wh
 - New to napkin? Begin with <doc:GettingStarted>.
 - Want to see a real app, line by line? <doc:TutorialBuildingALoginFlow> walks through the example end to end.
 - Building your first feature? <doc:DefiningAFeature> walks through every file.
+- How does activation work? <doc:Lifecycle> maps the active-state machine; ``InteractorLifecycle`` holds the exact contract — ordering, idempotency, task cancellation.
 - Migrating an older RIBs / pre-2.0 codebase? <doc:MigratingFromV0> shows the conversion line by line.
 - Wondering "why is it shaped this way?" — <doc:ProtocolCompositionOverInheritance>.
 
@@ -78,12 +79,16 @@ A runnable end-to-end reference, **Napkin's Rib House**, lives at `Examples/RibH
 - <doc:SwiftUIIntegration>
 - <doc:Glossary>
 
+### The Lifecycle
+
+- <doc:Lifecycle>
+- ``InteractorLifecycle``
+- ``InteractorScope``
+
 ### Defining a Napkin
 
 - ``Interactable``
 - ``PresentableInteractable``
-- ``InteractorLifecycle``
-- ``InteractorScope``
 
 ### Routing
 
