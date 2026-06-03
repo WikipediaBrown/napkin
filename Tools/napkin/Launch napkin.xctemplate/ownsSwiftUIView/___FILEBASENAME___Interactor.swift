@@ -44,9 +44,20 @@ final actor ___VARIABLE_productName___Interactor: PresentableInteractable, ___VA
 
     func didBecomeActive() async {
         // TODO: Implement business logic here.
+        //
+        // Start lifecycle-bound work with `task { }`. The lifecycle cancels it
+        // for you on deactivate — this is napkin's replacement for RIBs'
+        // disposeOnDeactivate, so you write no manual teardown:
+        //
+        //   task {
+        //       for await value in someStream {
+        //           await presenter.present(value)
+        //       }
+        //   }
     }
 
     func willResignActive() async {
-        // TODO: Pause any business logic.
+        // TODO: Pause any business logic. Work started with `task { }` in
+        // didBecomeActive() is cancelled automatically after this returns.
     }
 }

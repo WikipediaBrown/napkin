@@ -25,6 +25,7 @@ napkin is a fork of Uber's [RIBs](https://github.com/uber/ribs-ios) rebuilt on S
   - [Builder](#builder)
   - [Component & Dependency](#component--dependency)
   - [Interactor](#interactor)
+  - [Interactor Lifecycle](#interactor-lifecycle)
   - [Router](#router)
   - [Presenter (Optional)](#presenter-optional)
   - [ViewControllable](#viewcontrollable)
@@ -111,7 +112,7 @@ Combine has been removed. View-state changes flow through `@Observable` properti
 
 ### Why protocol composition instead of class inheritance?
 
-Swift actors do not support inheritance (SE-0306). Rather than fall back to `@MainActor open class` (which would pin business logic to the main actor) or a custom `@globalActor` (which would serialize all interactors on one executor), napkin uses **protocol composition**: each feature's interactor is its own `final actor` conforming to `Interactable`. A small `InteractorLifecycle` helper class — the only `@unchecked Sendable` type in the framework — holds the mutex-protected state. Default implementations of `activate` / `deactivate` / `task(_:)` / `isActive` / `isActiveStream` come from a protocol extension that delegates to `lifecycle`.
+Swift actors do not support inheritance (SE-0306). Rather than fall back to `@MainActor open class` (which would pin business logic to the main actor) or a custom `@globalActor` (which would serialize all interactors on one executor), napkin uses **protocol composition**: each feature's interactor is its own `final actor` conforming to `Interactable`. The `InteractorLifecycle` class — the only `@unchecked Sendable` type in the framework — owns the mutex-protected lifecycle state and its concurrency contract. Default implementations of `activate` / `deactivate` / `task(_:)` / `isActive` / `isActiveStream` come from a protocol extension that delegates to `lifecycle`.
 
 ### Divergence from Uber RIBs-iOS
 
@@ -277,6 +278,25 @@ final actor HomeInteractor: PresentableInteractable, HomePresentableListener {
 `didBecomeActive` / `willResignActive` are protocol default-implementation methods, so there is no `override` and no `super` call. Subscriptions started with `task { }` on the lifecycle are cancelled automatically when the interactor deactivates.
 
 Use `PresentableInteractable` when the interactor communicates with a view through a presentable protocol. Use plain `Interactable` for napkins without views.
+
+### Interactor Lifecycle
+
+An interactor's parent router drives it between two states. You override two callbacks; the lifecycle handles the transitions, the bound tasks, and teardown.
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> Inactive
+    Inactive --> Active: activate() → didBecomeActive()
+    Active --> Inactive: deactivate() → willResignActive() → bound tasks cancelled
+```
+
+- **`activate()` / `deactivate()`** are called by the parent router on `attachChild` / `detachChild` — you never call them yourself, and both are idempotent.
+- **`didBecomeActive()`** is where you start observation; **`willResignActive()`** is where you flush state or notify the listener.
+- Work spawned with **`task { }`** is bound to the active scope and **cancelled automatically on deactivate** — napkin's replacement for `disposeOnDeactivate` from Uber's [RIBs](https://github.com/uber/ribs-ios). No manual teardown.
+- A read-only view of the state is available through `isActive` and the `isActiveStream` `AsyncStream<Bool>`.
+
+The full contract — the non-recursive `Mutex` guarding lifecycle state, the exact `deactivate()` ordering, and the `deinit` backstop that makes a runtime leak detector unnecessary — lives in the [lifecycle guide](https://getnapkin.to/documentation/napkin/lifecycle) and the [`InteractorLifecycle` reference](https://getnapkin.to/documentation/napkin/interactorlifecycle).
 
 ### Router
 

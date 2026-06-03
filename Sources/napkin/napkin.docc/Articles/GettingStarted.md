@@ -68,6 +68,8 @@ The napkin lifecycle is asynchronous from end to end:
 3. The child runs. Tasks spawned via ``Interactable/task(priority:_:)`` are bound to the active scope and cancelled automatically on detach.
 4. To unwind, the parent calls `await detachChild(childRouter)`, which deactivates the interactor (firing ``Interactable/willResignActive()``), cancels every bound task, and detaches the subtree.
 
+For the full state machine — idempotent activation, task binding, observing transitions via ``InteractorScope/isActiveStream``, and the concurrency guarantees behind it — see <doc:Lifecycle> and ``InteractorLifecycle``.
+
 ## What "a napkin" is
 
 The name has two layers, both about being *clean*:

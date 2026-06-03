@@ -66,6 +66,15 @@ import Synchronization
 /// ``Interactable/task(priority:_:)``, ``InteractorScope/isActive``, and
 /// ``InteractorScope/isActiveStream`` here.
 ///
+/// ## Teardown
+///
+/// `InteractorLifecycle` also cleans up when it is simply released. Its
+/// `deinit` cancels every still-registered task and calls `finish()` on every
+/// ``isActiveStream`` continuation, so an interactor dropped without an
+/// explicit ``deactivate(invoking:)`` still cancels its bound work and closes
+/// its streams. This release-time backstop, paired with
+/// ``deactivate(invoking:)``, is why napkin needs no runtime leak detector.
+///
 /// - SeeAlso: ``Interactable``
 /// - SeeAlso: ``InteractorScope``
 ///
@@ -235,6 +244,12 @@ public final class InteractorLifecycle: @unchecked Sendable {
         return t
     }
 
+    /// Release-time teardown backstop. Under the lock, snapshots and clears the
+    /// registered tasks and stream continuations and sets `isActive` to
+    /// `false`; then, outside the lock, cancels each task and calls `finish()`
+    /// on each continuation so any live ``isActiveStream`` iterators terminate
+    /// cleanly. Complements ``deactivate(invoking:)`` for lifecycles that are
+    /// dropped without an explicit deactivation.
     deinit {
         let snapshot = state.withLock { storage -> ([Task<Void, Never>], [AsyncStream<Bool>.Continuation]) in
             let result = (Array(storage.tasks), Array(storage.continuations.values))

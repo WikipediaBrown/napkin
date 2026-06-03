@@ -36,10 +36,21 @@ final actor ___VARIABLE_productName___Interactor: Interactable {
 
     func didBecomeActive() async {
         // TODO: Implement business logic here.
+        //
+        // Start lifecycle-bound work with `task { }`. The lifecycle cancels it
+        // for you on deactivate — this is napkin's replacement for RIBs'
+        // disposeOnDeactivate, so you write no manual teardown:
+        //
+        //   task {
+        //       for await event in eventStream {
+        //           // handle each event on the actor
+        //       }
+        //   }
     }
 
     func willResignActive() async {
         await router?.cleanupViews()
-        // TODO: Pause any business logic.
+        // TODO: Pause any business logic. Work started with `task { }` in
+        // didBecomeActive() is cancelled automatically after this returns.
     }
 }
