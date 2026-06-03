@@ -33,13 +33,12 @@ final class LoggedInNapkinBuilder: Builder<LoggedInNapkinDependency>, LoggedInNa
     ) async -> LoggedInNapkinRouting {
         let viewController = LoggedInNapkinViewController(user: user)
         let interactor = LoggedInNapkinInteractor(presenter: viewController, user: user)
-        await interactor.set(listener: listener)
         let router = LoggedInNapkinRouter(
             interactor: interactor,
             viewController: viewController,
             user: user
         )
-        await interactor.set(router: router)
+        await interactor.wire(router: router, listener: listener)
         return router
     }
 }

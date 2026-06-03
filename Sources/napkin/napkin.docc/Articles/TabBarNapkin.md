@@ -70,7 +70,6 @@ final class TabBarNapkinBuilder: Builder<TabBarNapkinDependency>, TabBarNapkinBu
 
         let viewController = TabBarNapkinViewController()
         let interactor = TabBarNapkinInteractor()
-        await interactor.set(listener: listener)
         let router = TabBarNapkinRouter(
             interactor: interactor,
             viewController: viewController,
@@ -78,7 +77,7 @@ final class TabBarNapkinBuilder: Builder<TabBarNapkinDependency>, TabBarNapkinBu
             browseBuilder: browseBuilder,
             profileBuilder: profileBuilder
         )
-        await interactor.set(router: router)
+        await interactor.wire(router: router, listener: listener)
         return router
     }
 }

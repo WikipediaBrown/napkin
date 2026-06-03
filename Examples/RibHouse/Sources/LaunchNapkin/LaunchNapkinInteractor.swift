@@ -24,8 +24,10 @@ final actor LaunchNapkinInteractor:
         self.authService = authService
     }
 
-    func set(router: LaunchNapkinRouting?) { self.router = router }
-    func set(listener: LaunchNapkinListener?) { self.listener = listener }
+    func wire(router: LaunchNapkinRouting?, listener: LaunchNapkinListener?) {
+        self.router = router
+        self.listener = listener
+    }
 
     func didBecomeActive() async {
         await router?.attachLoggedOut()

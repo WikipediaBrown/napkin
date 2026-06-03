@@ -16,7 +16,7 @@ The builder is the only entry point a parent napkin sees. It owns the parent-sup
 
 **Why `async @MainActor`.** The builder constructs view controllers, which are `@MainActor`-isolated. It also calls into the interactor (an actor) to wire the listener and the router. Both crossings require `await`, so the build method itself is `async`.
 
-**Why two-phase wiring.** The interactor needs a router, and the router needs the interactor. We construct the interactor first, hand it to the router, then call `await interactor.set(router: router)`. This breaks the cycle without exposing a mutable property to the outside world; only the builder ever calls `set(router:)`.
+**Why two-phase wiring.** The interactor needs a router, and the router needs the interactor. We construct the interactor first, hand it to the router, then call `await interactor.wire(router: router, listener: listener)` to set both back-references in a single hop. This breaks the cycle without exposing mutable properties to the outside world; only the builder ever calls `wire(router:listener:)`.
 
 ## CounterInteractor.swift
 

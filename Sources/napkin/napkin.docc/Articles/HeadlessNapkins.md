@@ -39,9 +39,8 @@ final class AnalyticsBuilder:
             eventBus: dependency.eventBus,
             analyticsClient: dependency.analyticsClient
         )
-        await interactor.set(listener: listener)
         let router = AnalyticsRouter(interactor: interactor)
-        await interactor.set(router: router)
+        await interactor.wire(router: router, listener: listener)
         return router
     }
 }
@@ -76,8 +75,10 @@ final actor AnalyticsInteractor: Interactable {
         self.analyticsClient = analyticsClient
     }
 
-    func set(router: AnalyticsRouting?) { self.router = router }
-    func set(listener: AnalyticsListener?) { self.listener = listener }
+    func wire(router: AnalyticsRouting?, listener: AnalyticsListener?) {
+        self.router = router
+        self.listener = listener
+    }
 
     func didBecomeActive() async {
         task {

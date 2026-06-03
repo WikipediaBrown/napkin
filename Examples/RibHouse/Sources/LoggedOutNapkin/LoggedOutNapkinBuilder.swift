@@ -18,9 +18,8 @@ final class LoggedOutNapkinBuilder: Builder<LoggedOutNapkinDependency>, LoggedOu
     func build(withListener listener: LoggedOutNapkinListener) async -> LoggedOutNapkinRouting {
         let viewController = LoggedOutNapkinViewController()
         let interactor = LoggedOutNapkinInteractor(presenter: viewController)
-        await interactor.set(listener: listener)
         let router = LoggedOutNapkinRouter(interactor: interactor, viewController: viewController)
-        await interactor.set(router: router)
+        await interactor.wire(router: router, listener: listener)
         return router
     }
 }

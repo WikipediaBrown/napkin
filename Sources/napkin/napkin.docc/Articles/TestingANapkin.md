@@ -75,7 +75,7 @@ final class LoggedOutNapkinInteractorTests: XCTestCase {
         let presenter = MockLoggedOutNapkinPresentable()
         let listener = MockLaunchToLoggedOutListener()
         let sut = LoggedOutNapkinInteractor(presenter: presenter)
-        await sut.set(listener: listener)
+        await sut.wire(router: nil, listener: listener)
 
         // Act
         await sut.didTapLogin()
@@ -158,7 +158,7 @@ final class LaunchNapkinInteractorTests: XCTestCase {
         auth.loginResult = .success(user)
         let router = MockLaunchNapkinRouting()
         let sut = LaunchNapkinInteractor(authService: auth)
-        await sut.set(router: router)
+        await sut.wire(router: router, listener: nil)
 
         // Act
         await sut.loggedOutDidTapLogin()
@@ -176,7 +176,7 @@ final class LaunchNapkinInteractorTests: XCTestCase {
         auth.loginResult = .failure(MockError.unauthorized)
         let router = MockLaunchNapkinRouting()
         let sut = LaunchNapkinInteractor(authService: auth)
-        await sut.set(router: router)
+        await sut.wire(router: router, listener: nil)
 
         // Act
         await sut.loggedOutDidTapLogin()
@@ -205,7 +205,7 @@ final class LaunchNapkinInteractor_LifecycleTests: XCTestCase {
         let auth = MockAuthService()
         let router = MockLaunchNapkinRouting()
         let sut = LaunchNapkinInteractor(authService: auth)
-        await sut.set(router: router)
+        await sut.wire(router: router, listener: nil)
 
         await sut.didBecomeActive()
 
