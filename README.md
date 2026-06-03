@@ -147,9 +147,8 @@ nonisolated final class HomeBuilder: Builder<HomeDependency>, HomeBuildable {
             presenter: viewController,
             userService: component.userService
         )
-        await interactor.set(listener: listener)
         let router = HomeRouter(interactor: interactor, viewController: viewController)
-        await interactor.set(router: router)
+        await interactor.wire(router: router, listener: listener)
         return router
     }
 }
@@ -247,8 +246,10 @@ final actor HomeInteractor: PresentableInteractable, HomePresentableListener {
         self.userService = userService
     }
 
-    func set(router: HomeRouting?) { self.router = router }
-    func set(listener: HomeListener?) { self.listener = listener }
+    func wire(router: HomeRouting?, listener: HomeListener?) {
+        self.router = router
+        self.listener = listener
+    }
 
     func didBecomeActive() async {
         // Lifecycle-bound subscription: cancelled automatically on willResignActive.
@@ -589,9 +590,8 @@ func build(withListener listener: HomeListener) async -> HomeRouting {
     let viewController = HomeViewController()
     let interactor = HomeInteractor(presenter: viewController,
                                     userService: component.userService)
-    await interactor.set(listener: listener)
     let router = HomeRouter(interactor: interactor, viewController: viewController)
-    await interactor.set(router: router)
+    await interactor.wire(router: router, listener: listener)
     return router
 }
 ```
@@ -634,7 +634,7 @@ struct HomeInteractorTests {
         let listener = MockHomeListener()
         let presenter = await MockHomePresentable()
         let interactor = HomeInteractor(presenter: presenter, userService: MockUserService())
-        await interactor.set(listener: listener)
+        await interactor.wire(router: nil, listener: listener)
         await interactor.activate()
 
         await interactor.didTapLogout()

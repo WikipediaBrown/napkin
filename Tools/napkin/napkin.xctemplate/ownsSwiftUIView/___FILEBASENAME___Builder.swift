@@ -30,9 +30,8 @@ nonisolated final class ___VARIABLE_productName___Builder: Builder<___VARIABLE_p
         _ = component
         let viewController = ___VARIABLE_productName___ViewController()
         let interactor = ___VARIABLE_productName___Interactor(presenter: viewController)
-        await interactor.set(listener: listener)
         let router = ___VARIABLE_productName___Router(interactor: interactor, viewController: viewController)
-        await interactor.set(router: router)
+        await interactor.wire(router: router, listener: listener)
         return router
     }
 }

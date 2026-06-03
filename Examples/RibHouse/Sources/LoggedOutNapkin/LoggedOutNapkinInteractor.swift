@@ -23,8 +23,10 @@ final actor LoggedOutNapkinInteractor: PresentableInteractable, LoggedOutNapkinP
         self.presenter = presenter
     }
 
-    func set(router: LoggedOutNapkinRouting?) { self.router = router }
-    func set(listener: LoggedOutNapkinListener?) { self.listener = listener }
+    func wire(router: LoggedOutNapkinRouting?, listener: LoggedOutNapkinListener?) {
+        self.router = router
+        self.listener = listener
+    }
 
     func didBecomeActive() async {
         let presenter = self.presenter

@@ -33,14 +33,13 @@ final class LaunchNapkinBuilder: Builder<LaunchNapkinDependency>, LaunchNapkinBu
         let loggedInBuilder = LoggedInNapkinBuilder(dependency: component)
         let viewController = LaunchNapkinViewController()
         let interactor = LaunchNapkinInteractor(authService: component.authService)
-        await interactor.set(listener: listener)
         let router = LaunchNapkinRouter(
             interactor: interactor,
             viewController: viewController,
             loggedOutBuilder: loggedOutBuilder,
             loggedInBuilder: loggedInBuilder
         )
-        await interactor.set(router: router)
+        await interactor.wire(router: router, listener: listener)
         return router
     }
 }

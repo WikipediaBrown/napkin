@@ -25,8 +25,10 @@ final actor LoggedInNapkinInteractor: PresentableInteractable, LoggedInNapkinPre
         self.user = user
     }
 
-    func set(router: LoggedInNapkinRouting?) { self.router = router }
-    func set(listener: LoggedInNapkinListener?) { self.listener = listener }
+    func wire(router: LoggedInNapkinRouting?, listener: LoggedInNapkinListener?) {
+        self.router = router
+        self.listener = listener
+    }
 
     func didBecomeActive() async {
         let presenter = self.presenter

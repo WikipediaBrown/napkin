@@ -134,14 +134,13 @@ final class LaunchNapkinBuilder: Builder<LaunchNapkinDependency>, LaunchNapkinBu
         let loggedInBuilder = LoggedInNapkinBuilder(dependency: component)
         let viewController = LaunchNapkinViewController()
         let interactor = LaunchNapkinInteractor(authService: component.authService)
-        await interactor.set(listener: listener)
         let router = LaunchNapkinRouter(
             interactor: interactor,
             viewController: viewController,
             loggedOutBuilder: loggedOutBuilder,
             loggedInBuilder: loggedInBuilder
         )
-        await interactor.set(router: router)
+        await interactor.wire(router: router, listener: listener)
         return router
     }
 }
@@ -314,9 +313,8 @@ final class LoggedOutNapkinBuilder: Builder<LoggedOutNapkinDependency>, LoggedOu
     func build(withListener listener: LoggedOutNapkinListener) async -> LoggedOutNapkinRouting {
         let viewController = LoggedOutNapkinViewController()
         let interactor = LoggedOutNapkinInteractor(presenter: viewController)
-        await interactor.set(listener: listener)
         let router = LoggedOutNapkinRouter(interactor: interactor, viewController: viewController)
-        await interactor.set(router: router)
+        await interactor.wire(router: router, listener: listener)
         return router
     }
 }
@@ -423,13 +421,12 @@ final class LoggedInNapkinBuilder: ... {
     ) async -> LoggedInNapkinRouting {
         let viewController = LoggedInNapkinViewController(user: user)
         let interactor = LoggedInNapkinInteractor(presenter: viewController, user: user)
-        await interactor.set(listener: listener)
         let router = LoggedInNapkinRouter(
             interactor: interactor,
             viewController: viewController,
             user: user
         )
-        await interactor.set(router: router)
+        await interactor.wire(router: router, listener: listener)
         return router
     }
 }

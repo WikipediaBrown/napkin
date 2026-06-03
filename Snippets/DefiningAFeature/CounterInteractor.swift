@@ -38,8 +38,10 @@ final actor CounterInteractor: PresentableInteractable, CounterPresentableListen
         self.presenter = presenter
     }
 
-    func set(router: CounterRouting?) { self.router = router }
-    func set(listener: CounterListener?) { self.listener = listener }
+    func wire(router: CounterRouting?, listener: CounterListener?) {
+        self.router = router
+        self.listener = listener
+    }
 
     func didBecomeActive() async {
         let presenter = self.presenter
