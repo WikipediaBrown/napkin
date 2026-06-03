@@ -147,6 +147,13 @@ public protocol Interactable: Actor, InteractorScope {
     /// The default implementations of ``activate()``, ``deactivate()``,
     /// ``task(priority:_:)``, ``InteractorScope/isActive``, and
     /// ``InteractorScope/isActiveStream`` all forward to this helper.
+    ///
+    /// - Note: This satisfies a `public` protocol requirement, so the declared
+    ///   property must be at least as accessible as the conforming interactor —
+    ///   `internal` for an `internal` type. It cannot be `private` or
+    ///   `fileprivate`. `internal` is the intended visibility: it keeps
+    ///   `lifecycle` out of your module's public API, and you are not meant to
+    ///   call its methods directly.
     nonisolated var lifecycle: InteractorLifecycle { get }
 
     /// Activates the interactor.
