@@ -37,6 +37,12 @@ xcodeTemplate () {
   cp -R "$SRC/Launch $PROJECT_NAME.xctemplate/ownsView/"* "$XCODE_TEMPLATE_DIR/Launch $PROJECT_NAME.xctemplate/ownsViewwithXIB/"
   cp -R "$SRC/$PROJECT_NAME.xctemplate/ownsView/"* "$XCODE_TEMPLATE_DIR/$PROJECT_NAME.xctemplate/ownsViewwithStoryboard/"
   cp -R "$SRC/Launch $PROJECT_NAME.xctemplate/ownsView/"* "$XCODE_TEMPLATE_DIR/Launch $PROJECT_NAME.xctemplate/ownsViewwithStoryboard/"
+
+  # Strip cruft that can exist in a working copy: macOS metadata and Xcode's
+  # " 2" duplicate files. These are git-ignored (see .gitignore `* 2.*`) so they
+  # never show in `git status`, but `cp -R` would otherwise install them and
+  # Xcode would emit them as duplicate sources (e.g. a stray `LaunchComponent 2`).
+  find "$XCODE_TEMPLATE_DIR" \( -name "* 2.*" -o -name ".DS_Store" \) -delete
 }
 
 xcodeTemplate
