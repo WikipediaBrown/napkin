@@ -87,11 +87,23 @@ platform :ios do
     new_version
   end
 
-  # Increments and returns version of last tag. Pass `major` or `minor` (or
-  # set the BUMP env var to one of those) to bump those components; anything
-  # else (or no value) increments patch.
+  # Returns the highest semver (X.Y.Z) tag in the repo, independent of the
+  # commit graph. fastlane's `last_git_tag` uses `git describe`, which returns
+  # the nearest tag by graph position — it mis-selects when several tags share
+  # one commit (e.g. a minor 2.1.0 sitting alongside 2.0.40) or under a shallow
+  # CI checkout, which once bumped 2.1.0 to 2.0.41 instead of 2.1.1.
+  def highest_semver_tag
+    sh("git tag --list --sort=-v:refname", log: false)
+      .each_line
+      .map(&:strip)
+      .find { |tag| tag =~ /\A\d+\.\d+\.\d+\z/ } || "0.0.0"
+  end
+
+  # Increments and returns the version above the highest existing tag. Pass
+  # `major` or `minor` (or set the BUMP env var to one of those) to bump those
+  # components; anything else (or no value) increments patch.
   def increment_version(bump="")
-    major, minor, patch = last_git_tag.split('.').map(&:to_i)
+    major, minor, patch = highest_semver_tag.split('.').map(&:to_i)
 
     case bump.downcase
     when "major"
