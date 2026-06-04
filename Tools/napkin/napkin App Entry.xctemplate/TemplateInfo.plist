@@ -10,27 +10,13 @@
 	<key>DefaultCompletionName</key>
 	<string>SceneDelegate</string>
 	<key>Description</key>
-	<string>Generates the app entry point that builds LaunchComponent and launches the root napkin. Choose UIKit SceneDelegate or SwiftUI App lifecycle.</string>
+	<string>Generates the app entry point that launches the root napkin. Choose UIKit SceneDelegate or SwiftUI App lifecycle, then replace the "Root" placeholder with your launch napkin's name and uncomment the launch.</string>
 	<key>Kind</key>
 	<string>Xcode.IDEFoundation.TextSubstitutionFileTemplateKind</string>
 	<key>MainTemplateFiles</key>
 	<string>___FILEBASENAME___.swift</string>
 	<key>Options</key>
 	<array>
-		<dict>
-			<key>Description</key>
-			<string>The name of the launch (root) napkin this entry point builds — e.g. Root, Launch, App</string>
-			<key>Identifier</key>
-			<string>productName</string>
-			<key>Name</key>
-			<string>Launch napkin name:</string>
-			<key>NotPersisted</key>
-			<string>true</string>
-			<key>Required</key>
-			<string>true</string>
-			<key>Type</key>
-			<string>text</string>
-		</dict>
 		<dict>
 			<key>Default</key>
 			<string>false</string>
