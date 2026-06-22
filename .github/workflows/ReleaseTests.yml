@@ -16,7 +16,7 @@ jobs:
       DANGER_GITHUB_API_TOKEN: ${{secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Select Xcode
         # Plain Apple tooling, no third-party action. Glob picks the highest
         # Xcode 26.x.y installed on the runner so a runner-image refresh
