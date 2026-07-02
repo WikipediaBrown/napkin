@@ -1082,17 +1082,19 @@ bundle exec fastlane unit_test
 
 ### Runnable example app
 
-**Napkin's Rib House** under [`Examples/RibHouse`](Examples/RibHouse) is a runnable iOS app demonstrating the framework end-to-end: a headless `LaunchNapkin` holds an `AuthService`, swapping between a `LoggedOutNapkin` (Login button) and a `LoggedInNapkin` (user name + barbecue list).
+**Napkin's Rib House** under [`Examples/RibHouse`](Examples/RibHouse) is a runnable iOS app demonstrating the framework end-to-end: a headless `LaunchNapkin` holds an `AuthService`, swapping between a `LoggedOutNapkin` (Login button) and a `LoggedInNapkin` (user name + barbecue list). The app also exercises every recipe from [Streaming State Down the Tree](#streaming-state-down-the-tree), live: the Launch napkin's auth gate routes from `userStream()`, a `PitService` actor fans out to the LoggedIn header *and* a pushed Pit Board napkin, a headless Announcements napkin consumes the no-replay last-call stream, and the specials list arrives via `Observations`.
 
 <p align="center">
   <img src="Sources/napkin/napkin.docc/Resources/rib-house-logged-out.png" alt="LoggedOut napkin: paper-cream background with kicker '§ 00 · WELCOME', large serif headline 'Step inside the smokehouse', a lede, and an ink LOGIN button." width="300">
   &nbsp;&nbsp;
-  <img src="Sources/napkin/napkin.docc/Resources/rib-house-logged-in.png" alt="LoggedIn napkin: dark green-black background, '§ ∞ · SIGNED IN' kicker, italic 'Smokey Joe' wordmark, a numbered list of barbecue foods, and an outlined LOGOUT button." width="300">
+  <img src="Sources/napkin/napkin.docc/Resources/rib-house-logged-in.png" alt="LoggedIn napkin: dark green-black background, '§ ∞ · SIGNED IN' kicker, italic 'Smokey Joe' wordmark, a live 'LIVE FROM THE PIT · 2 SMOKING · 1 RESTING' summary line, a numbered list of barbecue foods, a filled PIT BOARD button, and an outlined LOGOUT button." width="300">
+  &nbsp;&nbsp;
+  <img src="Sources/napkin/napkin.docc/Resources/rib-house-pit-board.png" alt="Pit Board napkin: dark paper background, '§ 01 · THE PIT, LIVE' kicker, items grouped into LIGHTING / SMOKING / RESTING stage sections each with an amber stage label, a hairline rule, and a TODAY'S SPECIALS list of starred items." width="300">
 </p>
 
-<p align="center"><em>Left:</em> <code>LoggedOutNapkin</code> &nbsp;·&nbsp; <em>Right:</em> <code>LoggedInNapkin</code></p>
+<p align="center"><em>Left:</em> <code>LoggedOutNapkin</code> &nbsp;·&nbsp; <em>Center:</em> <code>LoggedInNapkin</code> &nbsp;·&nbsp; <em>Right:</em> <code>PitBoardNapkin</code></p>
 
-Both screenshots are the **reference images** from the example's snapshot tests (`Examples/RibHouse/SnapshotTests/__Snapshots__/`) — any visual regression in either view flips the test red. The `.xcodeproj` is tracked, so just:
+All three screenshots are the **reference images** from the example's snapshot tests (`Examples/RibHouse/SnapshotTests/__Snapshots__/`) — any visual regression in any of the three views flips the test red. The `.xcodeproj` is tracked, so just:
 
 ```bash
 open Examples/RibHouse/RibHouse.xcodeproj
