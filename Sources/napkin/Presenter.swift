@@ -96,6 +96,7 @@ public protocol Presentable: AnyObject {}
 ///
 /// ```swift
 /// @MainActor
+/// @Observable
 /// final class HomePresenter: Presenter<HomeViewController>, HomePresentable {
 ///
 ///     var displayName: String = ""
