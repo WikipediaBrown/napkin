@@ -129,6 +129,7 @@ struct LoggedInNapkinView: View {
         user: User(
             name: "Smokey Joe",
             barbecueFoods: ["Brisket", "Pulled Pork", "St. Louis Ribs", "Burnt Ends", "Smoked Sausage"]
-        )
+        ),
+        pitSummary: "2 SMOKING · 1 RESTING"
     )
 }

@@ -1089,7 +1089,7 @@ bundle exec fastlane unit_test
   &nbsp;&nbsp;
   <img src="Sources/napkin/napkin.docc/Resources/rib-house-logged-in.png" alt="LoggedIn napkin: dark green-black background, '§ ∞ · SIGNED IN' kicker, italic 'Smokey Joe' wordmark, a live 'LIVE FROM THE PIT · 2 SMOKING · 1 RESTING' summary line, a numbered list of barbecue foods, a filled PIT BOARD button, and an outlined LOGOUT button." width="300">
   &nbsp;&nbsp;
-  <img src="Sources/napkin/napkin.docc/Resources/rib-house-pit-board.png" alt="Pit Board napkin: dark paper background, '§ 01 · THE PIT, LIVE' kicker, items grouped into LIGHTING / SMOKING / RESTING stage sections each with an amber stage label, a hairline rule, and a TODAY'S SPECIALS list of starred items." width="300">
+  <img src="Sources/napkin/napkin.docc/Resources/rib-house-pit-board.png" alt="Pit Board napkin: dark green-black background, '§ 01 · THE PIT, LIVE' kicker, items grouped into LIGHTING / SMOKING / RESTING stage sections each with an amber stage label, a hairline rule, and a TODAY'S SPECIALS list of starred items." width="300">
 </p>
 
 <p align="center"><em>Left:</em> <code>LoggedOutNapkin</code> &nbsp;·&nbsp; <em>Center:</em> <code>LoggedInNapkin</code> &nbsp;·&nbsp; <em>Right:</em> <code>PitBoardNapkin</code></p>

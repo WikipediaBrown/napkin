@@ -86,6 +86,7 @@ final actor LoggedInNapkinInteractor: PresentableInteractable, LoggedInNapkinPre
         // timer — acceptable for the demo, and the next event re-shows it.
         task {
             try? await Task.sleep(for: .seconds(3))
+            if Task.isCancelled { return }
             await self.presenter.present(banner: nil)
         }
     }

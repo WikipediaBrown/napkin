@@ -1,8 +1,7 @@
 import SwiftUI
-import napkin
 
 struct PitBoardNapkinView: View {
-    var presenter: PitBoardNapkinPresenter?
+    weak var presenter: PitBoardNapkinPresenter?
 
     var body: some View {
         ZStack {
