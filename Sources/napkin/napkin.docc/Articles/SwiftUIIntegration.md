@@ -38,7 +38,7 @@ final class HomePresenter: Presenter<HomeViewController>, HomePresentable {
 }
 ```
 
-The SwiftUI view receives the presenter as a `@Bindable` and reads stored properties directly. SwiftUI invalidates only the parts of the view that read mutated properties.
+The SwiftUI view holds the presenter weakly — the presenter owns the view controller that owns the view, so a strong stored reference would be a retain cycle — and reads its `@Observable` properties directly, rebinding with `@Bindable` inside `body` only when it needs two-way bindings. SwiftUI invalidates only the parts of the view that read mutated properties.
 
 ```swift
 struct HomeView: View {
@@ -60,7 +60,7 @@ struct HomeView: View {
 }
 ```
 
-**Why `@Bindable` and not `@ObservedObject`.** `@Observable` types are not `ObservableObject`. Use `@Bindable` for two-way bindings (`$presenter.foo`) or read directly via `presenter.foo`. There is no `.environmentObject` plumbing — the presenter is just passed in as a property.
+**Why Observation and not `@ObservedObject`.** `@Observable` types are not `ObservableObject` — Observation tracks reads on its own, so no property wrapper is needed to observe: read directly via `presenter?.foo`. For two-way bindings, rebind inside `body` (`if let presenter { @Bindable var presenter = presenter; ... $presenter.foo ... }`). There is no `.environmentObject` plumbing — the presenter is just passed in as a property.
 
 **Why `@MainActor` on the presenter.** SwiftUI reads from `@Observable` synchronously during `body` evaluation. The presenter's storage must be readable on the main actor. Marking the class `@MainActor` makes that guarantee explicit.
 

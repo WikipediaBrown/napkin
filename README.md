@@ -713,7 +713,7 @@ final actor ProfileInteractor: PresentableInteractable {
 }
 ```
 
-The presenter *is* the view model. Its `@Observable` stored property replaces the subject, the `assign`, the nested `ObservableObject`, and the `receive(on: main)` — SwiftUI reads it directly: Hold it weakly — the presenter owns the view controller that owns the view; rebind with `@Bindable` inside `body` when you need two-way bindings.
+The presenter *is* the view model. Its `@Observable` stored property replaces the subject, the `assign`, the nested `ObservableObject`, and the `receive(on: main)` — SwiftUI reads it directly. Hold the presenter weakly (it owns the view controller that owns the view), and rebind with `@Bindable` inside `body` when you need two-way bindings:
 
 ```swift
 @MainActor
@@ -1022,7 +1022,7 @@ protocol HomePresentableListener: AnyObject, Sendable {
 }
 
 struct HomeView: View {
-    @Bindable var presenter: HomePresenter
+    weak var presenter: HomePresenter?
     weak var listener: HomePresentableListener?
 
     var body: some View {
