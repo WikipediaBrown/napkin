@@ -57,6 +57,7 @@ Build-time injection covers initial values; for *ongoing* values, Combine users 
 | `.receive(on: DispatchQueue.main)` | `await presenter.…` | The presenter is `@MainActor`; the crossing is explicit |
 | `assign(to:on:)` / nested `ObservableObject` view model | Set the `@Observable` presenter property; SwiftUI reads via `@Bindable` | The view-model layer disappears |
 | `tapSubject` on the SwiftUI view + `.sink` in the VC | `dispatch { await listener?.didTapX() }` | Already documented in [SwiftUI Integration](#swiftui-integration) |
+| `publisher(for: \.keyPath)` (KVO on UIKit objects) | The UIKit override/callback KVO was wrapping + `dispatch {}` | Not every pipe becomes a stream |
 | `combineLatest` / `merge` / `debounce` / `removeDuplicates` | [swift-async-algorithms](https://github.com/apple/swift-async-algorithms) | Official Apple package, not stdlib |
 
 #### 3. Worked example — the spine: auth state from service to screen (all four seams)
@@ -173,6 +174,21 @@ Two seam-3 nuances from the reference app, each one sentence in the README:
 - **Where formatting lives**: 0.x ran `compactMap { currencyFormatter.string(from:) }` inside the VC's pipelines; in 2.x that transform belongs in the presenter method (`present(total:)` formats, then sets the stored property) — which is the `Presenter` class's stated job.
 
 Seam 4 (view → interactor: 0.x `tapSubject` + `.sink` in the hosting controller → 2.x `dispatch { await listener?.didTapX() }`) is already documented in the SwiftUI Integration section — one sentence + link, no repeated code.
+
+**Complex situations (from the reference app's Profile napkin)** — a short "Not everything becomes a stream" callout plus three one-liners:
+
+- **System-signal pipelines.** 0.x used `publisher(for: \.parent)` (KVO on a UIKit property) to detect the VC being popped and notify the interactor. 2.x uses the callback KVO was wrapping — with a ~6-line snippet, the only code in this block:
+  ```swift
+  override func didMove(toParent parent: UIViewController?) {
+      super.didMove(toParent: parent)
+      if parent == nil {
+          dispatch { [listener] in await listener?.didDismiss() }
+      }
+  }
+  ```
+- **Many subjects, one presenter.** Parallel subjects (`institutions`, `privateRank`, `user`) collapse into stored properties on a single `@Observable` presenter — several pipes become several properties, not several streams. Collections included: `var institutions: [Institution]` drives `ForEach` directly, and per-subview `ViewModel` construction disappears (child views take presenter properties as plain values).
+- **Tap enums with associated values** (`case institution(itemId:institutionId:)`) become listener methods with parameters — the enum + switch ceremony deletes.
+- **Animations.** `.transition`/`.animation(value:)` on the view keep working; where 0.x relied on implicit animation from `objectWillChange`, wrap the mutation in `withAnimation` inside the presenter method (it's `@MainActor`, so this is legal and local).
 
 A short **"seam by seam"** intro sentence frames the four crossings before the code so readers can map their own app onto it: service → interactor (`task { for await }`), interactor → presenter (`await` async method), presenter → view (`@Observable` + `@Bindable`), view → interactor (`dispatch`).
 
