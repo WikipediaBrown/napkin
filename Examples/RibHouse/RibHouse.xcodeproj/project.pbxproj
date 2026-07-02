@@ -22,6 +22,7 @@
 		752D0DCE309368D214FCD65B /* testLoggedOutNapkinView.1.png in Resources */ = {isa = PBXBuildFile; fileRef = 2DE9353E27F489402562E5D1 /* testLoggedOutNapkinView.1.png */; };
 		77CF0006F08D0E2A9F952814 /* LaunchNapkinHostingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B36063DF066C53EEF1195FB0 /* LaunchNapkinHostingViewController.swift */; };
 		7D805B5BF07263367390AF4A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BC68A44DF4CAF7F6FC6C1A5 /* AppDelegate.swift */; };
+		7E41C897297B6E9A88A0C2FB /* LoggedInNapkinNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4988A129C87187AE4D12BCB3 /* LoggedInNapkinNavigationController.swift */; };
 		8710F1015FBC6673BE75F619 /* napkin in Frameworks */ = {isa = PBXBuildFile; productRef = 6716A7B18CBA938557EB5049 /* napkin */; };
 		8CA664742483776B6807D70C /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 61EBF7A28A5D8AC060FFCC1C /* SnapshotTesting */; };
 		974E0E86A4F48ED077EE4C54 /* SpecialsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C18FCBA4FA10B11CBD6A9CE6 /* SpecialsService.swift */; };
@@ -67,6 +68,7 @@
 		320B423566EB1A3D1494D67D /* AccessibilityIdentifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityIdentifiers.swift; sourceTree = "<group>"; };
 		45B0D14F833CB795853874A3 /* RibHouseUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RibHouseUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		493C24891CB2AFA177AAAE4C /* LoggedInNapkinViewSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedInNapkinViewSnapshotTests.swift; sourceTree = "<group>"; };
+		4988A129C87187AE4D12BCB3 /* LoggedInNapkinNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedInNapkinNavigationController.swift; sourceTree = "<group>"; };
 		5C315556B6222F6EC58B93D9 /* RibHouse.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = RibHouse.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		67BDD04B5EAC54134C4BD833 /* LoggedOutNapkinBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedOutNapkinBuilder.swift; sourceTree = "<group>"; };
 		6AABB03AE1D9597A0885E2B7 /* LaunchNapkinInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchNapkinInteractor.swift; sourceTree = "<group>"; };
@@ -249,6 +251,7 @@
 				A8C631D2076B45AB0F5B4AD3 /* LoggedInNapkinBuilder.swift */,
 				8D4C510BF52F45481E411302 /* LoggedInNapkinHostingViewController.swift */,
 				FAE5780F3790B916A2CEC0B0 /* LoggedInNapkinInteractor.swift */,
+				4988A129C87187AE4D12BCB3 /* LoggedInNapkinNavigationController.swift */,
 				239E398530140496F4C36C5D /* LoggedInNapkinRouter.swift */,
 				9B75A61491224CFA53ED9D9E /* LoggedInNapkinView.swift */,
 			);
@@ -401,6 +404,7 @@
 				B01577ED137F0D9CDB777B55 /* LoggedInNapkinBuilder.swift in Sources */,
 				322B60AA5468BAEFAA6C140B /* LoggedInNapkinHostingViewController.swift in Sources */,
 				C3AFE4684494D89A143B703C /* LoggedInNapkinInteractor.swift in Sources */,
+				7E41C897297B6E9A88A0C2FB /* LoggedInNapkinNavigationController.swift in Sources */,
 				3769C0C8CE9F5212C4EA28BC /* LoggedInNapkinRouter.swift in Sources */,
 				F1D4358FE7689495C4823080 /* LoggedInNapkinView.swift in Sources */,
 				3EDE8AF5B1BEECC93A8BC13B /* LoggedOutNapkinBuilder.swift in Sources */,

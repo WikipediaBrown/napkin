@@ -1,16 +1,16 @@
 import napkin
 
 protocol LoggedInNapkinDependency: Dependency {
-    // The AuthService is required from above (LaunchNapkin's component
-    // satisfies it). Declaring it here means the LoggedInNapkin can reach
-    // the service if it ever needs to call it directly — even though right
-    // now only LaunchInteractor invokes login/logout.
+    // Threaded from the AppComponent through the LaunchNapkin. The pit
+    // powers the live summary here and the PitBoard child.
     var authService: AuthService { get }
+    var pitService: PitService { get }
 }
 
 final class LoggedInNapkinComponent: Component<LoggedInNapkinDependency>, @unchecked Sendable {
 
     var authService: AuthService { dependency.authService }
+    var pitService: PitService { dependency.pitService }
 }
 
 protocol LoggedInNapkinBuildable: Buildable {
@@ -31,11 +31,17 @@ final class LoggedInNapkinBuilder: Builder<LoggedInNapkinDependency>, LoggedInNa
         withListener listener: LoggedInNapkinListener,
         user: User
     ) async -> LoggedInNapkinRouting {
-        let viewController = LoggedInNapkinViewController(user: user)
-        let interactor = LoggedInNapkinInteractor(presenter: viewController, user: user)
+        let component = LoggedInNapkinComponent(dependency: dependency)
+        let hosting = LoggedInNapkinViewController(user: user)
+        let navigation = LoggedInNapkinNavigationController(root: hosting)
+        let interactor = LoggedInNapkinInteractor(
+            presenter: hosting,
+            user: user,
+            pitService: component.pitService
+        )
         let router = LoggedInNapkinRouter(
             interactor: interactor,
-            viewController: viewController,
+            viewController: navigation,
             user: user
         )
         await interactor.wire(router: router, listener: listener)

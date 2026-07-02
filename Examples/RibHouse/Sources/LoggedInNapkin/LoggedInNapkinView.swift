@@ -3,6 +3,7 @@ import napkin
 
 struct LoggedInNapkinView: View {
     let user: User
+    var pitSummary: String = ""
     weak var listener: LoggedInNapkinPresentableListener?
 
     var body: some View {
@@ -32,6 +33,18 @@ struct LoggedInNapkinView: View {
                 Rectangle()
                     .fill(Palette.Dark.ink3.opacity(0.35))
                     .frame(height: 1)
+
+                if !pitSummary.isEmpty {
+                    HStack(spacing: 6) {
+                        Text("LIVE FROM THE PIT")
+                        Text("·").foregroundStyle(Palette.Dark.ink3.opacity(0.5))
+                        Text(pitSummary).foregroundStyle(Palette.Dark.amber)
+                    }
+                    .font(.system(.caption, design: .monospaced))
+                    .tracking(2)
+                    .foregroundStyle(Palette.Dark.ink3)
+                    .accessibilityIdentifier(NapkinAccessibility.LoggedIn.pitSummary)
+                }
 
                 Text("BARBECUE FOODS")
                     .font(.system(.caption, design: .monospaced))

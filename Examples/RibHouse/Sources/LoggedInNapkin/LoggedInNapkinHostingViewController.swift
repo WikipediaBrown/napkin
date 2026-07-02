@@ -12,6 +12,10 @@ protocol LoggedInNapkinPresentableListener: AnyObject, Sendable {
         didSet { rootView.listener = listener }
     }
 
+    func present(pitSummary: String) async {
+        rootView.pitSummary = pitSummary
+    }
+
     init(user: User) {
         super.init(rootView: LoggedInNapkinView(user: user))
     }
@@ -27,6 +31,10 @@ protocol LoggedInNapkinPresentableListener: AnyObject, Sendable {
         didSet { rootView.listener = listener }
     }
 
+    func present(pitSummary: String) async {
+        rootView.pitSummary = pitSummary
+    }
+
     init(user: User) {
         super.init(rootView: LoggedInNapkinView(user: user))
     }
@@ -36,5 +44,3 @@ protocol LoggedInNapkinPresentableListener: AnyObject, Sendable {
     }
 }
 #endif
-
-extension LoggedInNapkinViewController: LoggedInNapkinViewControllable {}
