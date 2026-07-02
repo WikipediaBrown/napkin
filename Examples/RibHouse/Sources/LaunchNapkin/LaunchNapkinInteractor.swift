@@ -30,7 +30,19 @@ final actor LaunchNapkinInteractor:
     }
 
     func didBecomeActive() async {
-        await router?.attachLoggedOut()
+        // The auth gate: routing follows auth state, not taps. The stream
+        // replays the current value (nil at launch), which is what attaches
+        // the LoggedOut napkin. Bound to the active scope — cancelled
+        // automatically on willResignActive.
+        task {
+            for await user in await self.authService.userStream() {
+                if let user {
+                    await self.router?.attachLoggedIn(user: user)
+                } else {
+                    await self.router?.attachLoggedOut()
+                }
+            }
+        }
     }
 
     func willResignActive() async {}
@@ -39,8 +51,8 @@ final actor LaunchNapkinInteractor:
 
     func loggedOutDidTapLogin() async {
         do {
-            let user = try await authService.login()
-            await router?.attachLoggedIn(user: user)
+            _ = try await authService.login()
+            // No routing here — the gate above reacts to the stream.
         } catch {
             // Login failed — stay on the logged-out screen. Real apps would
             // surface an alert; we keep this demo silent.
@@ -50,7 +62,7 @@ final actor LaunchNapkinInteractor:
     // MARK: - LoggedInNapkinListener
 
     func loggedInDidTapLogout() async {
+        // Routing happens via the stream, same as login.
         try? await authService.logout()
-        await router?.attachLoggedOut()
     }
 }

@@ -2,18 +2,24 @@ import napkin
 
 protocol LaunchNapkinDependency: Dependency {
     // The AuthService is provided by the app's root component (AppComponent
-    // in SceneDelegate) and threaded through here. The LaunchNapkin holds
-    // the service and exposes it to its interactor; child napkins never see it.
+    // in SceneDelegate) and threaded through here. authService stays at this
+    // level (only the gate calls login/logout); pitService and
+    // specialsService are forwarded down the Dependency chain to LoggedIn
+    // and its children.
     var authService: AuthService { get }
+    var pitService: PitService { get }
+    var specialsService: SpecialsService { get }
 }
 
 final class LaunchNapkinComponent: Component<LaunchNapkinDependency>, @unchecked Sendable {
 
     var authService: AuthService { dependency.authService }
+    var pitService: PitService { dependency.pitService }
+    var specialsService: SpecialsService { dependency.specialsService }
 }
 
-// Child napkin dependency protocols are empty, so the LaunchNapkin's
-// component trivially satisfies them.
+// LoggedInNapkinDependency requires the shared services; the component
+// satisfies it by forwarding them from the AppComponent above.
 extension LaunchNapkinComponent: LoggedOutNapkinDependency, LoggedInNapkinDependency {}
 
 protocol LaunchNapkinBuildable: Buildable {

@@ -1,28 +1,35 @@
 import napkin
 
 @MainActor
-protocol LoggedInNapkinRouting: ViewableRouting, Sendable {}
+protocol LoggedInNapkinRouting: ViewableRouting, Sendable {
+    func attachPitBoard() async
+    func detachPitBoard() async
+}
 
 protocol LoggedInNapkinPresentable: Presentable, Sendable {
     @MainActor var listener: LoggedInNapkinPresentableListener? { get set }
+    func present(pitSummary: String) async
+    func present(banner: String?) async
 }
 
 protocol LoggedInNapkinListener: AnyObject, Sendable {
     func loggedInDidTapLogout() async
 }
 
-final actor LoggedInNapkinInteractor: PresentableInteractable, LoggedInNapkinPresentableListener {
+final actor LoggedInNapkinInteractor: PresentableInteractable, LoggedInNapkinPresentableListener, AnnouncementsNapkinListener, PitBoardNapkinListener {
 
     nonisolated let lifecycle = InteractorLifecycle()
     nonisolated let presenter: LoggedInNapkinPresentable
     nonisolated let user: User
+    nonisolated let pitService: PitService
 
     weak var router: LoggedInNapkinRouting?
     weak var listener: LoggedInNapkinListener?
 
-    init(presenter: LoggedInNapkinPresentable, user: User) {
+    init(presenter: LoggedInNapkinPresentable, user: User, pitService: PitService) {
         self.presenter = presenter
         self.user = user
+        self.pitService = pitService
     }
 
     func wire(router: LoggedInNapkinRouting?, listener: LoggedInNapkinListener?) {
@@ -33,9 +40,24 @@ final actor LoggedInNapkinInteractor: PresentableInteractable, LoggedInNapkinPre
     func didBecomeActive() async {
         let presenter = self.presenter
         await MainActor.run { presenter.listener = self }
+
+        // The pit runs only while someone is logged in.
+        await pitService.start()
+
+        // Fan-out subscriber #1: reduce each board snapshot to the header
+        // summary. The transform lives in the loop body — this is where a
+        // Combine `.map` went. Cancelled automatically on deactivate.
+        task {
+            for await items in await self.pitService.updates() {
+                let smoking = items.count(where: { $0.stage == .smoking })
+                let resting = items.count(where: { $0.stage == .resting })
+                await self.presenter.present(pitSummary: "\(smoking) SMOKING · \(resting) RESTING")
+            }
+        }
     }
 
     func willResignActive() async {
+        await pitService.stop()
         let presenter = self.presenter
         await MainActor.run { presenter.listener = nil }
     }
@@ -44,5 +66,28 @@ final actor LoggedInNapkinInteractor: PresentableInteractable, LoggedInNapkinPre
 
     func didTapLogout() async {
         await listener?.loggedInDidTapLogout()
+    }
+
+    func didTapPitBoard() async {
+        await router?.attachPitBoard()
+    }
+
+    // MARK: - PitBoardNapkinListener
+
+    func pitBoardNapkinDidDismiss() async {
+        await router?.detachPitBoard()
+    }
+
+    // MARK: - AnnouncementsNapkinListener
+
+    func announcementsNapkinDidHearLastCall(itemName: String) async {
+        await presenter.present(banner: "LAST CALL · \(itemName)")
+        // Auto-clear. A newer banner may be cleared early by an older
+        // timer — acceptable for the demo, and the next event re-shows it.
+        task {
+            try? await Task.sleep(for: .seconds(3))
+            if Task.isCancelled { return }
+            await self.presenter.present(banner: nil)
+        }
     }
 }

@@ -3,6 +3,7 @@ import SwiftUI
 
 protocol LoggedInNapkinPresentableListener: AnyObject, Sendable {
     func didTapLogout() async
+    func didTapPitBoard() async
 }
 
 #if canImport(UIKit)
@@ -10,6 +11,16 @@ protocol LoggedInNapkinPresentableListener: AnyObject, Sendable {
 
     weak var listener: LoggedInNapkinPresentableListener? {
         didSet { rootView.listener = listener }
+    }
+
+    func present(pitSummary: String) async {
+        rootView.pitSummary = pitSummary
+    }
+
+    func present(banner: String?) async {
+        withAnimation(.easeInOut(duration: 0.25)) {
+            rootView.banner = banner
+        }
     }
 
     init(user: User) {
@@ -27,6 +38,16 @@ protocol LoggedInNapkinPresentableListener: AnyObject, Sendable {
         didSet { rootView.listener = listener }
     }
 
+    func present(pitSummary: String) async {
+        rootView.pitSummary = pitSummary
+    }
+
+    func present(banner: String?) async {
+        withAnimation(.easeInOut(duration: 0.25)) {
+            rootView.banner = banner
+        }
+    }
+
     init(user: User) {
         super.init(rootView: LoggedInNapkinView(user: user))
     }
@@ -36,5 +57,3 @@ protocol LoggedInNapkinPresentableListener: AnyObject, Sendable {
     }
 }
 #endif
-
-extension LoggedInNapkinViewController: LoggedInNapkinViewControllable {}
