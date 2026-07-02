@@ -193,9 +193,12 @@ final class ProfilePresenter: Presenter<ProfileViewController>, ProfilePresentab
 }
 
 struct ProfileView: View {
-    @Bindable var presenter: ProfilePresenter
+    // Weak: the presenter owns the view controller, which owns this view —
+    // a strong reference here would be a retain cycle. The interactor keeps
+    // the presenter alive for the napkin's whole attached lifetime.
+    weak var presenter: ProfilePresenter?
 
     var body: some View {
-        Text(presenter.greeting)
+        Text(presenter?.greeting ?? "")
     }
 }

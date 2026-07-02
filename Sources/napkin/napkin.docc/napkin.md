@@ -64,6 +64,7 @@ A runnable end-to-end reference, **Napkin's Rib House**, lives at `Examples/RibH
 - <doc:TutorialBuildingALoginFlow>
 - <doc:DefiningAFeature>
 - <doc:MigratingFromV0>
+- <doc:StreamingStateDownTheTree>
 
 ### Tutorials
 
