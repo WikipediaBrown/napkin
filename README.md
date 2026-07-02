@@ -891,7 +891,7 @@ final class ProfileViewController: UIViewController {
 
 Tap enums with associated values (`case institution(itemId:institutionId:)`) get the same treatment: they become listener methods with parameters, and the enum-plus-`switch` ceremony deletes.
 
-For operator-heavy pipelines — `combineLatest`, `merge`, `debounce`, `removeDuplicates` — reach for [swift-async-algorithms](https://github.com/apple/swift-async-algorithms), Apple's official package of `AsyncSequence` algorithms. Migration mechanics beyond streaming live in [Migrating from v0](https://getnapkin.to/documentation/napkin/migratingfromv0); lifecycle binding rules in [the lifecycle guide](https://getnapkin.to/documentation/napkin/lifecycle); the `task {}` vs `Task {}` decision rules in [Cross-Isolation Patterns](https://getnapkin.to/documentation/napkin/crossisolationpatterns).
+For operator-heavy pipelines — `combineLatest`, `merge`, `debounce`, `removeDuplicates` — reach for [swift-async-algorithms](https://github.com/apple/swift-async-algorithms), Apple's official package of `AsyncSequence` algorithms. Migration mechanics beyond streaming live in [Migrating from v0](https://getnapkin.to/documentation/napkin/migratingfromv0); lifecycle binding rules in [the lifecycle guide](https://getnapkin.to/documentation/napkin/lifecycle); the `task {}` vs `Task {}` decision rules in [Cross-Isolation Patterns](https://getnapkin.to/documentation/napkin/crossisolationpatterns). This section also lives as a DocC article: [Streaming State Down the Tree](https://getnapkin.to/documentation/napkin/streamingstatedownthetree).
 
 ## Launching the App
 

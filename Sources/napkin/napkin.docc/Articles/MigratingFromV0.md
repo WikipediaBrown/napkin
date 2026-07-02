@@ -229,6 +229,8 @@ A typical v0.x file set on the left, the v2.0.0 equivalent on the right. Treat e
 | `protocol HomeListener { func homeDidLogout() }` | `protocol HomeListener: AnyObject, Sendable { func homeDidLogout() async }` | Listeners cross isolation domains (parent's actor). They are `Sendable` and their methods are `async`. |
 | `attachChild(r)` (sync) | `await attachChild(r)` | ``Routing/attachChild(_:)`` is `async` because it awaits the child's ``Interactable/activate()``. |
 | `super.init(interactor: interactor, viewController: viewController)` in router | Same | ``ViewableRouter`` is still a class; this initializer is unchanged. |
+| `CurrentValueSubject` on a service | `actor` service vending replay-latest `AsyncStream`s (fresh stream per subscriber) | Producer recipes in <doc:StreamingStateDownTheTree>. |
+| `PassthroughSubject` | The same fan-out actor, minus the initial `yield` | No replay. |
 
 ## What you don't have to change
 

@@ -11,6 +11,7 @@
 - [Adding a Networked Service](https://getnapkin.to/documentation/napkin/addinganetworkedservice): Swap the example's BarbecueAuthService mock for a real URLSession-backed implementation. The napkin tree above the service doesn't change.
 - [Tab Bar Napkin](https://getnapkin.to/documentation/napkin/tabbarnapkin): Concurrent routing pattern — a parent napkin holds N child napkin builders, all attached at once, hosted in a UITabBarController.
 - [Migrating from V0](https://getnapkin.to/documentation/napkin/migratingfromv0): Side-by-side diffs for converting older RIBs/Combine code to napkin's Swift Concurrency idioms.
+- [Streaming State Down the Tree](https://getnapkin.to/documentation/napkin/streamingstatedownthetree): Replacing `CurrentValueSubject`/`PassthroughSubject`/`@Published` with actor-owned `AsyncStream`s and `Observations`, consumed via lifecycle-bound `task {}`.
 
 ## Architecture
 
