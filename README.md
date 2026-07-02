@@ -493,7 +493,7 @@ Data flows down the napkin tree; events flow up through listener protocols. Buil
 | `.sink {}.store(in: &cancellables)` | `task { for await … }` | Auto-cancelled on deactivate |
 | `.subscribe(presenter.someSubject)` | `await presenter.present(…)` in the loop body | Presentable protocols expose async methods, not subjects |
 | `.catch` / `.retry` / subject `reset()` | `async throws` at the call site | Streams carry state, not failure; they never terminate on error |
-| `.catch { presentError(…); return Just(fallback) }` | `do { for try await … } catch { await presenter.presentError(…) }` | Same terminal semantics as Combine's `.catch`-with-replacement |
+| `.catch { presentError(…); return Just(fallback) }` | `do { for try await … } catch { await presenter.presentError(…) }` | Both are terminal — emit a fallback in the `catch` if you need one |
 | `.map` / transforms mid-pipeline | Plain code in the loop body | It's just a `for` loop |
 | `.receive(on: DispatchQueue.main)` | `await presenter.…` | The presenter is `@MainActor`; the crossing is explicit |
 | `assign(to:on:)` / nested `ObservableObject` view model | Set the `@Observable` presenter property; SwiftUI reads via `@Bindable` | The view-model layer disappears |
@@ -653,7 +653,7 @@ One value crosses four seams on its way to a pixel: service → interactor (`tas
 ```swift
 // The presentable protocol exposed subjects…
 protocol ProfilePresentable: Presentable {
-    var greeting: PassthroughSubject<String?, Never> { get }
+    var greeting: PassthroughSubject<String, Never> { get }
 }
 
 // …the interactor piped into them…
