@@ -168,6 +168,10 @@ struct ProfileView: View {
 }
 ```
 
+Two seam-3 nuances from the reference app, each one sentence in the README:
+- **Mixed UIKit + SwiftUI presentation**: the reference hosting controller feeds UIKit chrome (`assign(to: \.navigationItem.title)`, a bar-button label) and the SwiftUI view model from the same subjects. In 2.x the same `@Observable` presenter serves both — `@Bindable` for SwiftUI, `Observations {}` for UIKit chrome (link to SwiftUI Integration, which documents it).
+- **Where formatting lives**: 0.x ran `compactMap { currencyFormatter.string(from:) }` inside the VC's pipelines; in 2.x that transform belongs in the presenter method (`present(total:)` formats, then sets the stored property) — which is the `Presenter` class's stated job.
+
 Seam 4 (view → interactor: 0.x `tapSubject` + `.sink` in the hosting controller → 2.x `dispatch { await listener?.didTapX() }`) is already documented in the SwiftUI Integration section — one sentence + link, no repeated code.
 
 A short **"seam by seam"** intro sentence frames the four crossings before the code so readers can map their own app onto it: service → interactor (`task { for await }`), interactor → presenter (`await` async method), presenter → view (`@Observable` + `@Bindable`), view → interactor (`dispatch`).
