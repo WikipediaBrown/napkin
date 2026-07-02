@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0C5ABE7179DB67B389230193 /* testLoggedInNapkinView.1.png in Resources */ = {isa = PBXBuildFile; fileRef = 9BC63029399977C81D2A46F9 /* testLoggedInNapkinView.1.png */; };
+		19FFB6A77A25B853665CCFC6 /* PitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13458418AC1636B662194B4B /* PitService.swift */; };
 		1AC8B8B631F899BBE376F1D8 /* LoggedOutNapkinHostingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B64F94C52DD640F2FA48BFC1 /* LoggedOutNapkinHostingViewController.swift */; };
 		322B60AA5468BAEFAA6C140B /* LoggedInNapkinHostingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4C510BF52F45481E411302 /* LoggedInNapkinHostingViewController.swift */; };
 		3769C0C8CE9F5212C4EA28BC /* LoggedInNapkinRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 239E398530140496F4C36C5D /* LoggedInNapkinRouter.swift */; };
@@ -17,10 +19,12 @@
 		4EEDC47C5C40A335C40F1673 /* AccessibilityIdentifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320B423566EB1A3D1494D67D /* AccessibilityIdentifiers.swift */; };
 		5022237B891086C1CDE262CD /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D9F460D1E15A72658F681D /* User.swift */; };
 		6F47F9C8B8FFC6E554BEC22B /* LoggedOutNapkinViewSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAC1EDA12E27599882A8CD8A /* LoggedOutNapkinViewSnapshotTests.swift */; };
+		752D0DCE309368D214FCD65B /* testLoggedOutNapkinView.1.png in Resources */ = {isa = PBXBuildFile; fileRef = 2DE9353E27F489402562E5D1 /* testLoggedOutNapkinView.1.png */; };
 		77CF0006F08D0E2A9F952814 /* LaunchNapkinHostingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B36063DF066C53EEF1195FB0 /* LaunchNapkinHostingViewController.swift */; };
 		7D805B5BF07263367390AF4A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BC68A44DF4CAF7F6FC6C1A5 /* AppDelegate.swift */; };
 		8710F1015FBC6673BE75F619 /* napkin in Frameworks */ = {isa = PBXBuildFile; productRef = 6716A7B18CBA938557EB5049 /* napkin */; };
 		8CA664742483776B6807D70C /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 61EBF7A28A5D8AC060FFCC1C /* SnapshotTesting */; };
+		974E0E86A4F48ED077EE4C54 /* SpecialsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C18FCBA4FA10B11CBD6A9CE6 /* SpecialsService.swift */; };
 		98FCA22750635CFF3EFA5E36 /* AccessibilityIdentifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320B423566EB1A3D1494D67D /* AccessibilityIdentifiers.swift */; };
 		B01577ED137F0D9CDB777B55 /* LoggedInNapkinBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C631D2076B45AB0F5B4AD3 /* LoggedInNapkinBuilder.swift */; };
 		B6EADD163EA2021FCB71764E /* LoggedOutNapkinRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3A35A4291E0731E86967071 /* LoggedOutNapkinRouter.swift */; };
@@ -55,9 +59,11 @@
 
 /* Begin PBXFileReference section */
 		07D96E571C4BEF4D2B06FBBC /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
+		13458418AC1636B662194B4B /* PitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitService.swift; sourceTree = "<group>"; };
 		239E398530140496F4C36C5D /* LoggedInNapkinRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedInNapkinRouter.swift; sourceTree = "<group>"; };
 		2926F18DC49F1A86742F7710 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		2BC68A44DF4CAF7F6FC6C1A5 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		2DE9353E27F489402562E5D1 /* testLoggedOutNapkinView.1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = testLoggedOutNapkinView.1.png; sourceTree = "<group>"; };
 		320B423566EB1A3D1494D67D /* AccessibilityIdentifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityIdentifiers.swift; sourceTree = "<group>"; };
 		45B0D14F833CB795853874A3 /* RibHouseUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RibHouseUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		493C24891CB2AFA177AAAE4C /* LoggedInNapkinViewSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedInNapkinViewSnapshotTests.swift; sourceTree = "<group>"; };
@@ -68,6 +74,7 @@
 		8D4C510BF52F45481E411302 /* LoggedInNapkinHostingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedInNapkinHostingViewController.swift; sourceTree = "<group>"; };
 		9A126B8212368800A9093A53 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		9B75A61491224CFA53ED9D9E /* LoggedInNapkinView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedInNapkinView.swift; sourceTree = "<group>"; };
+		9BC63029399977C81D2A46F9 /* testLoggedInNapkinView.1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = testLoggedInNapkinView.1.png; sourceTree = "<group>"; };
 		A236832A9C4F60936AA218A3 /* RibHouseUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RibHouseUITests.swift; sourceTree = "<group>"; };
 		A8C631D2076B45AB0F5B4AD3 /* LoggedInNapkinBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedInNapkinBuilder.swift; sourceTree = "<group>"; };
 		B36063DF066C53EEF1195FB0 /* LaunchNapkinHostingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchNapkinHostingViewController.swift; sourceTree = "<group>"; };
@@ -76,6 +83,7 @@
 		B64F94C52DD640F2FA48BFC1 /* LoggedOutNapkinHostingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedOutNapkinHostingViewController.swift; sourceTree = "<group>"; };
 		BF72016881F53FB3C3AAD0B0 /* LoggedOutNapkinView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedOutNapkinView.swift; sourceTree = "<group>"; };
 		C10604EDC0C0069797CF9EA1 /* LoggedOutNapkinInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedOutNapkinInteractor.swift; sourceTree = "<group>"; };
+		C18FCBA4FA10B11CBD6A9CE6 /* SpecialsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecialsService.swift; sourceTree = "<group>"; };
 		CE22BFA5F10EB7948775CEC0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		D0D9F460D1E15A72658F681D /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		D106F592FFCACFF5FE08F2BD /* RibHouseSnapshotTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RibHouseSnapshotTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -111,6 +119,8 @@
 				320B423566EB1A3D1494D67D /* AccessibilityIdentifiers.swift */,
 				2926F18DC49F1A86742F7710 /* AuthService.swift */,
 				07D96E571C4BEF4D2B06FBBC /* Palette.swift */,
+				13458418AC1636B662194B4B /* PitService.swift */,
+				C18FCBA4FA10B11CBD6A9CE6 /* SpecialsService.swift */,
 				D0D9F460D1E15A72658F681D /* User.swift */,
 			);
 			path = Shared;
@@ -122,6 +132,23 @@
 				A236832A9C4F60936AA218A3 /* RibHouseUITests.swift */,
 			);
 			path = UITests;
+			sourceTree = "<group>";
+		};
+		3340665545CD55225BAC654E /* __Snapshots__ */ = {
+			isa = PBXGroup;
+			children = (
+				3F5AA51C745BABA1CD539060 /* LoggedInNapkinViewSnapshotTests */,
+				B950D60A168D1DD8C5194606 /* LoggedOutNapkinViewSnapshotTests */,
+			);
+			path = __Snapshots__;
+			sourceTree = "<group>";
+		};
+		3F5AA51C745BABA1CD539060 /* LoggedInNapkinViewSnapshotTests */ = {
+			isa = PBXGroup;
+			children = (
+				9BC63029399977C81D2A46F9 /* testLoggedInNapkinView.1.png */,
+			);
+			path = LoggedInNapkinViewSnapshotTests;
 			sourceTree = "<group>";
 		};
 		4308B847A286CC0B0FBB8C22 /* Sources */ = {
@@ -186,11 +213,20 @@
 			name = Packages;
 			sourceTree = "<group>";
 		};
+		B950D60A168D1DD8C5194606 /* LoggedOutNapkinViewSnapshotTests */ = {
+			isa = PBXGroup;
+			children = (
+				2DE9353E27F489402562E5D1 /* testLoggedOutNapkinView.1.png */,
+			);
+			path = LoggedOutNapkinViewSnapshotTests;
+			sourceTree = "<group>";
+		};
 		D2CBCDB71462DA53DD4DFB6B /* SnapshotTests */ = {
 			isa = PBXGroup;
 			children = (
 				493C24891CB2AFA177AAAE4C /* LoggedInNapkinViewSnapshotTests.swift */,
 				EAC1EDA12E27599882A8CD8A /* LoggedOutNapkinViewSnapshotTests.swift */,
+				3340665545CD55225BAC654E /* __Snapshots__ */,
 			);
 			path = SnapshotTests;
 			sourceTree = "<group>";
@@ -246,6 +282,7 @@
 			buildConfigurationList = 916801190F07C2E34621DE88 /* Build configuration list for PBXNativeTarget "RibHouseSnapshotTests" */;
 			buildPhases = (
 				AA9EA2BAFEA85EC3651C81E6 /* Sources */,
+				E0536972B71ED16A77FC561D /* Resources */,
 				F853B44F8F036BBF6FC89051 /* Frameworks */,
 			);
 			buildRules = (
@@ -319,6 +356,18 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		E0536972B71ED16A77FC561D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0C5ABE7179DB67B389230193 /* testLoggedInNapkinView.1.png in Resources */,
+				752D0DCE309368D214FCD65B /* testLoggedOutNapkinView.1.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		06B81631668608BF376DB65D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -360,7 +409,9 @@
 				B6EADD163EA2021FCB71764E /* LoggedOutNapkinRouter.swift in Sources */,
 				4E3698FD86B1E4884A5B4372 /* LoggedOutNapkinView.swift in Sources */,
 				F2E5BAF4EC1A15777C02E297 /* Palette.swift in Sources */,
+				19FFB6A77A25B853665CCFC6 /* PitService.swift in Sources */,
 				3BA0D6AA2CA036F453C22A04 /* SceneDelegate.swift in Sources */,
+				974E0E86A4F48ED077EE4C54 /* SpecialsService.swift in Sources */,
 				5022237B891086C1CDE262CD /* User.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
