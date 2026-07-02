@@ -13,6 +13,8 @@ final class LoggedInNapkinComponent: Component<LoggedInNapkinDependency>, @unche
     var pitService: PitService { dependency.pitService }
 }
 
+extension LoggedInNapkinComponent: AnnouncementsNapkinDependency {}
+
 protocol LoggedInNapkinBuildable: Buildable {
     @MainActor func build(
         withListener listener: LoggedInNapkinListener,
@@ -39,10 +41,12 @@ final class LoggedInNapkinBuilder: Builder<LoggedInNapkinDependency>, LoggedInNa
             user: user,
             pitService: component.pitService
         )
+        let announcementsBuilder = AnnouncementsNapkinBuilder(dependency: component)
         let router = LoggedInNapkinRouter(
             interactor: interactor,
             viewController: navigation,
-            user: user
+            user: user,
+            announcementsBuilder: announcementsBuilder
         )
         await interactor.wire(router: router, listener: listener)
         return router

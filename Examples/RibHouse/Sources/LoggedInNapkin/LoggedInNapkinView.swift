@@ -4,6 +4,7 @@ import napkin
 struct LoggedInNapkinView: View {
     let user: User
     var pitSummary: String = ""
+    var banner: String?
     weak var listener: LoggedInNapkinPresentableListener?
 
     var body: some View {
@@ -88,6 +89,20 @@ struct LoggedInNapkinView: View {
             }
             .padding(.horizontal, 36)
             .padding(.bottom, 48)
+        }
+        .overlay(alignment: .top) {
+            if let banner {
+                Text(banner)
+                    .font(.system(.caption, design: .monospaced))
+                    .tracking(2)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
+                    .background(Capsule().fill(Palette.Dark.amber))
+                    .foregroundStyle(Palette.Dark.paper)
+                    .padding(.top, 12)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .accessibilityIdentifier(NapkinAccessibility.LoggedIn.banner)
+            }
         }
     }
 }

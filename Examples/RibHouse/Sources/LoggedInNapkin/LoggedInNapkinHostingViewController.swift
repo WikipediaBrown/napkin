@@ -16,6 +16,12 @@ protocol LoggedInNapkinPresentableListener: AnyObject, Sendable {
         rootView.pitSummary = pitSummary
     }
 
+    func present(banner: String?) async {
+        withAnimation(.easeInOut(duration: 0.25)) {
+            rootView.banner = banner
+        }
+    }
+
     init(user: User) {
         super.init(rootView: LoggedInNapkinView(user: user))
     }
@@ -33,6 +39,12 @@ protocol LoggedInNapkinPresentableListener: AnyObject, Sendable {
 
     func present(pitSummary: String) async {
         rootView.pitSummary = pitSummary
+    }
+
+    func present(banner: String?) async {
+        withAnimation(.easeInOut(duration: 0.25)) {
+            rootView.banner = banner
+        }
     }
 
     init(user: User) {

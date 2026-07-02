@@ -10,6 +10,7 @@
 		0C5ABE7179DB67B389230193 /* testLoggedInNapkinView.1.png in Resources */ = {isa = PBXBuildFile; fileRef = 9BC63029399977C81D2A46F9 /* testLoggedInNapkinView.1.png */; };
 		19FFB6A77A25B853665CCFC6 /* PitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13458418AC1636B662194B4B /* PitService.swift */; };
 		1AC8B8B631F899BBE376F1D8 /* LoggedOutNapkinHostingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B64F94C52DD640F2FA48BFC1 /* LoggedOutNapkinHostingViewController.swift */; };
+		2B4A2B542796DDBFA50B3F4E /* AnnouncementsNapkinRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D95F90ACB5A2F28E11F5799D /* AnnouncementsNapkinRouter.swift */; };
 		322B60AA5468BAEFAA6C140B /* LoggedInNapkinHostingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4C510BF52F45481E411302 /* LoggedInNapkinHostingViewController.swift */; };
 		3769C0C8CE9F5212C4EA28BC /* LoggedInNapkinRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 239E398530140496F4C36C5D /* LoggedInNapkinRouter.swift */; };
 		39364AF55F5C5B2EF49E9FFA /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2926F18DC49F1A86742F7710 /* AuthService.swift */; };
@@ -19,6 +20,7 @@
 		4EEDC47C5C40A335C40F1673 /* AccessibilityIdentifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320B423566EB1A3D1494D67D /* AccessibilityIdentifiers.swift */; };
 		5022237B891086C1CDE262CD /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D9F460D1E15A72658F681D /* User.swift */; };
 		6F47F9C8B8FFC6E554BEC22B /* LoggedOutNapkinViewSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAC1EDA12E27599882A8CD8A /* LoggedOutNapkinViewSnapshotTests.swift */; };
+		725DFA15D03883F175923B71 /* AnnouncementsNapkinBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6762748E1A9CADD4B0A9D860 /* AnnouncementsNapkinBuilder.swift */; };
 		752D0DCE309368D214FCD65B /* testLoggedOutNapkinView.1.png in Resources */ = {isa = PBXBuildFile; fileRef = 2DE9353E27F489402562E5D1 /* testLoggedOutNapkinView.1.png */; };
 		77CF0006F08D0E2A9F952814 /* LaunchNapkinHostingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B36063DF066C53EEF1195FB0 /* LaunchNapkinHostingViewController.swift */; };
 		7D805B5BF07263367390AF4A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BC68A44DF4CAF7F6FC6C1A5 /* AppDelegate.swift */; };
@@ -26,6 +28,7 @@
 		8710F1015FBC6673BE75F619 /* napkin in Frameworks */ = {isa = PBXBuildFile; productRef = 6716A7B18CBA938557EB5049 /* napkin */; };
 		8CA664742483776B6807D70C /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 61EBF7A28A5D8AC060FFCC1C /* SnapshotTesting */; };
 		974E0E86A4F48ED077EE4C54 /* SpecialsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C18FCBA4FA10B11CBD6A9CE6 /* SpecialsService.swift */; };
+		97C5F1F7E7852A3BE56AF731 /* AnnouncementsNapkinInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E2465F34A03FE3B7C6DBA9E /* AnnouncementsNapkinInteractor.swift */; };
 		98FCA22750635CFF3EFA5E36 /* AccessibilityIdentifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320B423566EB1A3D1494D67D /* AccessibilityIdentifiers.swift */; };
 		B01577ED137F0D9CDB777B55 /* LoggedInNapkinBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C631D2076B45AB0F5B4AD3 /* LoggedInNapkinBuilder.swift */; };
 		B6EADD163EA2021FCB71764E /* LoggedOutNapkinRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3A35A4291E0731E86967071 /* LoggedOutNapkinRouter.swift */; };
@@ -70,8 +73,10 @@
 		493C24891CB2AFA177AAAE4C /* LoggedInNapkinViewSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedInNapkinViewSnapshotTests.swift; sourceTree = "<group>"; };
 		4988A129C87187AE4D12BCB3 /* LoggedInNapkinNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedInNapkinNavigationController.swift; sourceTree = "<group>"; };
 		5C315556B6222F6EC58B93D9 /* RibHouse.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = RibHouse.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6762748E1A9CADD4B0A9D860 /* AnnouncementsNapkinBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnouncementsNapkinBuilder.swift; sourceTree = "<group>"; };
 		67BDD04B5EAC54134C4BD833 /* LoggedOutNapkinBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedOutNapkinBuilder.swift; sourceTree = "<group>"; };
 		6AABB03AE1D9597A0885E2B7 /* LaunchNapkinInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchNapkinInteractor.swift; sourceTree = "<group>"; };
+		6E2465F34A03FE3B7C6DBA9E /* AnnouncementsNapkinInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnouncementsNapkinInteractor.swift; sourceTree = "<group>"; };
 		7C4A569891A1CBD5CF286863 /* LaunchNapkinBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchNapkinBuilder.swift; sourceTree = "<group>"; };
 		8D4C510BF52F45481E411302 /* LoggedInNapkinHostingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedInNapkinHostingViewController.swift; sourceTree = "<group>"; };
 		9A126B8212368800A9093A53 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -90,6 +95,7 @@
 		D0D9F460D1E15A72658F681D /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		D106F592FFCACFF5FE08F2BD /* RibHouseSnapshotTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RibHouseSnapshotTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D429C0E4661BD247C79235D1 /* napkin */ = {isa = PBXFileReference; lastKnownFileType = folder; name = napkin; path = ../..; sourceTree = SOURCE_ROOT; };
+		D95F90ACB5A2F28E11F5799D /* AnnouncementsNapkinRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnouncementsNapkinRouter.swift; sourceTree = "<group>"; };
 		EAC1EDA12E27599882A8CD8A /* LoggedOutNapkinViewSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedOutNapkinViewSnapshotTests.swift; sourceTree = "<group>"; };
 		FAE5780F3790B916A2CEC0B0 /* LoggedInNapkinInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedInNapkinInteractor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -156,6 +162,7 @@
 		4308B847A286CC0B0FBB8C22 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				EB4B658154108828698B2206 /* AnnouncementsNapkin */,
 				8EC6234A040919ABE5DA4558 /* App */,
 				A0A9F99CF7B8E4921E97F898 /* LaunchNapkin */,
 				FCE8EE383FDC2F749218459B /* LoggedInNapkin */,
@@ -243,6 +250,16 @@
 				BF72016881F53FB3C3AAD0B0 /* LoggedOutNapkinView.swift */,
 			);
 			path = LoggedOutNapkin;
+			sourceTree = "<group>";
+		};
+		EB4B658154108828698B2206 /* AnnouncementsNapkin */ = {
+			isa = PBXGroup;
+			children = (
+				6762748E1A9CADD4B0A9D860 /* AnnouncementsNapkinBuilder.swift */,
+				6E2465F34A03FE3B7C6DBA9E /* AnnouncementsNapkinInteractor.swift */,
+				D95F90ACB5A2F28E11F5799D /* AnnouncementsNapkinRouter.swift */,
+			);
+			path = AnnouncementsNapkin;
 			sourceTree = "<group>";
 		};
 		FCE8EE383FDC2F749218459B /* LoggedInNapkin */ = {
@@ -395,6 +412,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				4EEDC47C5C40A335C40F1673 /* AccessibilityIdentifiers.swift in Sources */,
+				725DFA15D03883F175923B71 /* AnnouncementsNapkinBuilder.swift in Sources */,
+				97C5F1F7E7852A3BE56AF731 /* AnnouncementsNapkinInteractor.swift in Sources */,
+				2B4A2B542796DDBFA50B3F4E /* AnnouncementsNapkinRouter.swift in Sources */,
 				7D805B5BF07263367390AF4A /* AppDelegate.swift in Sources */,
 				39364AF55F5C5B2EF49E9FFA /* AuthService.swift in Sources */,
 				EF6B542984EB1144C7DE07FE /* LaunchNapkinBuilder.swift in Sources */,

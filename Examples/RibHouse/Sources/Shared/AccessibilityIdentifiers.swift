@@ -26,5 +26,6 @@ public enum NapkinAccessibility {
         // Per-food identifiers are built as `\(foodPrefix).\(food)`.
         public static let foodPrefix = "loggedIn.food"
         public static let pitSummary = "loggedIn.pitSummary"
+        public static let banner = "loggedIn.banner"
     }
 }

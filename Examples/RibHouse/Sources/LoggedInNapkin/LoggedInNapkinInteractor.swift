@@ -6,13 +6,14 @@ protocol LoggedInNapkinRouting: ViewableRouting, Sendable {}
 protocol LoggedInNapkinPresentable: Presentable, Sendable {
     @MainActor var listener: LoggedInNapkinPresentableListener? { get set }
     func present(pitSummary: String) async
+    func present(banner: String?) async
 }
 
 protocol LoggedInNapkinListener: AnyObject, Sendable {
     func loggedInDidTapLogout() async
 }
 
-final actor LoggedInNapkinInteractor: PresentableInteractable, LoggedInNapkinPresentableListener {
+final actor LoggedInNapkinInteractor: PresentableInteractable, LoggedInNapkinPresentableListener, AnnouncementsNapkinListener {
 
     nonisolated let lifecycle = InteractorLifecycle()
     nonisolated let presenter: LoggedInNapkinPresentable
@@ -62,5 +63,17 @@ final actor LoggedInNapkinInteractor: PresentableInteractable, LoggedInNapkinPre
 
     func didTapLogout() async {
         await listener?.loggedInDidTapLogout()
+    }
+
+    // MARK: - AnnouncementsNapkinListener
+
+    func announcementsNapkinDidHearLastCall(itemName: String) async {
+        await presenter.present(banner: "LAST CALL · \(itemName)")
+        // Auto-clear. A newer banner may be cleared early by an older
+        // timer — acceptable for the demo, and the next event re-shows it.
+        task {
+            try? await Task.sleep(for: .seconds(3))
+            await self.presenter.present(banner: nil)
+        }
     }
 }

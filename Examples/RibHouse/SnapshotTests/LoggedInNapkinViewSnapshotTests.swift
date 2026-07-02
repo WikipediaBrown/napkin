@@ -31,4 +31,11 @@ final class LoggedInNapkinViewSnapshotTests: XCTestCase {
         let vc = UIHostingController(rootView: view)
         assertSnapshot(of: vc, as: .image(on: .iPhone13Pro))
     }
+
+    func testLoggedInNapkinViewWithBanner() {
+        var view = LoggedInNapkinView(user: smokeyJoe, pitSummary: "1 SMOKING · 2 RESTING")
+        view.banner = "LAST CALL · Brisket"
+        let vc = UIHostingController(rootView: view)
+        assertSnapshot(of: vc, as: .image(on: .iPhone13Pro))
+    }
 }
