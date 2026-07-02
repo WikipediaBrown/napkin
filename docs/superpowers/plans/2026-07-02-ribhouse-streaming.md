@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - Test command (AGENTS.md, use for every task's verification): `cd /Users/nonplus/Desktop/napkin/Examples/RibHouse && xcodebuild -project RibHouse.xcodeproj -scheme RibHouse -destination "platform=iOS Simulator,name=iPhone 17,OS=latest" test`. Expect **TEST SUCCEEDED**. It is slow (minutes) — run it once per task, not per edit. For intermediate compile checks use `… build` instead of `… test`.
-- Run `xcodegen` (from `Examples/RibHouse/`) ONLY in tasks that add a new top-level folder under `Sources/` (Tasks 4 and 5). New files inside existing folders are picked up without it. Commit the regenerated `.xcodeproj` changes with the task.
+- Run `xcodegen` (from `Examples/RibHouse/`) in EVERY task that adds a new file — the generated `.pbxproj` is an explicit file list, so new files are invisible until regeneration (verified empirically in Task 1; AGENTS.md's "only for new folders" note is optimistic). Commit the regenerated `.xcodeproj` changes with the task.
 - Framework code (`Sources/napkin/`) must not change. `swift build && swift test` at repo root must stay green (checked in Task 7).
 - File naming: `<Napkin><Type>.swift`, one napkin per folder. Two listener protocols per convention: `…PresentableListener` (view→interactor, `didTapX()` names) lives in the hosting VC file; `…Listener` (child→parent, `<self>NapkinDid<verb>()` names) lives in the interactor file.
 - View→interactor always via `dispatch { [listener] in await listener?.… }`, never bare `Task {}`.
@@ -21,7 +21,7 @@
 - Determinism: `PitService` seeds exactly 2 `.smoking` + 1 `.resting` items so the initial summary is `"2 SMOKING · 1 RESTING"`; tests may rely on that initial state and on "changes at least once under `-fastTicks`", never on specific later states.
 - Commits: imperative subject, body explains why, trailer `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`. Before every commit: `find /Users/nonplus/Desktop/napkin \( -name "* 2.*" -o -name "* 3.*" \) -not -path "*/.build/*" -print0 | xargs -0 rm -rf`
 - Compile-verified facts — do not "improve" these away: broadcaster actors with per-subscriber continuation tables are the sanctioned pattern (mirrors `Snippets/Streaming/AuthStateStreaming.swift`); `Observations` iterated from a nonisolated `task {}` closure crashes the compiler — the loop must be `task { @MainActor [weak self] in … }` with the service hoisted to a local `let`; `Presenter` subclasses re-annotate `@Observable`; `Presenter`'s generic argument must be a concrete VC class.
-- `SpecialsService` (a `@MainActor` class) is constructed by the nonisolated `AppComponent.init` — its `init` must be `nonisolated`. If the compiler rejects assigning its stored properties there, fall back to constructing it lazily on first use from a `@MainActor` context and report the deviation.
+- `SpecialsService` (a `@MainActor` class) CANNOT have a `nonisolated init` — the `@Observable` macro's init accessors are actor-isolated (verified empirically in Task 1: "main actor-isolated property 'specials' can not be mutated from a nonisolated context"). It is constructed on the main actor in `SceneDelegate`'s existing `Task { @MainActor in … }` and passed into `AppComponent.init` as a parameter (a `Sendable` value stored in a `let` — legal from a nonisolated init).
 
 ---
 
@@ -207,9 +207,11 @@ final class SpecialsService {
         Special(id: "banana-pudding", name: "Banana Pudding"),
     ]
 
-    // nonisolated so the nonisolated AppComponent can construct it; it only
-    // assigns Sendable stored values.
-    nonisolated init(rotationSeconds: Double = 6) {
+    // Constructed on the main actor (SceneDelegate's launch Task) and
+    // passed into the nonisolated AppComponent as a Sendable value — the
+    // @Observable macro's init accessors are actor-isolated, so this init
+    // cannot be nonisolated.
+    init(rotationSeconds: Double = 6) {
         self.rotationSeconds = rotationSeconds
         self.specials = Array(Self.menu.prefix(2))
     }
@@ -248,7 +250,9 @@ In `Examples/RibHouse/Sources/App/SceneDelegate.swift`, replace the `AppComponen
 ```swift
 // Root dependency conforming to the launch napkin's dependency protocol.
 // Provides the shared services at the top of the dependency tree; children
-// read them through their Dependency protocols.
+// read them through their Dependency protocols. The @MainActor
+// SpecialsService is built by the caller (on the main actor) and stored
+// here as a Sendable value.
 final class AppComponent: Component<EmptyDependency>, LaunchNapkinDependency, @unchecked Sendable {
     let authService: AuthService
     let pitService: PitService
@@ -256,22 +260,39 @@ final class AppComponent: Component<EmptyDependency>, LaunchNapkinDependency, @u
 
     init(
         authService: AuthService = BarbecueAuthService(),
+        specialsService: SpecialsService,
         fastTicks: Bool = ProcessInfo.processInfo.arguments.contains("-fastTicks")
     ) {
         self.authService = authService
         self.pitService = PitService(tickSeconds: fastTicks ? 0.5 : 4)
-        self.specialsService = SpecialsService(rotationSeconds: fastTicks ? 0.75 : 6)
+        self.specialsService = specialsService
         super.init(dependency: EmptyComponent())
     }
 }
 ```
 
+And in `SceneDelegate.scene(_:willConnectTo:options:)`, replace the existing `Task { @MainActor in … }` body's first line so the component is built with a main-actor-constructed service:
+
+```swift
+        Task { @MainActor in
+            let fastTicks = ProcessInfo.processInfo.arguments.contains("-fastTicks")
+            let component = AppComponent(
+                specialsService: SpecialsService(rotationSeconds: fastTicks ? 0.75 : 6),
+                fastTicks: fastTicks
+            )
+            let builder = LaunchNapkinBuilder(dependency: component)
+            let router = await builder.build(withListener: listener)
+            self.launchRouter = router
+            await router.launch(from: window)
+        }
+```
+
 Note: `LaunchNapkinDependency` does not yet require the two new properties — that arrives in Tasks 3 and 5. `BarbecueAuthService()` is still the current class in this task (Task 2 converts it); the call stays source-compatible.
 
-- [ ] **Step 4: Build**
+- [ ] **Step 4: xcodegen + build**
 
-Run: `cd /Users/nonplus/Desktop/napkin/Examples/RibHouse && xcodebuild -project RibHouse.xcodeproj -scheme RibHouse -destination "platform=iOS Simulator,name=iPhone 17,OS=latest" build 2>&1 | tail -5`
-Expected: `** BUILD SUCCEEDED **`. (New Shared files are picked up without xcodegen.)
+Run: `cd /Users/nonplus/Desktop/napkin/Examples/RibHouse && xcodegen && xcodebuild -project RibHouse.xcodeproj -scheme RibHouse -destination "platform=iOS Simulator,name=iPhone 17,OS=latest" build 2>&1 | tail -5`
+Expected: `** BUILD SUCCEEDED **`. Commit the regenerated `.xcodeproj` with the task.
 
 - [ ] **Step 5: Commit**
 
