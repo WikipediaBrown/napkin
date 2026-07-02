@@ -16,7 +16,7 @@ Every feature is a **napkin**: a small unit composed of a fixed set of "rings" �
 | Run framework unit tests | `swift test` |
 | Run the example app | `open Examples/RibHouse/RibHouse.xcodeproj` (⌘R to launch) |
 | Run example UI + snapshot tests | `cd Examples/RibHouse && xcodebuild -project RibHouse.xcodeproj -scheme RibHouse -destination "platform=iOS Simulator,name=iPhone 17,OS=latest" test` |
-| Regenerate the example's xcodeproj | `cd Examples/RibHouse && xcodegen` (only needed when you change `project.yml` or add files outside an existing folder) |
+| Regenerate the example's xcodeproj | `cd Examples/RibHouse && xcodegen` (needed after adding ANY file — the generated pbxproj is an explicit file list; that includes newly recorded snapshot reference PNGs) |
 | Build DocC locally | `swift package generate-documentation --target napkin` |
 
 CI runs the same commands on a `macos-26` runner with the highest non-beta Xcode 26.x (`grep -v -i beta` glob in workflows). Use the same simulator (`iPhone 17` / iOS 26) when reproducing failures.
@@ -130,19 +130,19 @@ final actor FooInteractor: PresentableInteractable, ...listenerConformances... {
 - **Branches**: feature work on `develop`, releases on `main`. Branch off `develop`, PR back to `develop`. Merging develop → main triggers Release → Documentation.
 - **Commits**: imperative subject ("Add tab bar tutorial"), short body explaining the *why*. Co-authored trailer for AI assistance is fine.
 - **Don't push to `main` directly** — it's protected against force-push and deletion but allows regular pushes. The merge-from-develop-with-`--no-ff` flow is what triggers Release.
-- **Example app's `.xcodeproj` is tracked** so it opens without xcodegen. If you change `project.yml` or add a Swift file in a new folder, regenerate (`cd Examples/RibHouse && xcodegen`).
+- **Example app's `.xcodeproj` is tracked** so it opens without xcodegen. Regenerate (`cd Examples/RibHouse && xcodegen`) after changing `project.yml` or adding ANY file — Swift sources and snapshot reference PNGs alike; the generated pbxproj lists files explicitly, so untracked additions are invisible to builds and the Xcode navigator.
 
 ## iCloud Drive trap
 
-If your clone is inside an iCloud Drive folder, you'll see `* 2.swift`, `* 3.swift`, ` 4.xcodeproj` artifacts appear. They're gitignored but SPM and xcodegen still see them on disk and may bake stale references into builds.
+If your clone is inside an iCloud Drive folder, you'll see `* 2.swift`, `* 3.swift`, ` 4.xcodeproj` artifacts appear — and also extensionless conflict copies of whole DIRECTORIES (`Sources/App 2/`) and of `.git` internals (`.git/index 3`). They're gitignored but SPM and xcodegen still see them on disk and may bake stale references into builds; the numbered `.git/index N` copies are never read by git and are safe to delete.
 
 **Before committing**, run:
 
 ```bash
-find /path/to/napkin \( -name "* 2.*" -o -name "* 3.*" \) -not -path "*/.build/*" -print0 | xargs -0 rm -rf
+find /path/to/napkin \( -name "* 2.*" -o -name "* 3.*" -o -name "* [0-9]" \) -not -path "*/.build/*" -print0 | xargs -0 rm -rf
 ```
 
-Then re-run xcodegen if you regenerated the project recently.
+(The `"* [0-9]"` pattern catches the extensionless directory and `.git/index N` copies the older command missed.) Then re-run xcodegen if you regenerated the project recently.
 
 ## What's in the source tree
 
