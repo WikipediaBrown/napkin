@@ -31,9 +31,11 @@ import Observation
 /// You have two options for who conforms to a feature-specific `Presentable`:
 ///
 /// - A dedicated ``Presenter`` subclass (recommended when there is non-trivial
-///   view-state to hold). The view controller observes the presenter via
-///   `@Bindable` (SwiftUI) or `Observations { ... }` (UIKit) and stays a
-///   thin renderer.
+///   view-state to hold). The view controller holds the presenter and
+///   SwiftUI reads its stored properties directly (`@Bindable` locally in
+///   `body` for two-way bindings), or UIKit observes them via
+///   `Observations { ... }`; either way the view controller stays a thin
+///   renderer.
 /// - The view controller itself, when there is no separate state to hold and
 ///   the presenter would just delegate every method to the view controller
 ///   anyway.
@@ -58,9 +60,10 @@ public protocol Presentable: AnyObject {}
 
 /// A base class for presenters with `@Observable` view state.
 ///
-/// `Presenter` is `@MainActor`-isolated and `@Observable`, so SwiftUI views
-/// can read its stored properties directly via `@Bindable` and UIKit views
-/// can observe them via the `Observations { ... }` macro.
+/// `Presenter` is `@MainActor`-isolated and `@Observable`. The view
+/// controller holds the presenter and SwiftUI reads its stored properties
+/// directly (`@Bindable` locally in `body` for two-way bindings); UIKit
+/// views can observe them via the `Observations { ... }` macro.
 ///
 /// ## Overview
 ///

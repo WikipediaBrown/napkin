@@ -305,8 +305,9 @@ For each feature:
 6. Mark listener and presentable protocol methods `async`. Conform listener
    protocols to `Sendable`.
 7. SwiftUI views: replace `@ObservedObject var viewModel: HomeViewModel` with
-   `@Bindable var presenter: HomePresenter`. Replace event handlers with
-   `dispatch { await listener?.didTapX() }`.
+   `weak var presenter: HomePresenter?`, reading its properties directly and
+   rebinding with `@Bindable` inside `body` only when a two-way binding is
+   needed. Replace event handlers with `dispatch { await listener?.didTapX() }`.
 8. `Builder.build(...)` becomes `async @MainActor` when it constructs a view
    controller.
 

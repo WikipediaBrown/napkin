@@ -363,7 +363,7 @@ For detaching, the order is reversed: dismiss the view, then `await detachChild(
 
 ### Presenter (Optional)
 
-The **Presenter** transforms business data into view-friendly formats. It sits between the interactor and the view controller. `Presenter` is `@MainActor` and `@Observable`, so SwiftUI views can read its stored properties directly via `@Bindable`. Re-annotate subclasses with `@Observable` so their own stored properties are tracked too:
+The **Presenter** transforms business data into view-friendly formats. It sits between the interactor and the view controller. `Presenter` is `@MainActor` and `@Observable`, so SwiftUI views can read its stored properties directly. Re-annotate subclasses with `@Observable` so their own stored properties are tracked too:
 
 ```swift
 protocol HomePresentable: Presentable, Sendable {

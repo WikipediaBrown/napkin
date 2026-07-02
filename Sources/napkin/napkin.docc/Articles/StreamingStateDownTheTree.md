@@ -1,6 +1,6 @@
 # Streaming State Down the Tree
 
-How to replace Combine's `CurrentValueSubject`, `PassthroughSubject`, and `@Published` with actor-owned `AsyncStream`s and `Observations` sequences, consumed through ``Interactable/task(priority:_:)`` — the same lifecycle-bound primitive behind the framework's own ``InteractorScope/isActiveStream``.
+How to replace Combine's `CurrentValueSubject`, `PassthroughSubject`, and `@Published` with actor-owned `AsyncStream`s and `Observations` sequences, consumed through lifecycle-bound ``Interactable/task(priority:_:)`` loops. The state recipe mirrors the shape of the framework's own ``InteractorScope/isActiveStream``.
 
 ## Overview
 

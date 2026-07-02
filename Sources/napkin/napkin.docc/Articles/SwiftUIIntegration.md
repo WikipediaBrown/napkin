@@ -6,7 +6,7 @@ How `@Observable` presenters consume state without Combine, the `Observations { 
 
 napkin doesn't import Combine. The interactor → presenter path uses `async` methods; the presenter → view path uses Observation (the `@Observable` macro). This article explains the consuming patterns for SwiftUI and UIKit, and the small set of pitfalls that have bitten people.
 
-## `@Observable` Presenter + `@Bindable` View
+## The `@Observable` Presenter, Held Weakly
 
 When a feature is large enough to want a dedicated presenter object, subclass ``Presenter`` and add stored properties for view state. ``Presenter`` is `@Observable`, so SwiftUI sees mutations automatically. Subclasses re-annotate `@Observable` so their own stored properties are tracked too.
 
