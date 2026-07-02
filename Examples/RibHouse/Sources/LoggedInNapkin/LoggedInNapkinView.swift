@@ -39,12 +39,13 @@ struct LoggedInNapkinView: View {
                     HStack(spacing: 6) {
                         Text("LIVE FROM THE PIT")
                         Text("·").foregroundStyle(Palette.Dark.ink3.opacity(0.5))
-                        Text(pitSummary).foregroundStyle(Palette.Dark.amber)
+                        Text(pitSummary)
+                            .foregroundStyle(Palette.Dark.amber)
+                            .accessibilityIdentifier(NapkinAccessibility.LoggedIn.pitSummary)
                     }
                     .font(.system(.caption, design: .monospaced))
                     .tracking(2)
                     .foregroundStyle(Palette.Dark.ink3)
-                    .accessibilityIdentifier(NapkinAccessibility.LoggedIn.pitSummary)
                 }
 
                 Text("BARBECUE FOODS")

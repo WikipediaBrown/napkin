@@ -8,9 +8,7 @@ protocol PitBoardNapkinPresentableListener: AnyObject, Sendable {
 #if canImport(UIKit)
 @MainActor final class PitBoardNapkinViewController: UIHostingController<PitBoardNapkinView> {
 
-    weak var listener: PitBoardNapkinPresentableListener? {
-        didSet { rootView.listener = listener }
-    }
+    weak var listener: PitBoardNapkinPresentableListener?
 
     init() {
         super.init(rootView: PitBoardNapkinView())

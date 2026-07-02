@@ -79,13 +79,9 @@ final class RibHouseUITests: XCTestCase {
         app.launch()
 
         app.buttons[NapkinAccessibility.LoggedOut.loginButton].tap()
-        // The pitSummary identifier sits on a container HStack whose three
-        // Texts aren't accessibility-combined, so the identifier propagates
-        // to all three static texts (in view order: "LIVE FROM THE PIT",
-        // "·", then the live summary). boundBy: 2 pins the third — the one
-        // whose label actually changes — so `.label` resolves to a single
-        // element instead of throwing on the ambiguous match.
-        let summary = app.staticTexts.matching(identifier: NapkinAccessibility.LoggedIn.pitSummary).element(boundBy: 2)
+        // The pitSummary identifier sits directly on the Text whose label
+        // actually changes, so this resolves to a single element.
+        let summary = app.staticTexts[NapkinAccessibility.LoggedIn.pitSummary]
         XCTAssertTrue(summary.waitForExistence(timeout: 5))
         let initial = summary.label
 

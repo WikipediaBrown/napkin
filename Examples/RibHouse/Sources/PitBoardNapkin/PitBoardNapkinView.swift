@@ -3,7 +3,6 @@ import napkin
 
 struct PitBoardNapkinView: View {
     var presenter: PitBoardNapkinPresenter?
-    weak var listener: PitBoardNapkinPresentableListener?
 
     var body: some View {
         ZStack {
