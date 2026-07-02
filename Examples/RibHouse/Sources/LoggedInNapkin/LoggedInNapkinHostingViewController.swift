@@ -3,6 +3,7 @@ import SwiftUI
 
 protocol LoggedInNapkinPresentableListener: AnyObject, Sendable {
     func didTapLogout() async
+    func didTapPitBoard() async
 }
 
 #if canImport(UIKit)

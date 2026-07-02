@@ -5,15 +5,18 @@ protocol LoggedInNapkinDependency: Dependency {
     // powers the live summary here and the PitBoard child.
     var authService: AuthService { get }
     var pitService: PitService { get }
+    var specialsService: SpecialsService { get }
 }
 
 final class LoggedInNapkinComponent: Component<LoggedInNapkinDependency>, @unchecked Sendable {
 
     var authService: AuthService { dependency.authService }
     var pitService: PitService { dependency.pitService }
+    var specialsService: SpecialsService { dependency.specialsService }
 }
 
 extension LoggedInNapkinComponent: AnnouncementsNapkinDependency {}
+extension LoggedInNapkinComponent: PitBoardNapkinDependency {}
 
 protocol LoggedInNapkinBuildable: Buildable {
     @MainActor func build(
@@ -42,11 +45,13 @@ final class LoggedInNapkinBuilder: Builder<LoggedInNapkinDependency>, LoggedInNa
             pitService: component.pitService
         )
         let announcementsBuilder = AnnouncementsNapkinBuilder(dependency: component)
+        let pitBoardBuilder = PitBoardNapkinBuilder(dependency: component)
         let router = LoggedInNapkinRouter(
             interactor: interactor,
             viewController: navigation,
             user: user,
-            announcementsBuilder: announcementsBuilder
+            announcementsBuilder: announcementsBuilder,
+            pitBoardBuilder: pitBoardBuilder
         )
         await interactor.wire(router: router, listener: listener)
         return router

@@ -35,5 +35,11 @@ final class LoggedInNapkinNavigationController: UINavigationController,
             setNavigationBarHidden(isRoot, animated: animated)
         }
     }
+
+    // MARK: - LoggedInNapkinViewControllable
+
+    func push(_ child: ViewControllable) {
+        pushViewController(child.uiviewController, animated: true)
+    }
 }
 #endif

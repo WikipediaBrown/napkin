@@ -71,6 +71,22 @@ struct LoggedInNapkinView: View {
 
                 Spacer()
 
+                Button {
+                    dispatch { [listener] in await listener?.didTapPitBoard() }
+                } label: {
+                    Text("Pit Board")
+                        .font(.system(.body, design: .monospaced))
+                        .textCase(.uppercase)
+                        .tracking(2)
+                        .padding(.horizontal, 28)
+                        .padding(.vertical, 16)
+                        .frame(maxWidth: .infinity)
+                }
+                .background(Capsule().fill(Palette.Dark.moss.opacity(0.25)))
+                .overlay(Capsule().stroke(Palette.Dark.moss.opacity(0.6), lineWidth: 1))
+                .foregroundStyle(Palette.Dark.ink)
+                .accessibilityIdentifier(NapkinAccessibility.LoggedIn.pitBoardButton)
+
                 // Ghost button — outlined paper-on-paper-deep, mono caps.
                 Button {
                     dispatch { [listener] in await listener?.didTapLogout() }

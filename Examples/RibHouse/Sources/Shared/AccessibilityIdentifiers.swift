@@ -27,5 +27,14 @@ public enum NapkinAccessibility {
         public static let foodPrefix = "loggedIn.food"
         public static let pitSummary = "loggedIn.pitSummary"
         public static let banner = "loggedIn.banner"
+        public static let pitBoardButton = "loggedIn.pitBoardButton"
+    }
+
+    public enum PitBoard {
+        public static let title = "pitBoard.title"
+        // Per-item identifiers are built as `\(itemPrefix).\(item.id)`.
+        public static let itemPrefix = "pitBoard.item"
+        // Per-special identifiers are built as `\(specialPrefix).\(special.id)`.
+        public static let specialPrefix = "pitBoard.special"
     }
 }

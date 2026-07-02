@@ -1,7 +1,10 @@
 import napkin
 
 @MainActor
-protocol LoggedInNapkinRouting: ViewableRouting, Sendable {}
+protocol LoggedInNapkinRouting: ViewableRouting, Sendable {
+    func attachPitBoard() async
+    func detachPitBoard() async
+}
 
 protocol LoggedInNapkinPresentable: Presentable, Sendable {
     @MainActor var listener: LoggedInNapkinPresentableListener? { get set }
@@ -13,7 +16,7 @@ protocol LoggedInNapkinListener: AnyObject, Sendable {
     func loggedInDidTapLogout() async
 }
 
-final actor LoggedInNapkinInteractor: PresentableInteractable, LoggedInNapkinPresentableListener, AnnouncementsNapkinListener {
+final actor LoggedInNapkinInteractor: PresentableInteractable, LoggedInNapkinPresentableListener, AnnouncementsNapkinListener, PitBoardNapkinListener {
 
     nonisolated let lifecycle = InteractorLifecycle()
     nonisolated let presenter: LoggedInNapkinPresentable
@@ -63,6 +66,16 @@ final actor LoggedInNapkinInteractor: PresentableInteractable, LoggedInNapkinPre
 
     func didTapLogout() async {
         await listener?.loggedInDidTapLogout()
+    }
+
+    func didTapPitBoard() async {
+        await router?.attachPitBoard()
+    }
+
+    // MARK: - PitBoardNapkinListener
+
+    func pitBoardNapkinDidDismiss() async {
+        await router?.detachPitBoard()
     }
 
     // MARK: - AnnouncementsNapkinListener

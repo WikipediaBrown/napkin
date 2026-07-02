@@ -6,12 +6,14 @@ protocol LaunchNapkinDependency: Dependency {
     // the service and exposes it to its interactor; child napkins never see it.
     var authService: AuthService { get }
     var pitService: PitService { get }
+    var specialsService: SpecialsService { get }
 }
 
 final class LaunchNapkinComponent: Component<LaunchNapkinDependency>, @unchecked Sendable {
 
     var authService: AuthService { dependency.authService }
     var pitService: PitService { dependency.pitService }
+    var specialsService: SpecialsService { dependency.specialsService }
 }
 
 // Child napkin dependency protocols are empty, so the LaunchNapkin's
