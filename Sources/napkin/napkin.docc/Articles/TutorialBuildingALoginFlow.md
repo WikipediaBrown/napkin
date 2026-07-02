@@ -17,7 +17,7 @@ A walkthrough of **Napkin's Rib House** (`Examples/RibHouse`): two child napkins
 
 This tutorial walks through the napkin example app, [`Examples/RibHouse`](https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse). When you're done you'll have an end-to-end mental model of how the rings — Builder, Component, Interactor, Router, ViewController — work together for a parent napkin with two children, an injected service, and a real user-driven state transition.
 
-**What we're building.** An iOS app whose root is a *headless* `LaunchNapkin` that holds an `AuthService`. The Launch napkin starts by attaching a `LoggedOutNapkin` (one **Login** button). When the user taps it, the Launch interactor calls `authService.login()`, gets back a `User`, and tells its router to swap to a `LoggedInNapkin` that shows the user's name and a list of barbecue foods. Tapping **Logout** reverses the flow.
+**What we're building.** An iOS app whose root is a *headless* `LaunchNapkin` that holds an `AuthService`. The Launch napkin starts by attaching a `LoggedOutNapkin` (one **Login** button). When the user taps it, the Launch interactor calls `authService.login()` — and that is all it does. Routing happens in the interactor's *auth gate*: a lifecycle-bound subscription to `authService.userStream()` that swaps to a `LoggedInNapkin` when a `User` arrives and back when it becomes `nil`. Tapping **Logout** reverses the flow the same way: state changes, the gate reacts.
 
 ```
 LaunchNapkin (headless container, holds AuthService)
@@ -42,28 +42,83 @@ struct User: Sendable, Equatable {
 }
 ```
 
-The `AuthService` is a `Sendable` protocol with two async-throws methods. The mock implementation is synchronous because the goal is to demonstrate the design, not simulate network latency.
+The `AuthService` is a `Sendable` protocol with three methods: `login()` and `logout()` change the auth state; `userStream()` *is* the state — an `AsyncStream` that replays the current user to every new subscriber and yields again on every change. That stream is the channel the LaunchNapkin's auth gate (Step 3) subscribes to instead of routing from the button taps directly.
 
 ```swift
 protocol AuthService: Sendable {
     func login() async throws -> User
     func logout() async throws
-}
-
-final class BarbecueAuthService: AuthService {
-    func login() async throws -> User {
-        User(
-            name: "Smokey Joe",
-            barbecueFoods: ["Brisket", "Pulled Pork", "St. Louis Ribs", "Burnt Ends", "Smoked Sausage"]
-        )
-    }
-    func logout() async throws {}
+    func userStream() async -> AsyncStream<User?>
 }
 ```
 
+The mock implementation is an `actor`, not a plain class, because it has to hold a subscriber list and broadcast to it:
+
+```swift
+// Mock implementation that hands back Smokey Joe with a tray of barbecue.
+// Now an actor broadcaster — the README's CurrentValueSubject replacement:
+// it owns the current user and replays it to every new subscriber, so the
+// LaunchNapkin's gate routes from state instead of from taps. In a real
+// app a concrete implementation would talk to a server; the LaunchNapkin
+// only depends on the protocol, so the wiring doesn't change.
+actor BarbecueAuthService: AuthService {
+
+    private(set) var currentUser: User?
+    private var subscribers: [UUID: AsyncStream<User?>.Continuation] = [:]
+
+    func login() async throws -> User {
+        let user = User(
+            name: "Smokey Joe",
+            barbecueFoods: [
+                "Brisket",
+                "Pulled Pork",
+                "St. Louis Ribs",
+                "Burnt Ends",
+                "Smoked Sausage",
+            ]
+        )
+        setUser(user)
+        return user
+    }
+
+    func logout() async throws {
+        setUser(nil)
+    }
+
+    /// A fresh stream per subscriber: the current value immediately, then
+    /// every change.
+    func userStream() -> AsyncStream<User?> {
+        let (stream, continuation) = AsyncStream.makeStream(of: User?.self)
+        let id = UUID()
+        subscribers[id] = continuation
+        continuation.yield(currentUser)
+        continuation.onTermination = { [weak self] _ in
+            Task { await self?.removeSubscriber(id) }
+        }
+        return stream
+    }
+
+    // MARK: - Private
+
+    private func setUser(_ user: User?) {
+        currentUser = user
+        for continuation in subscribers.values {
+            continuation.yield(user)
+        }
+    }
+
+    private func removeSubscriber(_ id: UUID) {
+        subscribers[id]?.finish()
+        subscribers.removeValue(forKey: id)
+    }
+}
+```
+
+Two things matter in `userStream()`: it **replays** the current value to a fresh subscriber (so a napkin that attaches after login still sees the right state), and `setUser` **broadcasts** on every change to every existing subscriber. That replay-then-broadcast pair is exactly what a lifecycle-scoped `for await` loop needs — no separate "give me the initial value" step.
+
 `Sendable` here is the contract that this service can be passed across actor boundaries — important because the LaunchInteractor (an `actor`) will hold and call it.
 
-> Note: Both methods are `async throws` even though the mock implementation is synchronous and never throws. The signatures are part of the *contract*, not the mock — a real `BackendAuthService` would block on the network and surface errors, and the LaunchInteractor's `try await` will already handle both.
+> Note: `login()` and `logout()` are `async throws` even though the mock implementation never throws — the signatures are part of the *contract*, not the mock; a real `BackendAuthService` would block on the network and surface errors, and the LaunchInteractor's `try await` already handles both. `userStream()` is plain `async` (no `throws`) because a state stream can't fail — subscribers just stop iterating when they're done, rather than catching an error.
 
 ## Step 2: The dependency root
 
@@ -165,33 +220,57 @@ final actor LaunchNapkinInteractor:
     LoggedOutNapkinListener,
     LoggedInNapkinListener
 {
+
     nonisolated let lifecycle = InteractorLifecycle()
     nonisolated let authService: AuthService
 
     weak var router: LaunchNapkinRouting?
+    weak var listener: LaunchNapkinListener?
 
     init(authService: AuthService) {
         self.authService = authService
     }
 
-    func didBecomeActive() async {
-        await router?.attachLoggedOut()
+    func wire(router: LaunchNapkinRouting?, listener: LaunchNapkinListener?) {
+        self.router = router
+        self.listener = listener
     }
 
-    // Triggered by the LoggedOutNapkin's button tap.
-    func loggedOutDidTapLogin() async {
-        do {
-            let user = try await authService.login()
-            await router?.attachLoggedIn(user: user)
-        } catch {
-            // Real apps would surface this; the demo stays silent.
+    func didBecomeActive() async {
+        // The auth gate: routing follows auth state, not taps. The stream
+        // replays the current value (nil at launch), which is what attaches
+        // the LoggedOut napkin. Bound to the active scope — cancelled
+        // automatically on willResignActive.
+        task {
+            for await user in await self.authService.userStream() {
+                if let user {
+                    await self.router?.attachLoggedIn(user: user)
+                } else {
+                    await self.router?.attachLoggedOut()
+                }
+            }
         }
     }
 
-    // Triggered by the LoggedInNapkin's button tap.
+    func willResignActive() async {}
+
+    // MARK: - LoggedOutNapkinListener
+
+    func loggedOutDidTapLogin() async {
+        do {
+            _ = try await authService.login()
+            // No routing here — the gate above reacts to the stream.
+        } catch {
+            // Login failed — stay on the logged-out screen. Real apps would
+            // surface an alert; we keep this demo silent.
+        }
+    }
+
+    // MARK: - LoggedInNapkinListener
+
     func loggedInDidTapLogout() async {
+        // Routing happens via the stream, same as login.
         try? await authService.logout()
-        await router?.attachLoggedOut()
     }
 }
 ```
@@ -201,6 +280,9 @@ Key points:
 - **`final actor`** — business logic is off the main actor.
 - **`Interactable`** (not `PresentableInteractable`) — Launch has no presenter because it has no view of its own.
 - **`nonisolated let authService`** — `Sendable` service, safe to expose nonisolated; the actor reads it directly without crossing its own boundary.
+- **`wire(router:listener:)`** — the builder calls this once, right after construction, to hand the interactor its router and listener. Nothing else may assign either property.
+- **The auth gate lives in `didBecomeActive()`, not in the tap handlers.** `task { ... }` spawns a `Task` bound to the active scope — napkin cancels it automatically when the interactor resigns active — and loops `for await user in authService.userStream()`, routing to `attachLoggedIn` or `attachLoggedOut` as the stream yields. The stream replays the current value immediately, so this same loop is what attaches `LoggedOutNapkin` at launch.
+- **Neither `loggedOutDidTapLogin()` nor `loggedInDidTapLogout()` calls the router.** They only change `authService`'s state (`login()` / `logout()`); the gate above is what reacts and routes. One place decides *what to show*, driven by state, instead of routing logic scattered across every intent handler.
 - **Conforms to both child listener protocols** — `LoggedOutNapkinListener` for the Login intent, `LoggedInNapkinListener` for the Logout intent. The router will hand `interactor` to each child's builder as their listener.
 
 ### Router
@@ -547,17 +629,18 @@ Then commit the regenerated PNGs alongside the view change.
 The full data flow on a login tap:
 
 ```
-LoggedOutView.Login tap
-  → LoggedOutInteractor.didTapLogin()             (PresentableListener)
-  → listener?.loggedOutDidTapLogin()              (LoggedOutNapkinListener)
-  → LaunchInteractor.loggedOutDidTapLogin()       (Launch conforms to the listener)
-  → try await authService.login()
-  → router?.attachLoggedIn(user: user)
-  → LaunchRouter detaches LoggedOut, builds LoggedIn(user:), attaches + embeds.
+Login button tap
+  → dispatch { await listener?.didTapLogin() }        (PresentableListener)
+  → listener?.loggedOutDidTapLogin()                  (LoggedOutNapkinListener)
+  → LaunchInteractor.loggedOutDidTapLogin()           (Launch conforms to the listener)
+  → try await authService.login()                     (state changes…)
+  → userStream() yields the User                      (…the gate hears it…)
+  → router?.attachLoggedIn(user: user)                (…and routes)
 ```
 
 What that demonstrates:
 
+- **State-driven routing.** Routing isn't triggered by a tap; it's triggered by `authService.userStream()` yielding a new value. The tap only changes state (`login()` / `logout()`); a single lifecycle-bound loop in `didBecomeActive()` is the only place that calls `attachLoggedIn` or `attachLoggedOut`.
 - **Composition over inheritance.** No `class FooInteractor: BaseInteractor`. The actor conforms to `Interactable`; lifecycle is delegated to ``InteractorLifecycle``.
 - **Explicit isolation crossings.** View `@MainActor` → actor `Interactor` via `dispatch`. Actor → router `@MainActor` via `await`. Actor → service `Sendable` via plain call.
 - **DI through the dependency chain.** The parent's component conforms to its children's dependency protocols. Services injected at the top reach the leaves without anyone hand-rolling a singleton.

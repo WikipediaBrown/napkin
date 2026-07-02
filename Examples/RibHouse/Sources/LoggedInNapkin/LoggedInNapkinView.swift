@@ -3,6 +3,8 @@ import napkin
 
 struct LoggedInNapkinView: View {
     let user: User
+    var pitSummary: String = ""
+    var banner: String?
     weak var listener: LoggedInNapkinPresentableListener?
 
     var body: some View {
@@ -33,6 +35,19 @@ struct LoggedInNapkinView: View {
                     .fill(Palette.Dark.ink3.opacity(0.35))
                     .frame(height: 1)
 
+                if !pitSummary.isEmpty {
+                    HStack(spacing: 6) {
+                        Text("LIVE FROM THE PIT")
+                        Text("·").foregroundStyle(Palette.Dark.ink3.opacity(0.5))
+                        Text(pitSummary)
+                            .foregroundStyle(Palette.Dark.amber)
+                            .accessibilityIdentifier(NapkinAccessibility.LoggedIn.pitSummary)
+                    }
+                    .font(.system(.caption, design: .monospaced))
+                    .tracking(2)
+                    .foregroundStyle(Palette.Dark.ink3)
+                }
+
                 Text("BARBECUE FOODS")
                     .font(.system(.caption, design: .monospaced))
                     .tracking(2)
@@ -57,6 +72,22 @@ struct LoggedInNapkinView: View {
 
                 Spacer()
 
+                Button {
+                    dispatch { [listener] in await listener?.didTapPitBoard() }
+                } label: {
+                    Text("Pit Board")
+                        .font(.system(.body, design: .monospaced))
+                        .textCase(.uppercase)
+                        .tracking(2)
+                        .padding(.horizontal, 28)
+                        .padding(.vertical, 16)
+                        .frame(maxWidth: .infinity)
+                }
+                .background(Capsule().fill(Palette.Dark.moss.opacity(0.25)))
+                .overlay(Capsule().stroke(Palette.Dark.moss.opacity(0.6), lineWidth: 1))
+                .foregroundStyle(Palette.Dark.ink)
+                .accessibilityIdentifier(NapkinAccessibility.LoggedIn.pitBoardButton)
+
                 // Ghost button — outlined paper-on-paper-deep, mono caps.
                 Button {
                     dispatch { [listener] in await listener?.didTapLogout() }
@@ -76,6 +107,20 @@ struct LoggedInNapkinView: View {
             .padding(.horizontal, 36)
             .padding(.bottom, 48)
         }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if let banner {
+                Text(banner)
+                    .font(.system(.caption, design: .monospaced))
+                    .tracking(2)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
+                    .background(Capsule().fill(Palette.Dark.amber))
+                    .foregroundStyle(Palette.Dark.paper)
+                    .padding(.vertical, 8)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .accessibilityIdentifier(NapkinAccessibility.LoggedIn.banner)
+            }
+        }
     }
 }
 
@@ -84,6 +129,7 @@ struct LoggedInNapkinView: View {
         user: User(
             name: "Smokey Joe",
             barbecueFoods: ["Brisket", "Pulled Pork", "St. Louis Ribs", "Burnt Ends", "Smoked Sausage"]
-        )
+        ),
+        pitSummary: "2 SMOKING · 1 RESTING"
     )
 }

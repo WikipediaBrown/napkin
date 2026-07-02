@@ -2,13 +2,21 @@ import UIKit
 import napkin
 
 // Root dependency conforming to the launch napkin's dependency protocol.
-// Provides the AuthService at the top of the dependency tree; the
-// LaunchNapkin reads it through its dependency.
+// Provides the shared services at the top of the dependency tree; children
+// read them through their Dependency protocols.
 final class AppComponent: Component<EmptyDependency>, LaunchNapkinDependency, @unchecked Sendable {
     let authService: AuthService
+    let pitService: PitService
+    let specialsService: SpecialsService
 
-    init(authService: AuthService = BarbecueAuthService()) {
+    init(
+        authService: AuthService = BarbecueAuthService(),
+        specialsService: SpecialsService,
+        fastTicks: Bool = ProcessInfo.processInfo.arguments.contains("-fastTicks")
+    ) {
         self.authService = authService
+        self.pitService = PitService(tickSeconds: fastTicks ? 0.5 : 4)
+        self.specialsService = specialsService
         super.init(dependency: EmptyComponent())
     }
 }
@@ -35,7 +43,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         let listener = self.listener
         Task { @MainActor in
-            let builder = LaunchNapkinBuilder(dependency: AppComponent())
+            let fastTicks = ProcessInfo.processInfo.arguments.contains("-fastTicks")
+            let component = AppComponent(
+                specialsService: SpecialsService(rotationSeconds: fastTicks ? 0.75 : 6),
+                fastTicks: fastTicks
+            )
+            let builder = LaunchNapkinBuilder(dependency: component)
             let router = await builder.build(withListener: listener)
             self.launchRouter = router
             await router.launch(from: window)
