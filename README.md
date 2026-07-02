@@ -496,7 +496,7 @@ Data flows down the napkin tree; events flow up through listener protocols. Buil
 | `.catch { presentError(…); return Just(fallback) }` | `do { for try await … } catch { await presenter.presentError(…) }` | Both are terminal — emit a fallback in the `catch` if you need one |
 | `.map` / transforms mid-pipeline | Plain code in the loop body | It's just a `for` loop |
 | `.receive(on: DispatchQueue.main)` | `await presenter.…` | The presenter is `@MainActor`; the crossing is explicit |
-| `assign(to:on:)` / nested `ObservableObject` view model | Set the `@Observable` presenter property; SwiftUI reads via `@Bindable` | The view-model layer disappears |
+| `assign(to:on:)` / nested `ObservableObject` view model | Set the `@Observable` presenter property; SwiftUI reads it directly | The view-model layer disappears |
 | `tapSubject` on the SwiftUI view + `.sink` in the VC | `dispatch { await listener?.didTapX() }` | See [SwiftUI Integration](#swiftui-integration) |
 | `publisher(for: \.keyPath)` (KVO on UIKit objects) | The UIKit override/callback KVO was wrapping + `dispatch {}` | Not every pipe becomes a stream |
 | `combineLatest` / `merge` / `debounce` / `removeDuplicates` | [swift-async-algorithms](https://github.com/apple/swift-async-algorithms) | Official Apple package, not part of the standard library |
@@ -654,7 +654,7 @@ Teardown is a closed loop with no leak path: detaching the napkin cancels the `t
 
 ### From the service to the screen
 
-One value crosses four seams on its way to a pixel: service → interactor (`task { for await }`), interactor → presenter (an `await`ed async method), presenter → view (`@Observable` read via `@Bindable`), and view → interactor (`dispatch {}`). Here a second napkin, deeper in the tree, subscribes to the *same* service — each `userStream()` call is an independent stream, so fan-out just works. Because every stream starts with the current value, a napkin attached after login learns the auth state immediately — an upgrade over the PassthroughSubject original, where late subscribers waited for the next change. It carries the value through the presenter into SwiftUI:
+One value crosses four seams on its way to a pixel: service → interactor (`task { for await }`), interactor → presenter (an `await`ed async method), presenter → view (a direct `@Observable` read), and view → interactor (`dispatch {}`). Here a second napkin, deeper in the tree, subscribes to the *same* service — each `userStream()` call is an independent stream, so fan-out just works. Because every stream starts with the current value, a napkin attached after login learns the auth state immediately — an upgrade over the PassthroughSubject original, where late subscribers waited for the next change. It carries the value through the presenter into SwiftUI:
 
 <details>
 <summary>The 0.x version this replaces</summary>
@@ -744,7 +744,7 @@ struct ProfileView: View {
 Three notes from real migrations:
 
 - **Many subjects collapse into one presenter.** Parallel subjects (`institutions`, `rank`, `user`) become stored properties on a single presenter — several pipes become several properties, not several streams. Collections included: `var institutions: [Institution]` drives `ForEach` directly, and per-subview view-model construction disappears (child views take presenter properties as plain values).
-- **Formatting moves into the presenter.** 0.x ran `compactMap { currencyFormatter.string(from:) }` inside view-controller pipelines; that transform belongs in the presenter method — which is the `Presenter` class's stated job. Where the hosting controller also feeds UIKit chrome (a navigation title, a bar-button label), the same presenter serves both: `@Bindable` for SwiftUI, `Observations {}` for UIKit — see [the SwiftUI Integration guide](https://getnapkin.to/documentation/napkin/swiftuiintegration).
+- **Formatting moves into the presenter.** 0.x ran `compactMap { currencyFormatter.string(from:) }` inside view-controller pipelines; that transform belongs in the presenter method — which is the `Presenter` class's stated job. Where the hosting controller also feeds UIKit chrome (a navigation title, a bar-button label), the same presenter serves both: a direct read for SwiftUI, `Observations {}` for UIKit — see [the SwiftUI Integration guide](https://getnapkin.to/documentation/napkin/swiftuiintegration).
 - **Animations.** `.transition` / `.animation(value:)` on the view keep working. Where 0.x relied on implicit animation from `objectWillChange`, wrap the mutation in `withAnimation` inside the presenter method — it's `@MainActor`, so this is legal and local.
 
 ### Events: replacing PassthroughSubject

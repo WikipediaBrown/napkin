@@ -249,8 +249,9 @@ re-adopt against the new shape.
   `lifecycle: AnyPublisher<RouterLifecycle, Never>` Combine publisher. The
   `RouterLifecycle` enum has been removed.
 - **`Presenter`:** `@MainActor @Observable open class`. Subclasses' stored
-  properties are observable to SwiftUI views via `@Bindable` and to UIKit
-  views via `Observations { presenter.foo }`. The `Presentable` protocol is
+  properties are observable to SwiftUI views directly (rebind with
+  `@Bindable` in `body` for two-way bindings) and to UIKit views via
+  `Observations { presenter.foo }`. The `Presentable` protocol is
   `@MainActor`.
 - **`Component`:** `Synchronization.Mutex` replaces `NSRecursiveLock` for
   shared-instance storage. `Component` and `EmptyComponent` are
@@ -311,7 +312,7 @@ For each feature:
 8. `Builder.build(...)` becomes `async @MainActor` when it constructs a view
    controller.
 
-See `Examples/LaunchNapkinApp` and the rewritten `README.md` for working
+See `Examples/RibHouse` and the rewritten `README.md` for working
 reference code.
 
 ### Divergence from upstream Uber RIBs-iOS
