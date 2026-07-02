@@ -124,7 +124,7 @@ A typical v0.x file set on the left, the v2.0.0 equivalent on the right. Treat e
                 await MainActor.run { presenter.listener = self }
 
                 task {
-                    for await user in self.userService.userStream {
+                    for await user in self.userService.userStream() {
                         await self.presenter.update(user: user)
                     }
                 }
@@ -221,7 +221,7 @@ A typical v0.x file set on the left, the v2.0.0 equivalent on the right. Treat e
 | (none) | `nonisolated let lifecycle = InteractorLifecycle()` | Required by ``Interactable``. Holds active-state, bound tasks, and the `AsyncStream` continuations. |
 | `private var cancellables = Set<AnyCancellable>()` | *(deleted)* | Combine is gone. Bound tasks via ``Interactable/task(priority:_:)`` replace `disposeOnDeactivate`. |
 | `override func didBecomeActive() { super.didBecomeActive(); … }` | `func didBecomeActive() async { … }` | No `super` to call. ``Interactable/didBecomeActive()``'s default impl is a no-op; your body is the override. |
-| `userPublisher.sink { … }.store(in: &cancellables)` | `task { for await user in userService.userStream { … } }` | `for await` over an `AsyncStream` replaces Combine subscription. The `task { ... }` binds it to the active scope. |
+| `userPublisher.sink { … }.store(in: &cancellables)` | `task { for await user in userService.userStream() { … } }` | `for await` over an `AsyncStream` replaces Combine subscription. The `task { ... }` binds it to the active scope. |
 | `override func willResignActive() { super.willResignActive(); cancellables.removeAll() }` | `func willResignActive() async { … }` | No manual task cancellation — the lifecycle cancels bound tasks automatically *after* `willResignActive()` returns. |
 | `presenter.update(user: user)` (sync) | `await presenter.update(user: user)` | Presenter is `@MainActor`; the interactor is an actor. Crossing requires `await`. |
 | `init(...) { … presenter.listener = self }` | `await MainActor.run { presenter.listener = self }` inside `didBecomeActive()` | The presenter is `@MainActor`; setting its listener requires being on the main actor. Doing it in `didBecomeActive()` (rather than `init`) also keeps the wiring tied to the active scope. |

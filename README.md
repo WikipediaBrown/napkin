@@ -713,7 +713,7 @@ final actor ProfileInteractor: PresentableInteractable {
 }
 ```
 
-The presenter *is* the view model. Its `@Observable` stored property replaces the subject, the `assign`, the nested `ObservableObject`, and the `receive(on: main)` — SwiftUI reads it directly:
+The presenter *is* the view model. Its `@Observable` stored property replaces the subject, the `assign`, the nested `ObservableObject`, and the `receive(on: main)` — SwiftUI reads it directly: Hold it weakly — the presenter owns the view controller that owns the view; rebind with `@Bindable` inside `body` when you need two-way bindings.
 
 ```swift
 @MainActor
@@ -728,10 +728,13 @@ final class ProfilePresenter: Presenter<ProfileViewController>, ProfilePresentab
 }
 
 struct ProfileView: View {
-    @Bindable var presenter: ProfilePresenter
+    // Weak: the presenter owns the view controller, which owns this view —
+    // a strong reference here would be a retain cycle. The interactor keeps
+    // the presenter alive for the napkin's whole attached lifetime.
+    weak var presenter: ProfilePresenter?
 
     var body: some View {
-        Text(presenter.greeting)
+        Text(presenter?.greeting ?? "")
     }
 }
 ```
@@ -1009,7 +1012,7 @@ func build(withListener listener: HomeListener) async -> HomeRouting {
 
 (To render formatted state, give the interactor a `nonisolated let presenter` and call `await presenter.presentUser(...)` — the separate `@Observable` `Presenter` shown in [Core Components](#core-components).)
 
-When you *do* want a separate `@Observable` presenter holding formatted view-state, use the `Presenter` base class as shown in [Core Components](#core-components) — it's parameterized over your concrete view-controller type: build the view controller first, hand it to `Presenter`'s initializer, and let the view read the presenter via `@Bindable`. Re-annotate the subclass with `@Observable` so its stored properties are tracked.
+When you *do* want a separate `@Observable` presenter holding formatted view-state, use the `Presenter` base class as shown in [Core Components](#core-components) — it's parameterized over your concrete view-controller type: build the view controller first, hand it to `Presenter`'s initializer, and let the view hold the presenter `weak` and read its properties directly. Re-annotate the subclass with `@Observable` so its stored properties are tracked.
 
 Forward user actions to the interactor with `dispatch { await listener?.didTapX() }`. The `dispatch` helper is `@MainActor` and spawns an unstructured `Task` to call the actor-isolated listener — it's the bridge from a synchronous SwiftUI button handler to the async listener method:
 

@@ -292,8 +292,14 @@ For each feature:
 3. Drop `override` keyword from `didBecomeActive` / `willResignActive` (they're
    protocol default implementations now, not class overrides). Mark them `async`.
 4. Replace `cancellables` and Combine `.sink { … }` subscriptions with
-   `task { for await … in Observations { … } }` inside `didBecomeActive`. The
-   task is auto-cancelled on `deactivate`.
+   lifecycle-bound tasks inside `didBecomeActive`: `task { for await … in
+   service.stream() { … } }` for service streams, or — for `@Observable`
+   state — `task { @MainActor [weak self] in for await … in
+   Observations({ … }) { … } }`. The observation loop must be bound to the
+   actor that owns the state; iterating `Observations` directly inside the
+   nonisolated `task {}` closure crashes the current Swift 6 compiler
+   ([swiftlang/swift#90370](https://github.com/swiftlang/swift/issues/90370)).
+   Tasks are auto-cancelled on `deactivate`.
 5. Mark routing protocol methods `async`. Remove every `Task { @MainActor in }`
    wrapper from routing method bodies — routers are already `@MainActor`.
 6. Mark listener and presentable protocol methods `async`. Conform listener

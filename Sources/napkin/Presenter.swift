@@ -73,6 +73,8 @@ public protocol Presentable: AnyObject {}
 ///   add `@Observable`-friendly stored properties, and have it conform to
 ///   the feature's `Presentable` protocol. The view controller renders
 ///   from the presenter and forwards user events to a listener.
+///   Re-annotate subclasses with `@Observable` so their own stored
+///   properties are tracked.
 /// - **Viewful napkin without a separate presenter.** Have the view
 ///   controller conform to the feature's `Presentable` protocol directly,
 ///   and skip `Presenter`.
@@ -110,14 +112,17 @@ public protocol Presentable: AnyObject {}
 ///
 /// **Read it from SwiftUI:**
 ///
+/// Hold the presenter weakly — it owns the view controller that owns the
+/// view. Rebind with `@Bindable` inside `body` for two-way bindings.
+///
 /// ```swift
 /// struct HomeView: View {
-///     @Bindable var presenter: HomePresenter
+///     weak var presenter: HomePresenter?
 ///     let listener: HomeViewListener
 ///
 ///     var body: some View {
 ///         VStack {
-///             Text(presenter.displayName)
+///             Text(presenter?.displayName ?? "")
 ///             Button("Logout") {
 ///                 dispatch { await listener.didTapLogout() }
 ///             }

@@ -8,7 +8,7 @@ napkin doesn't import Combine. The interactor → presenter path uses `async` me
 
 ## `@Observable` Presenter + `@Bindable` View
 
-When a feature is large enough to want a dedicated presenter object, subclass ``Presenter`` and add stored properties for view state. ``Presenter`` is `@Observable`, so SwiftUI sees mutations automatically.
+When a feature is large enough to want a dedicated presenter object, subclass ``Presenter`` and add stored properties for view state. ``Presenter`` is `@Observable`, so SwiftUI sees mutations automatically. Subclasses re-annotate `@Observable` so their own stored properties are tracked too.
 
 ```swift
 import napkin
@@ -42,19 +42,19 @@ The SwiftUI view receives the presenter as a `@Bindable` and reads stored proper
 
 ```swift
 struct HomeView: View {
-    @Bindable var presenter: HomePresenter
+    weak var presenter: HomePresenter?
     weak var listener: HomeViewListener?
 
     var body: some View {
         VStack {
-            Text(presenter.displayName)
-            if let error = presenter.errorMessage {
+            Text(presenter?.displayName ?? "")
+            if let error = presenter?.errorMessage {
                 Text(error).foregroundStyle(.red)
             }
             Button("Logout") {
                 dispatch { [listener] in await listener?.didTapLogout() }
             }
-            .disabled(presenter.isLoggingOut)
+            .disabled(presenter?.isLoggingOut ?? false)
         }
     }
 }
