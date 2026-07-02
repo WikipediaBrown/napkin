@@ -12,7 +12,9 @@ The single biggest blocker reported by users migrating from Combine-era napkin (
 2. **The multicast trap is real and undocumented.** `AsyncStream` is single-consumer (concurrent `next()` is a documented programmer error per SE-0314), while Combine publishers multicast. "Stream state down the tree" usually means multiple children subscribing; a naive `AsyncStream` stored property breaks exactly there. No doc mentions this.
 3. **The reference app confirms the real-world "before" shape.** Scrillionaire-iOS (napkin 0.x in production) has `AuthenticationManager` owning `PassthroughSubject<User?, Error>` fed by a Firebase callback, and `RootInteractor.didBecomeActive` subscribing with `.catch { presentError; reset().userSubject }.retry(.max).assertNoFailure().sink(receiveValue: handleUser).store(in: &cancellables)`. The `catch/reset/retry` ceremony exists only because Combine completions are terminal — the concurrency version deletes it rather than translating it.
 
-The framework already contains the canonical producer-side answer: `InteractorLifecycle.isActiveStream` (Sources/napkin/InteractorLifecycle.swift:122) vends a fresh per-subscriber stream that yields the current value then every transition — `CurrentValueSubject` semantics, in-repo.
+4. **The reference app's viewful napkins show the pipeline runs through four seams, not one.** In Scrillionaire's Home napkin, the `HomePresentable` protocol's API surface is *subjects, not methods* (`var currentTotal: PassthroughSubject<Double?, Never> { get }`); the interactor pipes manager publishers into them with `.subscribe(presenter.currentTotal)` after `.catch { presentError; Just(nil) }` and `.debounce/.map` transforms; the `UIHostingController` then `.receive(on: main).assign(to: \.viewModel.currentTotal, on: rootView)` into a nested `ObservableObject` view model; and taps travel back up through a `tapSubject` on the SwiftUI struct. "Streaming down the tree" therefore means the whole vertical — **manager → interactor → presenter → SwiftUI view** — and every seam changes technology in 2.x. Examples that stop at the interactor answer a quarter of the question.
+
+The framework already contains the canonical producer-side answer: `InteractorLifecycle.isActiveStream` (Sources/napkin/InteractorLifecycle.swift:122) vends a fresh per-subscriber stream that yields the current value then every transition — `CurrentValueSubject` semantics, in-repo. And the 2.x presenter story is a *collapse*, not a translation: `Presenter` is already `@MainActor @Observable`, so the subject-property + `assign` + nested-ViewModel + `receive(on: main)` machinery becomes an async method setting a plain property that SwiftUI reads via `@Bindable`.
 
 ## Goals
 
@@ -48,16 +50,20 @@ Build-time injection covers initial values; for *ongoing* values, Combine users 
 | `@Published` / `ObservableObject` | `@Observable` service + `Observations {}` | Multi-consumer; primed with current value (SE-0475) |
 | `PassthroughSubject` | Same fan-out actor, minus the initial `yield` | No replay |
 | `.sink {}.store(in: &cancellables)` | `task { for await … }` | Auto-cancelled on deactivate — 0.x never had this |
+| `.subscribe(presenter.someSubject)` | `await presenter.present(…)` in the loop body | Presentable protocols expose async methods, not subjects |
 | `.catch` / `.retry` / subject `reset()` | `async throws` at the call site | Streams carry state, not failure; they never terminate on error |
-| `.receive(on: DispatchQueue.main)` | `await presenter.…` | Isolation crossing is explicit |
-| `assign(to:on:)` | Set the `@Observable` presenter property in the loop body | |
+| `.catch { presentError(…); return Just(fallback) }` | `do { for try await … } catch { await presenter.presentError(…) }` | Same terminal semantics as Combine's `.catch`-with-replacement |
+| `.map` / transforms mid-pipeline | Plain code in the loop body | It's just a `for` loop |
+| `.receive(on: DispatchQueue.main)` | `await presenter.…` | The presenter is `@MainActor`; the crossing is explicit |
+| `assign(to:on:)` / nested `ObservableObject` view model | Set the `@Observable` presenter property; SwiftUI reads via `@Bindable` | The view-model layer disappears |
+| `tapSubject` on the SwiftUI view + `.sink` in the VC | `dispatch { await listener?.didTapX() }` | Already documented in [SwiftUI Integration](#swiftui-integration) |
 | `combineLatest` / `merge` / `debounce` / `removeDuplicates` | [swift-async-algorithms](https://github.com/apple/swift-async-algorithms) | Official Apple package, not stdlib |
 
-#### 3. Worked example — the spine: auth state with a root auth gate
+#### 3. Worked example — the spine: auth state from service to screen (all four seams)
 
 Domain chosen deliberately: matches the reference production app (`AuthenticationManager` → `RootInteractor`), RibHouse (`AuthService`, `User`, LaunchNapkin swapping LoggedIn/LoggedOut), and the classic RIBs demo.
 
-**Before (Combine, collapsed in a `<details>` block, ~25 lines):** manager owning `PassthroughSubject<User?, Error>` fed by a callback API; root interactor subscribing with the `catch/reset/retry/assertNoFailure/sink/store` chain; `handleUser` routing `.some` → home, `.none` → login.
+**Before (Combine, collapsed `<details>` blocks placed next to the corresponding "after" code):** two short blocks mirroring the reference app. Block 1 (~25 lines, next to the producer + auth gate): manager owning `PassthroughSubject<User?, Error>` fed by a callback API; root interactor subscribing with the `catch/reset/retry/assertNoFailure/sink/store` chain; `handleUser` routing `.some` → home, `.none` → login. Block 2 (~20 lines, next to the presenter/view seams): the presentable protocol exposing subjects as properties, the interactor's `.subscribe(presenter.subject)` pipe, and the hosting controller's `.receive(on: main).assign(to: \.viewModel.x, on: rootView)` into a nested `ObservableObject` view model.
 
 **After — producer (the never-before-documented half):**
 
@@ -127,7 +133,46 @@ func didBecomeActive() async {
 }
 ```
 
-A second, deeper child (e.g. a profile napkin) subscribes to the *same service* via its own `userStream()` call — one line of prose + a 5-line snippet making the fan-out explicit. Replay means a child attached after login immediately learns the state — an upgrade over the `PassthroughSubject` original, which depended on the upstream callback re-firing.
+A second, deeper child (e.g. a profile napkin) subscribes to the *same service* via its own `userStream()` call, making the fan-out explicit — and this consumer carries the value **all the way to the screen**, covering the remaining seams the reference app's Home napkin shows in Combine form:
+
+```swift
+// Seam 2 — interactor → presenter. In 0.x the presentable protocol exposed
+// subjects (`var currentTotal: PassthroughSubject<…> { get }`) and the
+// interactor piped into them with `.subscribe(presenter.currentTotal)`.
+// In 2.x the presentable protocol exposes async methods:
+func didBecomeActive() async {
+    task {
+        for await user in await self.authService.userStream() {
+            // Seam 1 transform: what `.map` did mid-pipeline is now plain code.
+            let greeting = user.map { "Welcome back, \($0.name)" } ?? "Signed out"
+            await self.presenter.present(greeting: greeting)   // seam 2: the await IS receive(on: main)
+        }
+    }
+}
+```
+
+```swift
+// Seam 3 — presenter → SwiftUI. In 0.x: `.receive(on: main).assign(to:
+// \.viewModel.currentTotal, on: rootView)` into a nested ObservableObject
+// view model. In 2.x the @Observable presenter's stored property is the
+// view model; SwiftUI reads it directly:
+@MainActor
+final class ProfilePresenter: Presenter<ProfileViewControllable>, ProfilePresentable {
+    var greeting: String = ""
+    func present(greeting: String) async { self.greeting = greeting }
+}
+
+struct ProfileView: View {
+    @Bindable var presenter: ProfilePresenter
+    var body: some View { Text(presenter.greeting) }
+}
+```
+
+Seam 4 (view → interactor: 0.x `tapSubject` + `.sink` in the hosting controller → 2.x `dispatch { await listener?.didTapX() }`) is already documented in the SwiftUI Integration section — one sentence + link, no repeated code.
+
+A short **"seam by seam"** intro sentence frames the four crossings before the code so readers can map their own app onto it: service → interactor (`task { for await }`), interactor → presenter (`await` async method), presenter → view (`@Observable` + `@Bindable`), view → interactor (`dispatch`).
+
+Replay means a child attached after login immediately learns the state — an upgrade over the `PassthroughSubject` original, which depended on the upstream callback re-firing.
 
 **Callout (warning-style):** the deleted `catch/reset/retry` chain, shown struck-through or quoted, with the two-sentence explanation: Combine completions are terminal, so a long-lived stream needed subject-swapping ceremony to survive errors; concurrency streams carry only state and errors return at the call site.
 
