@@ -23,8 +23,8 @@ actor AuthEventBus {
         let (stream, continuation) = AsyncStream.makeStream(of: AuthEvent.self)
         let id = UUID()
         subscribers[id] = continuation
-        // No `continuation.yield(currentUser)` here — that one line is the
-        // whole difference between CurrentValueSubject and
+        // No stored current value and no initial yield — the replay
+        // is the whole difference between CurrentValueSubject and
         // PassthroughSubject.
         continuation.onTermination = { [weak self] _ in
             Task { await self?.removeSubscriber(id) }

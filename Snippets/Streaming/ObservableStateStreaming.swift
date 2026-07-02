@@ -25,7 +25,7 @@ struct User: Sendable, Equatable {
 /// of consumers can observe independently.
 @MainActor
 @Observable
-final class UserService {
+final class SessionService {
 
     private(set) var currentUser: User?
 
@@ -38,10 +38,10 @@ final actor SettingsInteractor: Interactable {
 
     nonisolated let lifecycle = InteractorLifecycle()
 
-    private let userService: UserService
+    private let sessionService: SessionService
 
-    init(userService: UserService) {
-        self.userService = userService
+    init(sessionService: SessionService) {
+        self.sessionService = sessionService
     }
 
     func didBecomeActive() async {
@@ -49,9 +49,9 @@ final actor SettingsInteractor: Interactable {
         // bind it to the main actor, and hop back to this actor to
         // handle each value. Still lifecycle-bound: cancelled on
         // willResignActive.
-        let userService = self.userService
+        let sessionService = self.sessionService
         task { @MainActor [weak self] in
-            for await user in Observations({ userService.currentUser }) {
+            for await user in Observations({ sessionService.currentUser }) {
                 await self?.handle(user)
             }
         }

@@ -223,7 +223,7 @@ protocol HomeListener: AnyObject, Sendable {
 }
 
 @MainActor
-protocol HomeRouting: ViewableRouting {
+protocol HomeRouting: ViewableRouting, Sendable {
     func routeToProfile() async
 }
 
@@ -312,7 +312,7 @@ Use `Router<InteractorType>` for napkins without views. Use `ViewableRouter<Inte
 
 ```swift
 @MainActor
-protocol HomeRouting: ViewableRouting {
+protocol HomeRouting: ViewableRouting, Sendable {
     func routeToProfile() async
     func routeBackFromProfile() async
 }
@@ -363,7 +363,7 @@ For detaching, the order is reversed: dismiss the view, then `await detachChild(
 
 ### Presenter (Optional)
 
-The **Presenter** transforms business data into view-friendly formats. It sits between the interactor and the view controller. `Presenter` is `@MainActor` and `@Observable`, so SwiftUI views can read its stored properties directly via `@Bindable`:
+The **Presenter** transforms business data into view-friendly formats. It sits between the interactor and the view controller. `Presenter` is `@MainActor` and `@Observable`, so SwiftUI views can read its stored properties directly via `@Bindable`. Re-annotate subclasses with `@Observable` so their own stored properties are tracked too:
 
 ```swift
 protocol HomePresentable: Presentable, Sendable {
@@ -570,6 +570,15 @@ actor AuthenticationService {
         setUser(nil)                  // e.g. try await backend.signOut()
     }
 
+    /// Adapting a callback API — the 0.x manager wrapped an auth
+    /// SDK's state-change listener; the 2.x service hops the callback
+    /// onto the actor:
+    func bind(to auth: AuthClient) {
+        auth.addStateDidChangeListener { user in
+            Task { await self.setUser(user) }
+        }
+    }
+
     private func setUser(_ user: User?) {
         currentUser = user
         for continuation in subscribers.values {
@@ -645,7 +654,7 @@ Teardown is a closed loop with no leak path: detaching the napkin cancels the `t
 
 ### From the service to the screen
 
-One value crosses four seams on its way to a pixel: service → interactor (`task { for await }`), interactor → presenter (an `await`ed async method), presenter → view (`@Observable` read via `@Bindable`), and view → interactor (`dispatch {}`). Here a second napkin, deeper in the tree, subscribes to the *same* service — each `userStream()` call is an independent stream, so fan-out just works — and carries the value through the presenter into SwiftUI:
+One value crosses four seams on its way to a pixel: service → interactor (`task { for await }`), interactor → presenter (an `await`ed async method), presenter → view (`@Observable` read via `@Bindable`), and view → interactor (`dispatch {}`). Here a second napkin, deeper in the tree, subscribes to the *same* service — each `userStream()` call is an independent stream, so fan-out just works. Because every stream starts with the current value, a napkin attached after login learns the auth state immediately — an upgrade over the PassthroughSubject original, where late subscribers waited for the next change. It carries the value through the presenter into SwiftUI:
 
 <details>
 <summary>The 0.x version this replaces</summary>
@@ -727,15 +736,17 @@ struct ProfileView: View {
 }
 ```
 
+(`Presenter`'s generic argument is your concrete hosting controller — here `ProfileViewController`, built by the feature's builder. A protocol can't satisfy it: existentials don't conform to their own protocols.)
+
 Three notes from real migrations:
 
 - **Many subjects collapse into one presenter.** Parallel subjects (`institutions`, `rank`, `user`) become stored properties on a single presenter — several pipes become several properties, not several streams. Collections included: `var institutions: [Institution]` drives `ForEach` directly, and per-subview view-model construction disappears (child views take presenter properties as plain values).
-- **Formatting moves into the presenter.** 0.x ran `compactMap { currencyFormatter.string(from:) }` inside view-controller pipelines; that transform belongs in the presenter method — which is the `Presenter` class's stated job. Where the hosting controller also feeds UIKit chrome (a navigation title, a bar-button label), the same presenter serves both: `@Bindable` for SwiftUI, `Observations {}` for UIKit — see [SwiftUI Integration](#swiftui-integration).
+- **Formatting moves into the presenter.** 0.x ran `compactMap { currencyFormatter.string(from:) }` inside view-controller pipelines; that transform belongs in the presenter method — which is the `Presenter` class's stated job. Where the hosting controller also feeds UIKit chrome (a navigation title, a bar-button label), the same presenter serves both: `@Bindable` for SwiftUI, `Observations {}` for UIKit — see [the SwiftUI Integration guide](https://getnapkin.to/documentation/napkin/swiftuiintegration).
 - **Animations.** `.transition` / `.animation(value:)` on the view keep working. Where 0.x relied on implicit animation from `objectWillChange`, wrap the mutation in `withAnimation` inside the presenter method — it's `@MainActor`, so this is legal and local.
 
 ### Events: replacing PassthroughSubject
 
-Fire-and-forget events (no current value, no replay) are the same fan-out actor minus one line:
+Fire-and-forget events (no current value, no replay) are the same fan-out actor minus the replay:
 
 ```swift
 enum AuthEvent: Sendable {
@@ -753,8 +764,8 @@ actor AuthEventBus {
         let (stream, continuation) = AsyncStream.makeStream(of: AuthEvent.self)
         let id = UUID()
         subscribers[id] = continuation
-        // No `continuation.yield(currentUser)` here — that one line is the
-        // whole difference between CurrentValueSubject and
+        // No stored current value and no initial yield — the replay
+        // is the whole difference between CurrentValueSubject and
         // PassthroughSubject.
         continuation.onTermination = { [weak self] _ in
             Task { await self?.removeSubscriber(id) }
@@ -809,7 +820,7 @@ final actor SessionMonitorInteractor: Interactable {
 /// of consumers can observe independently.
 @MainActor
 @Observable
-final class UserService {
+final class SessionService {
 
     private(set) var currentUser: User?
 
@@ -822,10 +833,10 @@ final actor SettingsInteractor: Interactable {
 
     nonisolated let lifecycle = InteractorLifecycle()
 
-    private let userService: UserService
+    private let sessionService: SessionService
 
-    init(userService: UserService) {
-        self.userService = userService
+    init(sessionService: SessionService) {
+        self.sessionService = sessionService
     }
 
     func didBecomeActive() async {
@@ -833,9 +844,9 @@ final actor SettingsInteractor: Interactable {
         // bind it to the main actor, and hop back to this actor to
         // handle each value. Still lifecycle-bound: cancelled on
         // willResignActive.
-        let userService = self.userService
+        let sessionService = self.sessionService
         task { @MainActor [weak self] in
-            for await user in Observations({ userService.currentUser }) {
+            for await user in Observations({ sessionService.currentUser }) {
                 await self?.handle(user)
             }
         }

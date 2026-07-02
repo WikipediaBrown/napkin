@@ -20,6 +20,7 @@ protocol HomePresentable: Presentable, Sendable {
 }
 
 @MainActor
+@Observable
 final class HomePresenter: Presenter<HomeViewController>, HomePresentable {
 
     var displayName: String = ""

@@ -20,6 +20,10 @@ typealias PlatformViewController = NSViewController
 struct User: Sendable, Equatable {
     let name: String
 }
+
+struct AuthClient {
+    func addStateDidChangeListener(_ handler: @escaping @Sendable (User?) -> Void) {}
+}
 // snippet.show
 
 // MARK: - Producer (the service the parent's Component shares)
@@ -59,6 +63,15 @@ actor AuthenticationService {
 
     func signOut() async throws {
         setUser(nil)                  // e.g. try await backend.signOut()
+    }
+
+    /// Adapting a callback API — the 0.x manager wrapped an auth
+    /// SDK's state-change listener; the 2.x service hops the callback
+    /// onto the actor:
+    func bind(to auth: AuthClient) {
+        auth.addStateDidChangeListener { user in
+            Task { await self.setUser(user) }
+        }
     }
 
     private func setUser(_ user: User?) {
