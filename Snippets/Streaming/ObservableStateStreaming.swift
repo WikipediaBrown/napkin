@@ -6,7 +6,7 @@
 //
 // NOTE: iterating `Observations` directly inside the nonisolated
 // `task {}` closure crashes the Swift 6.2 frontend (verified
-// 2026-07-02). The `task { @MainActor in … }` binding below is the
+// 2026-07-02). The `task { @MainActor [weak self] in … }` binding below is the
 // working form — do not "simplify" it.
 //
 import napkin

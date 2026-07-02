@@ -287,7 +287,7 @@ actor AuthEventBus {
         let (stream, continuation) = AsyncStream.makeStream(of: AuthEvent.self)
         let id = UUID()
         subscribers[id] = continuation
-        // No `continuation.yield(current)` here — that one line is the
+        // No `continuation.yield(currentUser)` here — that one line is the
         // whole difference between CurrentValueSubject and
         // PassthroughSubject.
         continuation.onTermination = { [weak self] _ in
@@ -373,7 +373,7 @@ Create `Snippets/Streaming/ObservableStateStreaming.swift` with exactly:
 //
 // NOTE: iterating `Observations` directly inside the nonisolated
 // `task {}` closure crashes the Swift 6.2 frontend (verified
-// 2026-07-02). The `task { @MainActor in … }` binding below is the
+// 2026-07-02). The `task { @MainActor [weak self] in … }` binding below is the
 // working form — do not "simplify" it.
 //
 import napkin
@@ -477,6 +477,7 @@ protocol ProfilePresentableListener: AnyObject, Sendable {
     func didDismiss() async
 }
 // snippet.show
+@MainActor
 final class ProfileViewController: UIViewController {
 
     weak var listener: ProfilePresentableListener?
@@ -485,7 +486,7 @@ final class ProfileViewController: UIViewController {
     //
     //     publisher(for: \.parent)
     //         .sink { [weak self] parent in
-    //             if parent == nil { self?.listener?.onDismiss() }
+    //             if parent == nil { self?.listener?.didDismiss() }
     //         }
     //         .store(in: &cancellables)
     //

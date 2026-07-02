@@ -13,6 +13,7 @@ protocol ProfilePresentableListener: AnyObject, Sendable {
     func didDismiss() async
 }
 // snippet.show
+@MainActor
 final class ProfileViewController: UIViewController {
 
     weak var listener: ProfilePresentableListener?
@@ -21,7 +22,7 @@ final class ProfileViewController: UIViewController {
     //
     //     publisher(for: \.parent)
     //         .sink { [weak self] parent in
-    //             if parent == nil { self?.listener?.onDismiss() }
+    //             if parent == nil { self?.listener?.didDismiss() }
     //         }
     //         .store(in: &cancellables)
     //
