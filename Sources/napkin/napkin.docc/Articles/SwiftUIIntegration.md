@@ -6,9 +6,9 @@ How `@Observable` presenters consume state without Combine, the `Observations { 
 
 napkin doesn't import Combine. The interactor → presenter path uses `async` methods; the presenter → view path uses Observation (the `@Observable` macro). This article explains the consuming patterns for SwiftUI and UIKit, and the small set of pitfalls that have bitten people.
 
-## `@Observable` Presenter + `@Bindable` View
+## The `@Observable` Presenter, Held Weakly
 
-When a feature is large enough to want a dedicated presenter object, subclass ``Presenter`` and add stored properties for view state. ``Presenter`` is `@Observable`, so SwiftUI sees mutations automatically.
+When a feature is large enough to want a dedicated presenter object, subclass ``Presenter`` and add stored properties for view state. ``Presenter`` is `@Observable`, so SwiftUI sees mutations automatically. Subclasses re-annotate `@Observable` so their own stored properties are tracked too.
 
 ```swift
 import napkin
@@ -38,29 +38,29 @@ final class HomePresenter: Presenter<HomeViewController>, HomePresentable {
 }
 ```
 
-The SwiftUI view receives the presenter as a `@Bindable` and reads stored properties directly. SwiftUI invalidates only the parts of the view that read mutated properties.
+The SwiftUI view holds the presenter weakly — the presenter owns the view controller that owns the view, so a strong stored reference would be a retain cycle — and reads its `@Observable` properties directly, rebinding with `@Bindable` inside `body` only when it needs two-way bindings. SwiftUI invalidates only the parts of the view that read mutated properties.
 
 ```swift
 struct HomeView: View {
-    @Bindable var presenter: HomePresenter
+    weak var presenter: HomePresenter?
     weak var listener: HomeViewListener?
 
     var body: some View {
         VStack {
-            Text(presenter.displayName)
-            if let error = presenter.errorMessage {
+            Text(presenter?.displayName ?? "")
+            if let error = presenter?.errorMessage {
                 Text(error).foregroundStyle(.red)
             }
             Button("Logout") {
                 dispatch { [listener] in await listener?.didTapLogout() }
             }
-            .disabled(presenter.isLoggingOut)
+            .disabled(presenter?.isLoggingOut ?? false)
         }
     }
 }
 ```
 
-**Why `@Bindable` and not `@ObservedObject`.** `@Observable` types are not `ObservableObject`. Use `@Bindable` for two-way bindings (`$presenter.foo`) or read directly via `presenter.foo`. There is no `.environmentObject` plumbing — the presenter is just passed in as a property.
+**Why Observation and not `@ObservedObject`.** `@Observable` types are not `ObservableObject` — Observation tracks reads on its own, so no property wrapper is needed to observe: read directly via `presenter?.foo`. For two-way bindings, rebind inside `body` (`if let presenter { @Bindable var presenter = presenter; ... $presenter.foo ... }`). There is no `.environmentObject` plumbing — the presenter is just passed in as a property.
 
 **Why `@MainActor` on the presenter.** SwiftUI reads from `@Observable` synchronously during `body` evaluation. The presenter's storage must be readable on the main actor. Marking the class `@MainActor` makes that guarantee explicit.
 

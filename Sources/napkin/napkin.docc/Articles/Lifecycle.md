@@ -40,7 +40,7 @@ Long-lived work — anything that watches an external source — goes in ``Inter
 ```swift
 func didBecomeActive() async {
     task {
-        for await user in userService.userStream {
+        for await user in userService.userStream() {
             await presenter.presentUser(user)
         }
     }

@@ -249,8 +249,9 @@ re-adopt against the new shape.
   `lifecycle: AnyPublisher<RouterLifecycle, Never>` Combine publisher. The
   `RouterLifecycle` enum has been removed.
 - **`Presenter`:** `@MainActor @Observable open class`. Subclasses' stored
-  properties are observable to SwiftUI views via `@Bindable` and to UIKit
-  views via `Observations { presenter.foo }`. The `Presentable` protocol is
+  properties are observable to SwiftUI views directly (rebind with
+  `@Bindable` in `body` for two-way bindings) and to UIKit views via
+  `Observations { presenter.foo }`. The `Presentable` protocol is
   `@MainActor`.
 - **`Component`:** `Synchronization.Mutex` replaces `NSRecursiveLock` for
   shared-instance storage. `Component` and `EmptyComponent` are
@@ -292,19 +293,26 @@ For each feature:
 3. Drop `override` keyword from `didBecomeActive` / `willResignActive` (they're
    protocol default implementations now, not class overrides). Mark them `async`.
 4. Replace `cancellables` and Combine `.sink { … }` subscriptions with
-   `task { for await … in Observations { … } }` inside `didBecomeActive`. The
-   task is auto-cancelled on `deactivate`.
+   lifecycle-bound tasks inside `didBecomeActive`: `task { for await … in
+   service.stream() { … } }` for service streams, or — for `@Observable`
+   state — `task { @MainActor [weak self] in for await … in
+   Observations({ … }) { … } }`. The observation loop must be bound to the
+   actor that owns the state; iterating `Observations` directly inside the
+   nonisolated `task {}` closure crashes the current Swift 6 compiler
+   ([swiftlang/swift#90370](https://github.com/swiftlang/swift/issues/90370)).
+   Tasks are auto-cancelled on `deactivate`.
 5. Mark routing protocol methods `async`. Remove every `Task { @MainActor in }`
    wrapper from routing method bodies — routers are already `@MainActor`.
 6. Mark listener and presentable protocol methods `async`. Conform listener
    protocols to `Sendable`.
 7. SwiftUI views: replace `@ObservedObject var viewModel: HomeViewModel` with
-   `@Bindable var presenter: HomePresenter`. Replace event handlers with
-   `dispatch { await listener?.didTapX() }`.
+   `weak var presenter: HomePresenter?`, reading its properties directly and
+   rebinding with `@Bindable` inside `body` only when a two-way binding is
+   needed. Replace event handlers with `dispatch { await listener?.didTapX() }`.
 8. `Builder.build(...)` becomes `async @MainActor` when it constructs a view
    controller.
 
-See `Examples/LaunchNapkinApp` and the rewritten `README.md` for working
+See `Examples/RibHouse` and the rewritten `README.md` for working
 reference code.
 
 ### Divergence from upstream Uber RIBs-iOS

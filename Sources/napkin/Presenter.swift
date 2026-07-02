@@ -31,9 +31,11 @@ import Observation
 /// You have two options for who conforms to a feature-specific `Presentable`:
 ///
 /// - A dedicated ``Presenter`` subclass (recommended when there is non-trivial
-///   view-state to hold). The view controller observes the presenter via
-///   `@Bindable` (SwiftUI) or `Observations { ... }` (UIKit) and stays a
-///   thin renderer.
+///   view-state to hold). The view controller holds the presenter and
+///   SwiftUI reads its stored properties directly (`@Bindable` locally in
+///   `body` for two-way bindings), or UIKit observes them via
+///   `Observations { ... }`; either way the view controller stays a thin
+///   renderer.
 /// - The view controller itself, when there is no separate state to hold and
 ///   the presenter would just delegate every method to the view controller
 ///   anyway.
@@ -58,9 +60,10 @@ public protocol Presentable: AnyObject {}
 
 /// A base class for presenters with `@Observable` view state.
 ///
-/// `Presenter` is `@MainActor`-isolated and `@Observable`, so SwiftUI views
-/// can read its stored properties directly via `@Bindable` and UIKit views
-/// can observe them via the `Observations { ... }` macro.
+/// `Presenter` is `@MainActor`-isolated and `@Observable`. The view
+/// controller holds the presenter and SwiftUI reads its stored properties
+/// directly (`@Bindable` locally in `body` for two-way bindings); UIKit
+/// views can observe them via the `Observations { ... }` macro.
 ///
 /// ## Overview
 ///
@@ -73,6 +76,8 @@ public protocol Presentable: AnyObject {}
 ///   add `@Observable`-friendly stored properties, and have it conform to
 ///   the feature's `Presentable` protocol. The view controller renders
 ///   from the presenter and forwards user events to a listener.
+///   Re-annotate subclasses with `@Observable` so their own stored
+///   properties are tracked.
 /// - **Viewful napkin without a separate presenter.** Have the view
 ///   controller conform to the feature's `Presentable` protocol directly,
 ///   and skip `Presenter`.
@@ -110,14 +115,17 @@ public protocol Presentable: AnyObject {}
 ///
 /// **Read it from SwiftUI:**
 ///
+/// Hold the presenter weakly — it owns the view controller that owns the
+/// view. Rebind with `@Bindable` inside `body` for two-way bindings.
+///
 /// ```swift
 /// struct HomeView: View {
-///     @Bindable var presenter: HomePresenter
+///     weak var presenter: HomePresenter?
 ///     let listener: HomeViewListener
 ///
 ///     var body: some View {
 ///         VStack {
-///             Text(presenter.displayName)
+///             Text(presenter?.displayName ?? "")
 ///             Button("Logout") {
 ///                 dispatch { await listener.didTapLogout() }
 ///             }

@@ -82,7 +82,7 @@ final actor AnalyticsInteractor: Interactable {
 
     func didBecomeActive() async {
         task {
-            for await event in self.eventBus.events {
+            for await event in self.eventBus.events() {
                 do {
                     try await self.analyticsClient.send(event)
                 } catch {
