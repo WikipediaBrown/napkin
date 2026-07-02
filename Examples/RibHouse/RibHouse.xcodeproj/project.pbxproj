@@ -19,6 +19,7 @@
 		4E3698FD86B1E4884A5B4372 /* LoggedOutNapkinView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF72016881F53FB3C3AAD0B0 /* LoggedOutNapkinView.swift */; };
 		4EEDC47C5C40A335C40F1673 /* AccessibilityIdentifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320B423566EB1A3D1494D67D /* AccessibilityIdentifiers.swift */; };
 		5022237B891086C1CDE262CD /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D9F460D1E15A72658F681D /* User.swift */; };
+		52D8AAFEC17676455A7D5B25 /* testLoggedInNapkinViewWithBanner.1.png in Resources */ = {isa = PBXBuildFile; fileRef = 0C29A1BD8447D72640ED7E02 /* testLoggedInNapkinViewWithBanner.1.png */; };
 		6F47F9C8B8FFC6E554BEC22B /* LoggedOutNapkinViewSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAC1EDA12E27599882A8CD8A /* LoggedOutNapkinViewSnapshotTests.swift */; };
 		725DFA15D03883F175923B71 /* AnnouncementsNapkinBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6762748E1A9CADD4B0A9D860 /* AnnouncementsNapkinBuilder.swift */; };
 		752D0DCE309368D214FCD65B /* testLoggedOutNapkinView.1.png in Resources */ = {isa = PBXBuildFile; fileRef = 2DE9353E27F489402562E5D1 /* testLoggedOutNapkinView.1.png */; };
@@ -63,6 +64,7 @@
 
 /* Begin PBXFileReference section */
 		07D96E571C4BEF4D2B06FBBC /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
+		0C29A1BD8447D72640ED7E02 /* testLoggedInNapkinViewWithBanner.1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = testLoggedInNapkinViewWithBanner.1.png; sourceTree = "<group>"; };
 		13458418AC1636B662194B4B /* PitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PitService.swift; sourceTree = "<group>"; };
 		239E398530140496F4C36C5D /* LoggedInNapkinRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggedInNapkinRouter.swift; sourceTree = "<group>"; };
 		2926F18DC49F1A86742F7710 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
@@ -155,6 +157,7 @@
 			isa = PBXGroup;
 			children = (
 				9BC63029399977C81D2A46F9 /* testLoggedInNapkinView.1.png */,
+				0C29A1BD8447D72640ED7E02 /* testLoggedInNapkinViewWithBanner.1.png */,
 			);
 			path = LoggedInNapkinViewSnapshotTests;
 			sourceTree = "<group>";
@@ -382,6 +385,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0C5ABE7179DB67B389230193 /* testLoggedInNapkinView.1.png in Resources */,
+				52D8AAFEC17676455A7D5B25 /* testLoggedInNapkinViewWithBanner.1.png in Resources */,
 				752D0DCE309368D214FCD65B /* testLoggedOutNapkinView.1.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

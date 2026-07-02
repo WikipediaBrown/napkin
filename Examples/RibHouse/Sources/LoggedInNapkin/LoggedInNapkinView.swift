@@ -90,7 +90,7 @@ struct LoggedInNapkinView: View {
             .padding(.horizontal, 36)
             .padding(.bottom, 48)
         }
-        .overlay(alignment: .top) {
+        .safeAreaInset(edge: .top, spacing: 0) {
             if let banner {
                 Text(banner)
                     .font(.system(.caption, design: .monospaced))
@@ -99,7 +99,7 @@ struct LoggedInNapkinView: View {
                     .padding(.vertical, 10)
                     .background(Capsule().fill(Palette.Dark.amber))
                     .foregroundStyle(Palette.Dark.paper)
-                    .padding(.top, 12)
+                    .padding(.vertical, 8)
                     .transition(.move(edge: .top).combined(with: .opacity))
                     .accessibilityIdentifier(NapkinAccessibility.LoggedIn.banner)
             }

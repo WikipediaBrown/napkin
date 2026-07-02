@@ -10,7 +10,7 @@ final class AnnouncementsNapkinComponent: Component<AnnouncementsNapkinDependenc
 }
 
 protocol AnnouncementsNapkinBuildable: Buildable {
-    func build(withListener listener: AnnouncementsNapkinListener) async -> AnnouncementsNapkinRouting
+    @MainActor func build(withListener listener: AnnouncementsNapkinListener) async -> AnnouncementsNapkinRouting
 }
 
 final class AnnouncementsNapkinBuilder: Builder<AnnouncementsNapkinDependency>, AnnouncementsNapkinBuildable, @unchecked Sendable {
@@ -19,10 +19,11 @@ final class AnnouncementsNapkinBuilder: Builder<AnnouncementsNapkinDependency>, 
         super.init(dependency: dependency)
     }
 
+    @MainActor
     func build(withListener listener: AnnouncementsNapkinListener) async -> AnnouncementsNapkinRouting {
         let component = AnnouncementsNapkinComponent(dependency: dependency)
         let interactor = AnnouncementsNapkinInteractor(pitService: component.pitService)
-        let router = await AnnouncementsNapkinRouter(interactor: interactor)
+        let router = AnnouncementsNapkinRouter(interactor: interactor)
         await interactor.wire(router: router, listener: listener)
         return router
     }
