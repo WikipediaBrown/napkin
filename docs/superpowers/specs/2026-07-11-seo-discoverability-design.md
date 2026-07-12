@@ -21,12 +21,18 @@ Two adversarially-verified deep-research passes (2026-07-11; 24 of 25 claims sur
    retrieved via general web search **88.5%** of the time, vs Reddit 1.9%, YouTube 0.5%
    (Ahrefs, 1.4M prompts). Ranking on Google/Bing for queries like "RIBs alternative
    Swift" and "Clean Architecture iOS framework" *is* the AI-visibility strategy.
-2. **DocC is nearly invisible to AI crawlers.** DocC renders as a client-side JS SPA;
-   GPTBot / ClaudeBot / PerplexityBot fetch but do **not** execute JavaScript
-   (Vercel/MERJ, 500M+ fetches). Only Gemini (via Googlebot) and AppleBot render it.
-   DocC ships **no sitemap generator** (swift-docc#779, open since 2023). Confirmed
-   locally: DocC emits ~102 per-page `index.html` files that are byte-identical 4,205-byte
-   SPA shells titled "Documentation" with no canonical, description, or OG tags.
+2. **DocC's default output is nearly invisible to AI crawlers, but there is now an official
+   fix.** DocC renders as a client-side JS SPA; GPTBot / ClaudeBot / PerplexityBot fetch but
+   do **not** execute JavaScript (Vercel/MERJ, 500M+ fetches). Only Gemini (via Googlebot)
+   and AppleBot render it. By default DocC emits ~102 byte-identical 4,205-byte shells titled
+   "Documentation". **However**, Swift 6.3+ ships an official flag,
+   `--experimental-transform-for-static-hosting-with-content`, that makes DocC write a real
+   `<title>` and the full page content (in `<noscript>`) into each `index.html` — verified
+   locally on the Xcode 27 toolchain. This is the official replacement for hand-injected
+   content and is the approach this design uses. DocC still ships **no sitemap generator**
+   (swift-docc#779, open) and the flag does not emit description/canonical/Open Graph (those
+   await the unshipped "absolute hosting URL" feature, #779/#964) — so the sitemap and
+   versioned-docs deduplication remain this project's responsibility (§1a-bis, §1b).
 3. **GEO content shape that measurably wins citations:** direct quotations, statistics,
    cited sources (+30–40% in the GEO/KDD-2024 paper); titles/URLs semantically matched to
    the user's question. Keyword-stuffing performs ~10% *worse* than baseline.
@@ -69,42 +75,72 @@ deploy** from `Tools/site/` + the DocC catalog + the workflow. Therefore:
 
 High-evidence, low-risk. No prose judgment calls; safe to ship first.
 
-### 1a. DocC static-HTML enrichment — centerpiece
-New script `Tools/site/docc_seo.py`, invoked in `Documentation.yml` after **each** DocC
-build (the latest build into `docs/`, and each versioned build into `docs/<ref>/`).
+### 1a. DocC crawler-readability — the OFFICIAL flag (revised 2026-07-12)
 
-For every `documentation/napkin/**/index.html` and `tutorials/**/index.html`:
-- Locate the sibling route JSON under `data/…/<route>.json`.
-- Read `metadata.title` and flatten `abstract` inline runs to plain text.
-- Inject into `<head>` (replacing DocC's generic `<title>Documentation</title>`):
-  - `<title>{Title} | napkin</title>`
-  - `<meta name="description" content="{abstract}">`
-  - `<link rel="canonical" href="{canonicalURL}">`
-  - OG + Twitter tags (`og:title`, `og:description`, `og:type=article`, `og:url`, image)
-  - `Person` author + `BreadcrumbList` JSON-LD (breadcrumb from DocC `hierarchy`)
-  - a `<noscript>` block with `<h1>{Title}</h1><p>{abstract}</p>` + a link, so JS-less
-    crawlers read real, unique content.
-- **Canonical rule:**
-  - Latest build (`docs/documentation/napkin/<route>/`) → canonical = its own
-    `https://getnapkin.to/documentation/napkin/<route>/`.
-  - Versioned build (`docs/<ref>/documentation/napkin/<route>/`) → canonical = the
-    **unversioned latest** URL `https://getnapkin.to/documentation/napkin/<route>/`
-    (dedupes `/2.0.8/…`, `/main/…` against the canonical copy).
-- Idempotent and resilient: if a route JSON is missing, leave that page's shell untouched
-  and log it (never fail the build over one page).
+**Corrected after primary-source verification + an empirical test on the Xcode 27 / Swift
+6.4 toolchain.** The original plan here was a hand-rolled Python post-processor. That is
+superseded: DocC now ships a first-party flag that does the core job, matching the
+"prefer the official mechanism" preference.
+
+**Add `--experimental-transform-for-static-hosting-with-content`** to **both**
+`swift package generate-documentation` invocations in `Documentation.yml` (the latest build
+and the versioned-docs loop). Shipped in Swift 6.3 (swift-docc PRs #1383/#1402/#1409),
+expanded on `main` for 6.4. With it, DocC itself writes into every per-page `index.html`:
+- a **real `<title>`** (e.g. `Presenter`) in place of the generic `Documentation`, and
+- the **full page content** (title, declaration, abstract, Overview, "Mentioned In") as
+  semantic HTML inside the page's `<noscript>` — readable by JS-less crawlers
+  (GPTBot/ClaudeBot/PerplexityBot).
+
+Verified locally on napkin's `Presenter` page: the shell grows from a byte-identical
+4,205 B "Documentation" placeholder to a 5,109 B page with a real title and real
+`<noscript>` content. Not cloaking (the content is DocC's own render of the same page).
+
+Toolchain gate: the flag is `--experimental-` and only exists in Swift 6.3+. napkin's docs
+build currently `xcode-select`s the highest non-beta Xcode 26.x; confirm that runner's
+`docc` accepts the flag (Swift 6.3 shipped in Xcode 26.4+), and **pass it conditionally** —
+detect support (`docc convert --help | grep static-hosting-with-content`) and only append
+the flag if present — so an older runner image degrades to today's behavior instead of
+failing the build. (This dovetails with the separate Xcode-27 CI transition work.)
+
+### 1a-bis. Residual DocC metadata — minimal, official-adjacent (NOT hand-injected content)
+
+The official flag does **not** emit `<meta name=description>`, `<link rel=canonical>`, or
+Open Graph (verified absent; upstream ties these to the unshipped "absolute hosting URL"
+feature, swift-docc #779/#964). Handle the residue with the **smallest** step, no content
+injection (so nothing can diverge from what DocC renders → no cloaking risk):
+
+- **Versioned-docs duplication** (`/main/…`, `/2.0.8/…` vs the latest at
+  `/documentation/napkin/…`): since we cannot set a canonical officially, use the
+  Google-recommended *single-signal* alternative — **`robots.txt` `Disallow:` the versioned
+  path prefixes** (`/main/`, `/<version>/`) and **exclude them from the sitemap**. This
+  removes the duplicates from indexing without mixing contradictory canonical+noindex
+  signals. The latest (unversioned) copy stays fully crawlable. Old versions remain
+  reachable by humans via the version picker; they're just not indexed.
+- **`<meta name=description>`**: deferred. The full page text now lives in `<noscript>`, so
+  crawlers can derive a snippet; a separate description tag is a minor gain with no official
+  emitter. Revisit if/when the absolute-hosting-URL feature lands (it would add description +
+  canonical + OG natively — at which point drop this residue entirely).
+- **Author/Organization JSON-LD** site-wide default: set officially via DocC's
+  `theme-settings.json` `meta.title` (already-shipped catalog file) so rendered titles read
+  `{Page} | napkin`; richer per-page JSON-LD is deferred to the native feature rather than
+  hand-injected.
 
 ### 1b. Sitemap generator
 New script `Tools/site/gen_sitemap.py` replacing the static `Tools/site/sitemap.xml` copy.
 Emits `<url>` entries for: landing `/`, `/about/`, `/faq/`, `/recipes/`, `/changelog/`,
 `/blog/` + each `/blog/<slug>/`, the Stage-2 compare pages, and **every** latest DocC page
-(`documentation/napkin/**`). Versioned copies are **excluded** (canonicalized away).
-`lastmod` from git commit date where practical, else file mtime. Wired into the workflow's
-"Copy homepage" step in place of `cp Tools/site/sitemap.xml`.
+(`documentation/napkin/**` and `tutorials/**`). Versioned copies (`/<ref>/…`) are
+**excluded** (they're `Disallow`ed in robots.txt per §1a-bis). `lastmod` from git commit date
+where practical, else file mtime. Wired into the workflow's "Copy homepage" step in place of
+`cp Tools/site/sitemap.xml`.
 
 ### 1c. robots.txt
 Keep `User-agent: * / Allow: /` and the `Sitemap:` line. Add explicit allow blocks (intent
 signal) for: `GPTBot`, `OAI-SearchBot`, `ChatGPT-User`, `ClaudeBot`, `Claude-SearchBot`,
-`PerplexityBot`, `Google-Extended`, `AppleBot-Extended`.
+`PerplexityBot`, `Google-Extended`, `AppleBot-Extended`. Also add `Disallow:` rules for the
+versioned-docs path prefixes (`/main/`, and each built `/<version>/`) per §1a-bis so only the
+latest DocC copy is indexed. The `Disallow` list is generated in the workflow from the same
+ref list the versioned-docs loop uses, so it stays in sync automatically.
 
 ### 1d. `.spi.yml`
 Add at repo root:
@@ -118,7 +154,9 @@ external_links:
 ### 1e. Author identity + schema cleanup
 - Add a reusable `Person` author object — `{ name: "WikipediaBrown",
   url: "https://wikipediabrown.dev", sameAs: [github repo/owner, spookylabs.ai] }` — to the
-  JSON-LD on the landing page, every blog post, and (via 1a) DocC pages.
+  JSON-LD on the landing page and every blog post. (DocC pages get their metadata from the
+  official flag in §1a, not injected JSON-LD; richer DocC JSON-LD waits for the native
+  absolute-hosting-URL feature.)
 - **Remove** the rating-less `SoftwareApplication` JSON-LD block from `Tools/site/index.html`;
   keep and enrich the `SoftwareSourceCode` block (add `author`, `sameAs`).
 - New `Tools/site/about/index.html` → `/about/`: a short maintainer/E-E-A-T page
@@ -133,13 +171,16 @@ POSTs the sitemap's URLs to the IndexNow endpoint (Bing/Yandex) with that key. C
 static-host-compatible.
 
 ### Stage 1 acceptance
-- A sampled DocC page's static HTML (curl, no JS) shows a unique `<title>`, description,
-  canonical, and `<noscript>` content.
+- A sampled DocC page's static HTML (curl, no JS) shows a **unique real `<title>`** and
+  **real page content in `<noscript>`** — emitted by the official flag, not injected.
+- The docs workflow passes `--experimental-transform-for-static-hosting-with-content`
+  conditionally (present only when the runner's `docc` supports it) and builds green either
+  way.
 - `sitemap.xml` contains the landing/blog/faq/recipes/changelog/about pages **and** the
-  DocC routes; contains no `/<version>/…` URLs.
-- Versioned DocC pages carry a canonical to the unversioned latest URL.
-- `robots.txt` names the AI crawlers; `.spi.yml` present; landing page has no rating-less
-  `SoftwareApplication`; `/about/` renders.
+  latest DocC routes; contains no `/<version>/…` URLs.
+- `robots.txt` names the AI crawlers, and `Disallow`s the versioned-docs prefixes so only the
+  latest DocC copy is indexed.
+- `.spi.yml` present; landing page has no rating-less `SoftwareApplication`; `/about/` renders.
 - `Documentation.yml` builds green on a manual `workflow_dispatch`.
 
 ---
@@ -202,11 +243,21 @@ A new `MARKETING.md` (repo root) plus the actions that don't need the maintainer
 - Analytics: **none now**; documented for later.
 - Author identity: WikipediaBrown / wikipediabrown.dev.
 - SPI: external-link the docs (no second DocC copy).
+- DocC crawler-readability: the **official** `--experimental-transform-for-static-hosting-with-content`
+  flag (verified on Xcode 27), not a hand-rolled content injector. Versioned-docs dedup via
+  `robots.txt Disallow` + sitemap exclusion, since no official canonical emitter exists yet.
 
 ## Risks / open items
-- **DocC output shape may shift under Xcode 27 / Swift 6.4** (see the WWDC-2026 transition
-  work). `docc_seo.py` must be defensive (skip-and-log on unexpected JSON) so a DocC-Render
-  change degrades gracefully rather than breaking the deploy.
+- **The DocC content flag is `--experimental-`.** Its spelling/behavior could change across
+  toolchains, and it only exists in Swift 6.3+. Mitigation: pass it *conditionally* (detect
+  via `docc convert --help`) so the build degrades to today's behavior rather than failing;
+  re-verify after the Xcode-27 CI transition. If/when the native "absolute hosting URL"
+  feature ships (adding description + canonical + Open Graph + native sitemap), revisit and
+  drop the §1a-bis / §1b residue in favor of the native path.
+- **No official canonical for versioned docs.** Using `robots.txt Disallow` (single-signal)
+  instead of a canonical is deliberate — mixing canonical+noindex sends contradictory signals
+  (per Google/Mueller). Trade-off: `Disallow`ed old-version pages won't be indexed at all
+  (acceptable — we only want the latest indexed).
 - **`awesome-swift` inclusion is star-gated (≥15)** — cannot be completed now; the PR is
   drafted and parked.
 - **Absolute measurement will undercount** (privacy-conscious audience blocks trackers); the
