@@ -48,7 +48,7 @@
             "@type": "Person",
             "name": "WikipediaBrown",
             "url": "https://wikipediabrown.dev",
-            "sameAs": ["https://github.com/WikipediaBrown", "https://spookylabs.ai"]
+            "sameAs": ["https://github.com/WikipediaBrown"]
         }
     }
     </script>
@@ -204,12 +204,12 @@
             <span class="spec__index" aria-hidden="true">03</span>
             <h3 class="spec__title">iOS 26 · macOS 26 · Swift 6.2</h3>
             <p class="spec__body">
-                Built on <code>isolated&nbsp;deinit</code>, <code>Mutex</code> from <code>Synchronization</code>, <code>@Observable</code>, and <code>Observations&nbsp;{ }</code>. Concrete bets on the modern stack &mdash; no polyfills, no compromises.
+                Built on <code>isolated&nbsp;deinit</code>, <code>Mutex</code> from <code>Synchronization</code>, and <code>@Observable</code> &mdash; with <code>Observations&nbsp;{ }</code> as the documented streaming recipe. Concrete bets on the modern stack, no polyfills, no compromises.
             </p>
         </li>
         <li class="spec">
             <span class="spec__index" aria-hidden="true">04</span>
-            <h3 class="spec__title">Modeled on Uber's RIBs</h3>
+            <h3 class="spec__title">Modeled on <a class="link" href="https://github.com/uber/RIBs/wiki">Uber's RIBs</a></h3>
             <p class="spec__body">
                 Builder, Component, Interactor, Router, Presenter. The familiar architecture you can sketch on a napkin &mdash; rebuilt around <code>actor</code> and friends, with composition where inheritance once lived.
             </p>
@@ -275,7 +275,7 @@
         <p class="kicker"><span class="kicker__num">§ 04</span><span class="kicker__sep">·</span>See it in motion</p>
         <h2 class="example__title" id="example-title">A real app, the napkin way.</h2>
         <p class="example__lede">
-            <strong>Napkin&#8217;s Rib House</strong> is a runnable iOS app: a headless <code>LaunchNapkin</code> holds an <code>AuthService</code>, then swaps a <code>LoggedOutNapkin</code> for a <code>LoggedInNapkin</code> on tap. Snapshots and code march in lockstep below.
+            <strong>Napkin&#8217;s Rib House</strong> is a runnable iOS app: a root <code>LaunchNapkin</code> holds an <code>AuthService</code>, then swaps a <code>LoggedOutNapkin</code> for a <code>LoggedInNapkin</code> when login succeeds &mdash; routing follows the auth stream, not the tap. Snapshots and condensed code below.
         </p>
         <div class="cta-row">
             <a class="btn btn--ink" href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse">
@@ -301,7 +301,7 @@
             <li class="step is-active">
                 <p class="step__head"><span class="step__num">01</span><span class="step__sep">·</span><span class="step__file"><span class="step__folder">LoggedOutNapkin/</span>LoggedOutNapkinView.swift</span></p>
                 <pre class="code"><code><span class="line"><span class="tk-key">struct</span> <span class="tk-typ">LoggedOutNapkinView</span>: <span class="tk-typ">View</span> {</span>
-<span class="line">    <span class="tk-key">weak</span> <span class="tk-key">var</span> listener: <span class="tk-typ">PresentableListener</span>?</span>
+<span class="line">    <span class="tk-key">weak</span> <span class="tk-key">var</span> listener: <span class="tk-typ">LoggedOutNapkinPresentableListener</span>?</span>
 <span class="line"></span>
 <span class="line">    <span class="tk-key">var</span> body: <span class="tk-key">some</span> <span class="tk-typ">View</span> {</span>
 <span class="line">        <span class="tk-typ">Button</span>(<span class="tk-str">"Login"</span>) {</span>
@@ -313,7 +313,7 @@
 
             <li class="step">
                 <p class="step__head"><span class="step__num">02</span><span class="step__sep">·</span><span class="step__file"><span class="step__folder">LoggedOutNapkin/</span>LoggedOutNapkinInteractor.swift</span></p>
-                <pre class="code"><code><span class="line"><span class="tk-key">final</span> <span class="tk-key">actor</span> <span class="tk-typ">LoggedOutNapkinInteractor</span>: <span class="tk-typ">PresentableListener</span> {</span>
+                <pre class="code"><code><span class="line"><span class="tk-key">final</span> <span class="tk-key">actor</span> <span class="tk-typ">LoggedOutNapkinInteractor</span>: <span class="tk-typ">LoggedOutNapkinPresentableListener</span> {</span>
 <span class="line">    <span class="tk-key">weak</span> <span class="tk-key">var</span> listener: <span class="tk-typ">LoggedOutNapkinListener</span>?</span>
 <span class="line"></span>
 <span class="line">    <span class="tk-cmt">// View talks down to me; I talk up to my parent.</span></span>
@@ -329,9 +329,17 @@
 <span class="line">    <span class="tk-key">nonisolated</span> <span class="tk-key">let</span> authService: <span class="tk-typ">AuthService</span></span>
 <span class="line">    <span class="tk-key">weak</span> <span class="tk-key">var</span> router: <span class="tk-typ">LaunchNapkinRouting</span>?</span>
 <span class="line"></span>
+<span class="line">    <span class="tk-key">func</span> <span class="tk-fn">didBecomeActive</span>() <span class="tk-key">async</span> {</span>
+<span class="line">        <span class="tk-fn">task</span> { <span class="tk-cmt">// routing follows auth state, not taps</span></span>
+<span class="line">            <span class="tk-key">for await</span> user <span class="tk-key">in</span> <span class="tk-key">await</span> authService.<span class="tk-fn">userStream</span>() {</span>
+<span class="line">                <span class="tk-key">if let</span> user { <span class="tk-key">await</span> router?.<span class="tk-fn">attachLoggedIn</span>(user: user) }</span>
+<span class="line">                <span class="tk-key">else</span> { <span class="tk-key">await</span> router?.<span class="tk-fn">attachLoggedOut</span>() }</span>
+<span class="line">            }</span>
+<span class="line">        }</span>
+<span class="line">    }</span>
+<span class="line"></span>
 <span class="line">    <span class="tk-key">func</span> <span class="tk-fn">loggedOutDidTapLogin</span>() <span class="tk-key">async</span> {</span>
-<span class="line">        <span class="tk-key">let</span> user = <span class="tk-key">try</span> <span class="tk-key">await</span> authService.<span class="tk-fn">login</span>()</span>
-<span class="line">        <span class="tk-key">await</span> router?.<span class="tk-fn">attachLoggedIn</span>(user: user)</span>
+<span class="line">        _ = <span class="tk-key">try</span>? <span class="tk-key">await</span> authService.<span class="tk-fn">login</span>() <span class="tk-cmt">// no routing — the stream reacts</span></span>
 <span class="line">    }</span>
 <span class="line">}</span></code></pre>
             </li>

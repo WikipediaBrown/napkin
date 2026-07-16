@@ -75,19 +75,19 @@
         <ul>
             <li><strong>You're starting a new app on Swift 6</strong> and can target iOS 26 / macOS 26.</li>
             <li><strong>Your app is flow-shaped:</strong> login trees, tab hierarchies, multi-step features — structure that wants per-screen units with owned lifecycles, not one composed state graph.</li>
-            <li><strong>You want the RIBs pattern without the RIBs stack:</strong> Router-Interactor-Builder and listener trees, but no RxSwift and no runtime leak detector — actors and compile-time isolation instead. (<a href="/compare/napkin-vs-ribs/">The full comparison.</a>)</li>
+            <li><strong>You want the RIBs pattern without the RIBs stack:</strong> Router-Interactor-Builder and listener trees, but no <a href="https://github.com/uber/RIBs-iOS/blob/main/Package.swift">RxSwift</a> and no runtime leak detector — actors and compile-time isolation instead. (<a href="/compare/napkin-vs-ribs/">The full comparison.</a>)</li>
             <li><strong>You want business logic structurally off the main actor.</strong> In napkin an interactor <em>is</em> a <code>final actor</code>; keeping heavy work off the UI thread is the design, not a discipline.</li>
             <li><strong>You want a near-zero dependency budget.</strong> napkin's only package dependency is the documentation plugin.</li>
         </ul>
 
         <h2>Don't use napkin when…</h2>
         <ul>
-            <li><strong>You must support anything below iOS 26.</strong> Hard stop, no back-port. RIBs-iOS runs on iOS 15+, TCA on iOS 16+.</li>
-            <li><strong>You have a working RIBs or TCA codebase.</strong> Both are actively maintained (<a href="https://github.com/uber/RIBs-iOS/releases/tag/1.1.0">RIBs-iOS shipped 1.1.0 on July 12, 2026</a>; <a href="https://github.com/pointfreeco/swift-composable-architecture/releases">TCA has cut seven releases in 2026</a>). Migration for its own sake buys you nothing.</li>
+            <li><strong>You must support anything below iOS 26.</strong> Hard stop, no back-port. RIBs-iOS runs on <a href="https://github.com/uber/RIBs-iOS/blob/main/Package.swift">iOS 15+</a>, TCA on iOS 16+.</li>
+            <li><strong>You have a working RIBs or TCA codebase.</strong> Both are actively maintained (<a href="https://github.com/uber/RIBs-iOS/releases/tag/1.1.0">RIBs-iOS shipped 1.1.0 on July 12, 2026</a>; <a href="https://github.com/pointfreeco/swift-composable-architecture/releases">TCA has cut ten releases in 2026</a>). Migration for its own sake buys you nothing.</li>
             <li><strong>Your complexity is state, not flows.</strong> If the hard part of your app is composing, persisting, and exhaustively testing state transitions, <a href="/compare/napkin-vs-tca/">TCA is built for exactly that</a>.</li>
-            <li><strong>You need a big ecosystem or a full tooling suite.</strong> napkin ships Xcode file templates and an install script, but not RIBs' broader IDE tooling — static analysis, runtime integrations — and TCA has ~14.8k GitHub stars and a deep library of learning material.</li>
+            <li><strong>You need a big ecosystem or a full tooling suite.</strong> napkin ships Xcode file templates and an install script, but not RIBs' broader IDE tooling — static analysis, runtime integrations — and TCA has <a href="https://github.com/pointfreeco/swift-composable-architecture">~14.8k GitHub stars</a> and a deep library of learning material.</li>
             <li><strong>You're building a simple app.</strong> TCA's maintainers <a href="https://github.com/pointfreeco/swift-composable-architecture/blob/main/Sources/ComposableArchitecture/Documentation.docc/Articles/FAQ.md">admit their framework doesn't really shine</a> for simple "reader" apps, and the same goes for napkin: a mostly-display app doesn't need an architecture framework. Plain SwiftUI is a great answer, and you can adopt structure later when the pain is real.</li>
-            <li><strong>Betting on a young project is unacceptable.</strong> napkin is at v2.1.5 with two GitHub stars (as of July 2026). The API is small and hasn't churned since 2.0, but nobody should call it battle-tested.</li>
+            <li><strong>Betting on a young project is unacceptable.</strong> napkin is at <a href="https://github.com/WikipediaBrown/napkin/releases">v2.1.x</a> with two GitHub stars (as of July 2026). The API is small and hasn't churned since 2.0, but nobody should call it battle-tested.</li>
         </ul>
 
         <h2>The short version</h2>

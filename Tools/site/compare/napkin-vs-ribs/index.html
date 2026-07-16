@@ -75,11 +75,11 @@
         <p>Let's kill that search query first: <strong>RIBs is actively maintained.</strong> In October 2024 Uber split the project into two repositories — <a href="https://github.com/uber/RIBs">uber/RIBs</a> is now the Android (Kotlin) repo, and iOS lives at <a href="https://github.com/uber/RIBs-iOS">uber/RIBs-iOS</a>. The iOS repo published <a href="https://github.com/uber/RIBs-iOS/releases/tag/1.1.0">release 1.1.0</a> on July 12, 2026. If you're evaluating napkin because you think RIBs is abandoned, that premise is wrong — and this page would rather you know that. napkin exists for a different reason.</p>
 
         <h2>The actual difference: the reactive backbone</h2>
-        <p>RIBs-iOS 1.1.0 depends on <a href="https://github.com/uber/RIBs-iOS/blob/main/Package.swift">RxSwift 6.9 and RxRelay</a>. Its 1.1.0 release added <code>async/await</code> interop helpers — <code>Single.fromAsync</code>, <code>Observable.fromAsync</code>, <code>onAsyncStep</code> — but the release notes say it plainly: <em>"RxSwift stays the backbone."</em> There is no first-party Combine or Swift-Concurrency-native variant; those exist only as community forks (ModernRIBs, RIBs-SwiftUI).</p>
+        <p>RIBs-iOS 1.1.0 depends on <a href="https://github.com/uber/RIBs-iOS/blob/1.1.0/Package.swift">RxSwift 6.9 and RxRelay</a>. Its 1.1.0 release added <code>async/await</code> interop helpers — <code>Single.fromAsync</code>, <code>Observable.fromAsync</code>, <code>onAsyncStep</code> — but <a href="https://github.com/uber/RIBs-iOS/releases/tag/1.1.0">the release notes</a> say it plainly: <em>"RxSwift stays the backbone."</em> There is no first-party Combine or Swift-Concurrency-native variant; those exist only as community forks (<a href="https://github.com/DevYeom/ModernRIBs">ModernRIBs</a>, RIBs-SwiftUI).</p>
         <p>napkin has <strong>no reactive dependency at all</strong>. Business logic lives in <code>final actor</code> interactors; routing and presentation are <code>@MainActor</code>; state streams down the tree with <code>AsyncStream</code> and <code>Observations</code>, and every isolation crossing is explicit <code>async/await</code>. The only package dependency is the documentation plugin. If your team already thinks in Swift Concurrency, there is no second concurrency vocabulary to learn — and none to bridge.</p>
 
         <h2>Leak detection: runtime vs compile time</h2>
-        <p>Uber's README describes the framework's tooling well: <em>"RIBs come with IDE tooling around code generation, memory leak detection, static analysis and runtime integrations - all which improve developer productivity for large teams or small."</em> That includes a runtime <a href="https://github.com/uber/RIBs-iOS/blob/main/RIBs/Classes/LeakDetector/LeakDetector.swift">LeakDetector</a> that watches for interactors and view controllers that outlive their scope.</p>
+        <p><a href="https://github.com/uber/RIBs-iOS/blob/main/README.md">Uber's README</a> describes the framework's tooling well: <em>"RIBs come with IDE tooling around code generation, memory leak detection, static analysis and runtime integrations - all which improve developer productivity for large teams or small."</em> That includes a runtime <a href="https://github.com/uber/RIBs-iOS/blob/main/RIBs/Classes/LeakDetector/LeakDetector.swift">LeakDetector</a> that watches for interactors and view controllers that outlive their scope.</p>
         <p>napkin ships Xcode file templates and an install script, but deliberately not the rest of that suite — no static analysis, no runtime integrations, and no leak detector. Its bet is that Swift 6 moved the problem: strict concurrency checking makes ownership and isolation mistakes <em>compile errors</em>, and napkin's structural rule — views hold their presenters <code>weak</code>, presenters own view controllers strongly, one direction only — removes the retain-cycle class the LeakDetector hunts at runtime. That's a trade, not a free lunch: RIBs' runtime detector can catch leaks in code the compiler can't reason about, and its richer tooling earns its keep on large teams. napkin hands you file templates and asks the type system to carry the rest of the weight.</p>
 
         <h2>Comparison table</h2>
@@ -90,16 +90,16 @@
                 <tr><th scope="col"></th><th scope="col">RIBs-iOS</th><th scope="col">napkin</th></tr>
             </thead>
             <tbody>
-                <tr><th scope="row">Latest release</th><td>1.1.0 (July 12, 2026)</td><td>2.1.5</td></tr>
+                <tr><th scope="row">Latest release</th><td>1.1.0 (July 12, 2026)</td><td>2.1.6</td></tr>
                 <tr><th scope="row">Reactive layer</th><td>RxSwift 6.9 + RxRelay</td><td>None — actors, <code>AsyncStream</code>, <code>async/await</code></td></tr>
                 <tr><th scope="row">Swift Concurrency</th><td>Interop helpers atop Rx ("RxSwift stays the backbone")</td><td>Native; Swift 6 language mode throughout</td></tr>
                 <tr><th scope="row">Leak safety</th><td>Runtime <code>LeakDetector</code></td><td>Compile-time isolation + weak-view ownership rule</td></tr>
                 <tr><th scope="row">Tooling</th><td>IDE tooling incl. code generation (per README)</td><td>Xcode file templates + install script; no static analysis or runtime integrations</td></tr>
                 <tr><th scope="row">Min platform</th><td>iOS 15, Swift tools 5.5</td><td>iOS 26 / macOS 26, Swift tools 6.2</td></tr>
-                <tr><th scope="row">Install</th><td>SwiftPM (&ldquo;canonical build&rdquo; per the 1.1.0 notes); CocoaPods trunk appears stale at 0.9.1</td><td>SwiftPM</td></tr>
+                <tr><th scope="row">Install</th><td>SwiftPM (&ldquo;canonical build&rdquo; per the 1.1.0 notes); <a href="https://cocoapods.org/pods/RIBs">CocoaPods trunk</a> appears stale at 0.9.1</td><td>SwiftPM</td></tr>
                 <tr><th scope="row">License</th><td>Apache-2.0</td><td>Apache-2.0</td></tr>
                 <tr><th scope="row">GitHub stars</th><td>186 (iOS repo)</td><td>2</td></tr>
-                <tr><th scope="row">Maturity</th><td>Uber-scale production since 2016</td><td>Young; small community</td></tr>
+                <tr><th scope="row">Maturity</th><td>Uber-scale <a href="https://www.uber.com/blog/new-rider-app-architecture/">production since 2016</a></td><td>Young; small community</td></tr>
             </tbody>
         </table>
         </div>
