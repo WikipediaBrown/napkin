@@ -86,8 +86,13 @@ jobs:
 
       - name: Resolve version + version list
         # Capture both the "current" version (for the homepage footer) and the
-        # list of versions to build (main + last 5 stable tags) BEFORE we do
-        # any `git checkout` in the versioned-docs loop.
+        # list of versions to build BEFORE we do any `git checkout` in the
+        # versioned-docs loop.
+        #
+        # Version list = latest patch of each minor in the current major, plus
+        # the latest release of each previous major (e.g. 2.1.5 2.0.40 1.0.0
+        # 0.0.30) — NOT the last N tags, which would all be patches of the
+        # same minor and give the version picker a useless spread.
         #
         # We use `git tag --sort=-v:refname` instead of `git describe` because
         # the shallow checkout above has no ancestry path back to the latest
@@ -95,9 +100,12 @@ jobs:
         # taking the head gives us the same answer without needing history.
         id: versions
         run: |
-          VERSION=$(git tag -l --sort=-v:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+          ALL_TAGS=$(git tag -l --sort=-v:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$')
+          VERSION=$(echo "$ALL_TAGS" | head -1)
           [ -z "$VERSION" ] && VERSION="main"
-          REFS=$( ( echo "main"; git tag -l --sort=-v:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -5 ) | tr '\n' ' ' )
+          CURRENT_MAJOR=$(echo "$ALL_TAGS" | head -1 | cut -d. -f1)
+          SELECTED_TAGS=$(echo "$ALL_TAGS" | awk -F. -v cm="$CURRENT_MAJOR" 'NF { key = ($1==cm) ? $1"."$2 : $1; if (!seen[key]++) print }')
+          REFS=$( ( echo "main"; echo "$SELECTED_TAGS" | awk 'NF' ) | tr '\n' ' ' )
           ORIGINAL_REF=$(git rev-parse HEAD)
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "refs=${REFS}" >> "$GITHUB_OUTPUT"
@@ -132,7 +140,7 @@ jobs:
             --checkout-path ${{ github.workspace }}
 
       - name: Build versioned docs
-        # Builds main + last 5 stable tags into ./docs/<ref>/ so the URLs
+        # Builds main + the resolved version list into ./docs/<ref>/ so the URLs
         #   https://getnapkin.to/2.0.8/documentation/napkin/
         #   https://getnapkin.to/main/documentation/napkin/
         # resolve. Best-effort: if an old tag fails to build against the
