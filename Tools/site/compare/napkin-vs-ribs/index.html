@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>napkin vs RIBs (2026): the same pattern, two concurrency models</title>
+    <meta name="description" content="Honest, cited comparison of napkin and Uber's RIBs-iOS (July 2026): the same Router-Interactor-Builder pattern on two concurrency models — RxSwift vs Swift 6 actors.">
+    <meta name="theme-color" content="#f6f1e3" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0e1410" media="(prefers-color-scheme: dark)">
+
+    <meta property="og:title" content="napkin vs RIBs (2026): the same pattern, two concurrency models">
+    <meta property="og:description" content="RIBs is alive — 1.1.0 shipped July 2026 on its RxSwift backbone. napkin is the same Router-Interactor-Builder pattern on Swift 6 actors. Honest, cited comparison.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://getnapkin.to/compare/napkin-vs-ribs/">
+    <meta property="og:image" content="https://getnapkin.to/social-preview.png">
+    <meta property="article:published_time" content="2026-07-16">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://getnapkin.to/compare/napkin-vs-ribs/">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="/napkin-icon.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/napkin-icon@2x.png">
+    <link rel="apple-touch-icon" href="/napkin-icon@2x.png">
+    <link rel="stylesheet" href="/styles.css">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "napkin vs RIBs (2026): the same pattern, two concurrency models",
+        "description": "An honest, cited comparison of napkin and Uber's RIBs-iOS: the same Router-Interactor-Builder pattern on two different concurrency models.",
+        "datePublished": "2026-07-16",
+        "dateModified": "2026-07-16",
+        "author": { "@type": "Person", "name": "WikipediaBrown", "url": "https://wikipediabrown.dev", "sameAs": ["https://github.com/WikipediaBrown"] },
+        "publisher": { "@type": "Organization", "name": "napkin", "url": "https://getnapkin.to/" },
+        "image": "https://getnapkin.to/social-preview.png",
+        "mainEntityOfPage": "https://getnapkin.to/compare/napkin-vs-ribs/"
+    }
+    </script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="masthead" role="banner">
+    <div class="masthead__inner">
+        <a class="masthead__brand" href="/" aria-label="napkin — home">
+            <span class="masthead__mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4 H20 V20 L4 20 L4 4 Z" />
+                    <path d="M4 14 L14 14 L14 20" />
+                </svg>
+            </span>
+            <span class="masthead__wordmark">napkin</span>
+        </a>
+        <nav class="masthead__nav" aria-label="Primary">
+            <ul>
+                <li><a href="/documentation/napkin/">Docs</a></li>
+                <li><a href="/#example">Example</a></li>
+                <li><a href="/blog/">Blog</a></li>
+                <li><a href="/changelog/">Changelog</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin">GitHub</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main id="main">
+<article class="post">
+    <p class="post__kicker"><span>Comparison</span> <span class="sep">·</span> <span>2026 · 07 · 16</span> <span class="sep">·</span> <span>Architecture</span></p>
+    <h1 class="post__title">napkin vs RIBs: the same pattern, two concurrency models</h1>
+    <p class="post__lede">Uber's <a href="https://github.com/uber/RIBs-iOS">RIBs-iOS</a> is alive and shipping — version 1.1.0 landed on July 12, 2026. napkin is the same Router-Interactor-Builder pattern. The real difference is underneath: RIBs keeps an RxSwift backbone and a runtime leak detector; napkin rebuilds the pattern on Swift 6 actors and compile-time isolation.</p>
+
+    <div class="post__body">
+        <h2>Is RIBs dead? No.</h2>
+        <p>Let's kill that search query first: <strong>RIBs is actively maintained.</strong> In October 2024 Uber split the project into two repositories — <a href="https://github.com/uber/RIBs">uber/RIBs</a> is now the Android (Kotlin) repo, and iOS lives at <a href="https://github.com/uber/RIBs-iOS">uber/RIBs-iOS</a>. The iOS repo published <a href="https://github.com/uber/RIBs-iOS/releases/tag/1.1.0">release 1.1.0</a> on July 12, 2026. If you're evaluating napkin because you think RIBs is abandoned, that premise is wrong — and this page would rather you know that. napkin exists for a different reason.</p>
+
+        <h2>The actual difference: the reactive backbone</h2>
+        <p>RIBs-iOS 1.1.0 depends on <a href="https://github.com/uber/RIBs-iOS/blob/main/Package.swift">RxSwift 6.9 and RxRelay</a>. Its 1.1.0 release added <code>async/await</code> interop helpers — <code>Single.fromAsync</code>, <code>Observable.fromAsync</code>, <code>onAsyncStep</code> — but the release notes say it plainly: <em>"RxSwift stays the backbone."</em> There is no first-party Combine or Swift-Concurrency-native variant; those exist only as community forks (ModernRIBs, RIBs-SwiftUI).</p>
+        <p>napkin has <strong>no reactive dependency at all</strong>. Business logic lives in <code>final actor</code> interactors; routing and presentation are <code>@MainActor</code>; state streams down the tree with <code>AsyncStream</code> and <code>Observations</code>, and every isolation crossing is explicit <code>async/await</code>. The only package dependency is the documentation plugin. If your team already thinks in Swift Concurrency, there is no second concurrency vocabulary to learn — and none to bridge.</p>
+
+        <h2>Leak detection: runtime vs compile time</h2>
+        <p>Uber's README describes the framework's tooling well: <em>"RIBs come with IDE tooling around code generation, memory leak detection, static analysis and runtime integrations - all which improve developer productivity for large teams or small."</em> That includes a runtime <a href="https://github.com/uber/RIBs-iOS/blob/main/RIBs/Classes/LeakDetector/LeakDetector.swift">LeakDetector</a> that watches for interactors and view controllers that outlive their scope.</p>
+        <p>napkin ships Xcode file templates and an install script, but deliberately not the rest of that suite — no static analysis, no runtime integrations, and no leak detector. Its bet is that Swift 6 moved the problem: strict concurrency checking makes ownership and isolation mistakes <em>compile errors</em>, and napkin's structural rule — views hold their presenters <code>weak</code>, presenters own view controllers strongly, one direction only — removes the retain-cycle class the LeakDetector hunts at runtime. That's a trade, not a free lunch: RIBs' runtime detector can catch leaks in code the compiler can't reason about, and its richer tooling earns its keep on large teams. napkin hands you file templates and asks the type system to carry the rest of the weight.</p>
+
+        <h2>Comparison table</h2>
+        <div class="compare-scroll">
+        <table class="compare-table">
+            <caption>Facts as of July 16, 2026 — versions and stars are point-in-time.</caption>
+            <thead>
+                <tr><th scope="col"></th><th scope="col">RIBs-iOS</th><th scope="col">napkin</th></tr>
+            </thead>
+            <tbody>
+                <tr><th scope="row">Latest release</th><td>1.1.0 (July 12, 2026)</td><td>2.1.5</td></tr>
+                <tr><th scope="row">Reactive layer</th><td>RxSwift 6.9 + RxRelay</td><td>None — actors, <code>AsyncStream</code>, <code>async/await</code></td></tr>
+                <tr><th scope="row">Swift Concurrency</th><td>Interop helpers atop Rx ("RxSwift stays the backbone")</td><td>Native; Swift 6 language mode throughout</td></tr>
+                <tr><th scope="row">Leak safety</th><td>Runtime <code>LeakDetector</code></td><td>Compile-time isolation + weak-view ownership rule</td></tr>
+                <tr><th scope="row">Tooling</th><td>IDE tooling incl. code generation (per README)</td><td>Xcode file templates + install script; no static analysis or runtime integrations</td></tr>
+                <tr><th scope="row">Min platform</th><td>iOS 15, Swift tools 5.5</td><td>iOS 26 / macOS 26, Swift tools 6.2</td></tr>
+                <tr><th scope="row">Install</th><td>SwiftPM (&ldquo;canonical build&rdquo; per the 1.1.0 notes); CocoaPods trunk appears stale at 0.9.1</td><td>SwiftPM</td></tr>
+                <tr><th scope="row">License</th><td>Apache-2.0</td><td>Apache-2.0</td></tr>
+                <tr><th scope="row">GitHub stars</th><td>186 (iOS repo)</td><td>2</td></tr>
+                <tr><th scope="row">Maturity</th><td>Uber-scale production since 2016</td><td>Young; small community</td></tr>
+            </tbody>
+        </table>
+        </div>
+
+        <h2>When to choose RIBs</h2>
+        <ul>
+            <li>You have an existing RIBs codebase that works — the framework is maintained; there is no forced migration.</li>
+            <li>Your team is fluent in RxSwift and its operators are pulling their weight.</li>
+            <li>You want the runtime leak detector and the full IDE tooling suite — static analysis, runtime integrations — on a large team.</li>
+            <li>You need to support iOS 15–25 — napkin's iOS 26 floor rules it out for you today.</li>
+        </ul>
+
+        <h2>When to choose napkin</h2>
+        <ul>
+            <li>You're starting a new app on Swift 6 and don't want RxSwift in the dependency graph.</li>
+            <li>You want the Router-Interactor-Builder tree expressed in the language's own concurrency vocabulary — actors, <code>@MainActor</code>, <code>@Observable</code>.</li>
+            <li>You prefer isolation mistakes to be compile errors rather than runtime detections.</li>
+            <li>You can target iOS 26 / macOS 26 and accept a young framework with a small community.</li>
+        </ul>
+
+        <p>Same sketch, different ink. Both frameworks draw the tree of Routers, Interactors, and Builders; they disagree about what should enforce its rules — a reactive runtime, or the compiler.</p>
+
+        <p><strong>Related:</strong> <a href="/compare/napkin-vs-tca/">napkin vs The Composable Architecture</a> · <a href="/compare/napkin-vs-viper/">napkin vs VIPER</a> · <a href="/when-to-use-napkin/">When to use napkin</a> · <a href="/faq/">FAQ</a> · <a href="/blog/swift-6-ribs-replacement/">Meet napkin (the long version)</a></p>
+    </div>
+</article>
+</main>
+
+<footer class="colophon" role="contentinfo">
+    <div class="colophon__inner">
+        <p class="colophon__line">
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin">napkin</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/LICENSE.md">Apache&#8209;2.0</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/changelog/">CHANGELOG</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/">Blog</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/faq/">FAQ</a>
+        </p>
+        <p class="colophon__line colophon__line--right">
+            Made with 🌲🌲🌲 in Cascadia
+        </p>
+    </div>
+</footer>
+
+</body>
+</html>

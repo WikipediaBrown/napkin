@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>When to use napkin — and when not to</title>
+    <meta name="description" content="An honest decision guide for napkin, the Swift 6 Router-Interactor-Builder framework: where it fits, and where RIBs, TCA, or plain SwiftUI are the better answer.">
+    <meta name="theme-color" content="#f6f1e3" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0e1410" media="(prefers-color-scheme: dark)">
+
+    <meta property="og:title" content="When to use napkin — and when not to">
+    <meta property="og:description" content="The honest decision guide: where napkin fits, and where RIBs, TCA, or plain SwiftUI are the better answer.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://getnapkin.to/when-to-use-napkin/">
+    <meta property="og:image" content="https://getnapkin.to/social-preview.png">
+    <meta property="article:published_time" content="2026-07-16">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://getnapkin.to/when-to-use-napkin/">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="/napkin-icon.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/napkin-icon@2x.png">
+    <link rel="apple-touch-icon" href="/napkin-icon@2x.png">
+    <link rel="stylesheet" href="/styles.css">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "When to use napkin — and when not to",
+        "description": "An honest decision guide for napkin: where it fits, where RIBs, TCA, or plain SwiftUI are the better answer.",
+        "datePublished": "2026-07-16",
+        "dateModified": "2026-07-16",
+        "author": { "@type": "Person", "name": "WikipediaBrown", "url": "https://wikipediabrown.dev", "sameAs": ["https://github.com/WikipediaBrown"] },
+        "publisher": { "@type": "Organization", "name": "napkin", "url": "https://getnapkin.to/" },
+        "image": "https://getnapkin.to/social-preview.png",
+        "mainEntityOfPage": "https://getnapkin.to/when-to-use-napkin/"
+    }
+    </script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="masthead" role="banner">
+    <div class="masthead__inner">
+        <a class="masthead__brand" href="/" aria-label="napkin — home">
+            <span class="masthead__mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4 H20 V20 L4 20 L4 4 Z" />
+                    <path d="M4 14 L14 14 L14 20" />
+                </svg>
+            </span>
+            <span class="masthead__wordmark">napkin</span>
+        </a>
+        <nav class="masthead__nav" aria-label="Primary">
+            <ul>
+                <li><a href="/documentation/napkin/">Docs</a></li>
+                <li><a href="/#example">Example</a></li>
+                <li><a href="/blog/">Blog</a></li>
+                <li><a href="/changelog/">Changelog</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin">GitHub</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main id="main">
+<article class="post">
+    <p class="post__kicker"><span>Decision guide</span> <span class="sep">·</span> <span>2026 · 07 · 16</span> <span class="sep">·</span> <span>Architecture</span></p>
+    <h1 class="post__title">When to use napkin — and when not to</h1>
+    <p class="post__lede">Most "should I use X" pages are sales pages. This one isn't: napkin is young, its community is tiny, and its platform floor is high. Here is the honest decision tree, including the branches that end somewhere else.</p>
+
+    <div class="post__body">
+        <h2>Use napkin when…</h2>
+        <ul>
+            <li><strong>You're starting a new app on Swift 6</strong> and can target iOS 26 / macOS 26.</li>
+            <li><strong>Your app is flow-shaped:</strong> login trees, tab hierarchies, multi-step features — structure that wants per-screen units with owned lifecycles, not one composed state graph.</li>
+            <li><strong>You want the RIBs pattern without the RIBs stack:</strong> Router-Interactor-Builder and listener trees, but no RxSwift and no runtime leak detector — actors and compile-time isolation instead. (<a href="/compare/napkin-vs-ribs/">The full comparison.</a>)</li>
+            <li><strong>You want business logic structurally off the main actor.</strong> In napkin an interactor <em>is</em> a <code>final actor</code>; keeping heavy work off the UI thread is the design, not a discipline.</li>
+            <li><strong>You want a near-zero dependency budget.</strong> napkin's only package dependency is the documentation plugin.</li>
+        </ul>
+
+        <h2>Don't use napkin when…</h2>
+        <ul>
+            <li><strong>You must support anything below iOS 26.</strong> Hard stop, no back-port. RIBs-iOS runs on iOS 15+, TCA on iOS 16+.</li>
+            <li><strong>You have a working RIBs or TCA codebase.</strong> Both are actively maintained (<a href="https://github.com/uber/RIBs-iOS/releases/tag/1.1.0">RIBs-iOS shipped 1.1.0 on July 12, 2026</a>; <a href="https://github.com/pointfreeco/swift-composable-architecture/releases">TCA has cut seven releases in 2026</a>). Migration for its own sake buys you nothing.</li>
+            <li><strong>Your complexity is state, not flows.</strong> If the hard part of your app is composing, persisting, and exhaustively testing state transitions, <a href="/compare/napkin-vs-tca/">TCA is built for exactly that</a>.</li>
+            <li><strong>You need a big ecosystem or a full tooling suite.</strong> napkin ships Xcode file templates and an install script, but not RIBs' broader IDE tooling — static analysis, runtime integrations — and TCA has ~14.8k GitHub stars and a deep library of learning material.</li>
+            <li><strong>You're building a simple app.</strong> TCA's maintainers <a href="https://github.com/pointfreeco/swift-composable-architecture/blob/main/Sources/ComposableArchitecture/Documentation.docc/Articles/FAQ.md">admit their framework doesn't really shine</a> for simple "reader" apps, and the same goes for napkin: a mostly-display app doesn't need an architecture framework. Plain SwiftUI is a great answer, and you can adopt structure later when the pain is real.</li>
+            <li><strong>Betting on a young project is unacceptable.</strong> napkin is at v2.1.5 with two GitHub stars (as of July 2026). The API is small and hasn't churned since 2.0, but nobody should call it battle-tested.</li>
+        </ul>
+
+        <h2>The short version</h2>
+        <div class="compare-scroll">
+        <table class="compare-table">
+            <caption>One-line routing. Facts as of July 16, 2026.</caption>
+            <thead>
+                <tr><th scope="col">Your situation</th><th scope="col">Honest answer</th></tr>
+            </thead>
+            <tbody>
+                <tr><th scope="row">New Swift 6 app, flow-shaped, iOS 26+</th><td><strong>napkin</strong></td></tr>
+                <tr><th scope="row">State-shaped complexity, exhaustive tests</th><td><a href="/compare/napkin-vs-tca/">TCA</a></td></tr>
+                <tr><th scope="row">Existing RIBs or TCA codebase that works</th><td>Stay put (<a href="/compare/napkin-vs-ribs/">why</a>)</td></tr>
+                <tr><th scope="row">Needs iOS 15–25</th><td>RIBs (15+) or TCA (16+)</td></tr>
+                <tr><th scope="row">Simple reader/display app</th><td>Plain SwiftUI</td></tr>
+            </tbody>
+        </table>
+        </div>
+
+        <p>Still unsure? The <a href="/documentation/napkin/gettingstarted">Getting Started guide</a> plus the <a href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse">runnable example app</a> take about an evening — the cheapest way to find out if the shape fits your head.</p>
+
+        <p><strong>Related:</strong> <a href="/compare/napkin-vs-ribs/">napkin vs RIBs</a> · <a href="/compare/napkin-vs-tca/">napkin vs TCA</a> · <a href="/compare/napkin-vs-viper/">napkin vs VIPER</a> · <a href="/faq/">FAQ</a></p>
+    </div>
+</article>
+</main>
+
+<footer class="colophon" role="contentinfo">
+    <div class="colophon__inner">
+        <p class="colophon__line">
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin">napkin</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/LICENSE.md">Apache&#8209;2.0</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/changelog/">CHANGELOG</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/">Blog</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/faq/">FAQ</a>
+        </p>
+        <p class="colophon__line colophon__line--right">
+            Made with 🌲🌲🌲 in Cascadia
+        </p>
+    </div>
+</footer>
+
+</body>
+</html>

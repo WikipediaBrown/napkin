@@ -15,8 +15,27 @@
 
 napkin is a fork of Uber's [RIBs](https://github.com/uber/ribs-ios) rebuilt on Swift 6.2 native concurrency. It structures iOS and macOS applications as a tree of modular units using the Router-Interactor-Builder pattern, with business logic running off the main actor and routing/presentation pinned to it.
 
+## How napkin compares
+
+napkin is the Router-Interactor-Builder pattern rebuilt on Swift 6 concurrency. Honest
+comparisons with the alternatives (facts as of July 2026):
+
+|  | napkin | [RIBs-iOS](https://github.com/uber/RIBs-iOS) | [TCA](https://github.com/pointfreeco/swift-composable-architecture) |
+|---|---|---|---|
+| Shape | Tree of screen/flow units | Tree of screen/flow units | State/Action/Reducer/Store |
+| Reactive layer | None — actors, `AsyncStream`, `async/await` | RxSwift 6.9 + RxRelay | Effects + Point-Free deps |
+| Leak safety | Compile-time isolation | Runtime `LeakDetector` | N/A (value types) |
+| Min platform | iOS 26 / macOS 26 | iOS 15 | iOS 16 |
+| License | Apache-2.0 | Apache-2.0 | MIT |
+
+Longer, cited write-ups: [napkin vs RIBs](https://getnapkin.to/compare/napkin-vs-ribs/) ·
+[napkin vs TCA](https://getnapkin.to/compare/napkin-vs-tca/) ·
+[napkin vs VIPER](https://getnapkin.to/compare/napkin-vs-viper/) ·
+[when to use napkin](https://getnapkin.to/when-to-use-napkin/)
+
 ## Table of Contents
 
+- [How napkin compares](#how-napkin-compares)
 - [Supported Platforms](#supported-platforms)
 - [Installation](#installation)
 - [Architecture Overview](#architecture-overview)

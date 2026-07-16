@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FAQ — napkin</title>
-    <meta name="description" content="Common questions about napkin, the Swift 6 framework for Clean Architecture iOS / macOS apps: how it differs from RIBs, when to use it, why no RxSwift, how testing works, deployment targets, and more.">
+    <meta name="description" content="Common questions about napkin, the Swift 6 framework for Clean Architecture iOS/macOS apps: how it differs from RIBs and TCA, when to use it, and how testing works.">
     <meta name="theme-color" content="#f6f1e3" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0e1410" media="(prefers-color-scheme: dark)">
 
@@ -114,6 +114,21 @@
             },
             {
                 "@type": "Question",
+                "name": "Is RIBs dead?",
+                "acceptedAnswer": { "@type": "Answer", "text": "No. Uber split the project in October 2024: uber/RIBs is the Android repo and uber/RIBs-iOS is the iOS repo, which released 1.1.0 on July 12, 2026 with async/await interop helpers — the release notes say \"RxSwift stays the backbone.\" napkin exists for people who want the same Router-Interactor-Builder pattern without that backbone — not because RIBs is abandoned. Full comparison at https://getnapkin.to/compare/napkin-vs-ribs/." }
+            },
+            {
+                "@type": "Question",
+                "name": "How is napkin different from The Composable Architecture (TCA)?",
+                "acceptedAnswer": { "@type": "Answer", "text": "They're different shapes of framework. TCA structures an app as value-type State/Action/Reducer trees driven by a Store, with exhaustive-by-default TestStore testing; napkin structures it as a tree of napkins — screen and flow units with actor interactors and @MainActor routers/presenters. As of TCA 1.26 (June 2026), TCA supports iOS 16+; napkin requires iOS 26+. Full comparison at https://getnapkin.to/compare/napkin-vs-tca/." }
+            },
+            {
+                "@type": "Question",
+                "name": "Should I use napkin for my app?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Honestly: only if you're starting a new Swift 6 app that can target iOS 26/macOS 26, your complexity is flows rather than state, and you're comfortable with a young framework. If you need older OS support, have a working RIBs or TCA codebase, or are building a simple display app, there are better answers — the decision guide at https://getnapkin.to/when-to-use-napkin/ spells them out." }
+            },
+            {
+                "@type": "Question",
                 "name": "Where can I find the docs?",
                 "acceptedAnswer": { "@type": "Answer", "text": "Full documentation at https://getnapkin.to/documentation/napkin/. Architecture articles (Cross-Isolation Patterns, Protocol Composition Over Inheritance), tutorials (Building a Login Flow, Testing a Napkin, Adding a Networked Service, Tab Bar Napkin), and full API reference. The repository is at https://github.com/WikipediaBrown/napkin." }
             }
@@ -207,6 +222,15 @@
 
         <h2>I added napkin and immediately got &ldquo;Main actor-isolated initializer&nbsp;<code>init(dependency:)</code> has different actor isolation from nonisolated overridden declaration&rdquo;. Why?</h2>
         <p>Xcode&nbsp;26&rsquo;s App template sets the <strong>Default Actor Isolation</strong> build setting to <code>MainActor</code> (Swift&rsquo;s approachable concurrency, <a class="link" href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0466-control-default-actor-isolation.md">SE-0466</a>). napkin&rsquo;s <code>Builder</code> and <code>Component</code> are deliberately <code>nonisolated</code> dependency-injection plumbing, so in a <code>MainActor</code>-default module your <code>Builder</code>/<code>Component</code> subclass is inferred <code>@MainActor</code> and its <code>init(dependency:)</code> override no longer matches napkin&rsquo;s <code>nonisolated</code> base initializer. It&rsquo;s not a napkin bug. Fix it <em>per type</em> by marking each <code>Builder</code>/<code>Component</code> subclass <code>nonisolated</code> (the bundled Xcode templates already generate this), or <em>per module</em> by setting the target&rsquo;s <strong>Default Actor Isolation</strong> to <code>nonisolated</code>. Routers and view controllers stay <code>@MainActor</code>; interactors stay <code>actor</code>s — only the DI plumbing needs <code>nonisolated</code>. Full explanation in <a href="/documentation/napkin/gettingstarted">Getting Started</a>.</p>
+
+        <h2>Is RIBs dead?</h2>
+        <p>No. Uber split the project in October 2024: <a href="https://github.com/uber/RIBs">uber/RIBs</a> is the Android repo and <a href="https://github.com/uber/RIBs-iOS">uber/RIBs-iOS</a> is the iOS repo, which released <a href="https://github.com/uber/RIBs-iOS/releases/tag/1.1.0">1.1.0 on July 12, 2026</a> with async/await interop helpers — the release notes say <em>&ldquo;RxSwift stays the backbone.&rdquo;</em> napkin exists for people who want the same Router-Interactor-Builder pattern <em>without</em> that backbone — not because RIBs is abandoned. Full comparison: <a href="/compare/napkin-vs-ribs/">napkin vs RIBs</a>.</p>
+
+        <h2>How is napkin different from The Composable Architecture (TCA)?</h2>
+        <p>They&rsquo;re different shapes of framework. <a href="https://github.com/pointfreeco/swift-composable-architecture">TCA</a> structures an app as value-type State/Action/Reducer trees driven by a Store, with exhaustive-by-default <code>TestStore</code> testing; napkin structures it as a tree of napkins — screen and flow units with <code>actor</code> interactors and <code>@MainActor</code> routers/presenters. As of TCA&nbsp;1.26 (June&nbsp;2026), TCA supports iOS&nbsp;16+; napkin requires iOS&nbsp;26+. Full comparison: <a href="/compare/napkin-vs-tca/">napkin vs TCA</a>.</p>
+
+        <h2>Should I use napkin for my app?</h2>
+        <p>Honestly: only if you&rsquo;re starting a new Swift&nbsp;6 app that can target iOS&nbsp;26/macOS&nbsp;26, your complexity is flows rather than state, and you&rsquo;re comfortable with a young framework. If you need older OS support, have a working RIBs or TCA codebase, or are building a simple display app, there are better answers — the <a href="/when-to-use-napkin/">decision guide</a> spells them out.</p>
 
         <h2>Where can I find the docs?</h2>
         <p>Full documentation at <a href="/documentation/napkin/">getnapkin.to/documentation/napkin/</a>. Architecture articles (<a href="/documentation/napkin/crossisolationpatterns">Cross-Isolation Patterns</a>, <a href="/documentation/napkin/protocolcompositionoverinheritance">Protocol Composition Over Inheritance</a>), tutorials (<a href="/documentation/napkin/tutorialbuildingaloginflow">Building a Login Flow</a>, <a href="/documentation/napkin/testinganapkin">Testing a Napkin</a>, <a href="/documentation/napkin/addinganetworkedservice">Adding a Networked Service</a>, <a href="/documentation/napkin/tabbarnapkin">Tab Bar Napkin</a>), and full API reference. The repository is at <a href="https://github.com/WikipediaBrown/napkin">github.com/WikipediaBrown/napkin</a>.</p>

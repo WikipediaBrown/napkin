@@ -67,13 +67,32 @@ jobs:
           sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app 2>/dev/null | grep -v -i beta | sort -V | tail -1)"
           xcodebuild -version
 
+      - name: Detect DocC content flag
+        # Swift 6.3+ DocC can write each page's real title and full text into
+        # its index.html (readable without JavaScript — which the crawlers
+        # behind ChatGPT/Claude/Perplexity never run). The flag is marked
+        # experimental, so detect support instead of assuming it: on an older
+        # toolchain we simply build today's output.
+        run: |
+          if xcrun docc convert --help 2>/dev/null | grep -q -- '--experimental-transform-for-static-hosting-with-content'; then
+            echo "DOCC_CONTENT_FLAG=--experimental-transform-for-static-hosting-with-content" >> "$GITHUB_ENV"
+            echo "docc supports static-hosting-with-content: passing it"
+          else
+            echo "docc does not support static-hosting-with-content: building without it"
+          fi
+
       - name: Configure Pages
         uses: actions/configure-pages@v6
 
       - name: Resolve version + version list
         # Capture both the "current" version (for the homepage footer) and the
-        # list of versions to build (main + last 5 stable tags) BEFORE we do
-        # any `git checkout` in the versioned-docs loop.
+        # list of versions to build BEFORE we do any `git checkout` in the
+        # versioned-docs loop.
+        #
+        # Version list = latest patch of each minor in the current major, plus
+        # the latest release of each previous major (e.g. 2.1.5 2.0.40 1.0.0
+        # 0.0.30) — NOT the last N tags, which would all be patches of the
+        # same minor and give the version picker a useless spread.
         #
         # We use `git tag --sort=-v:refname` instead of `git describe` because
         # the shallow checkout above has no ancestry path back to the latest
@@ -81,9 +100,12 @@ jobs:
         # taking the head gives us the same answer without needing history.
         id: versions
         run: |
-          VERSION=$(git tag -l --sort=-v:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+          ALL_TAGS=$(git tag -l --sort=-v:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$')
+          VERSION=$(echo "$ALL_TAGS" | head -1)
           [ -z "$VERSION" ] && VERSION="main"
-          REFS=$( ( echo "main"; git tag -l --sort=-v:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -5 ) | tr '\n' ' ' )
+          CURRENT_MAJOR=$(echo "$ALL_TAGS" | head -1 | cut -d. -f1)
+          SELECTED_TAGS=$(echo "$ALL_TAGS" | awk -F. -v cm="$CURRENT_MAJOR" 'NF { key = ($1==cm) ? $1"."$2 : $1; if (!seen[key]++) print }')
+          REFS=$( ( echo "main"; echo "$SELECTED_TAGS" | awk 'NF' ) | tr '\n' ' ' )
           ORIGINAL_REF=$(git rev-parse HEAD)
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "refs=${REFS}" >> "$GITHUB_OUTPUT"
@@ -110,6 +132,7 @@ jobs:
             --target napkin \
             --disable-indexing \
             --transform-for-static-hosting \
+            ${DOCC_CONTENT_FLAG} \
             --output-path ./docs \
             --experimental-enable-custom-templates \
             --source-service github \
@@ -117,7 +140,7 @@ jobs:
             --checkout-path ${{ github.workspace }}
 
       - name: Build versioned docs
-        # Builds main + last 5 stable tags into ./docs/<ref>/ so the URLs
+        # Builds main + the resolved version list into ./docs/<ref>/ so the URLs
         #   https://getnapkin.to/2.0.8/documentation/napkin/
         #   https://getnapkin.to/main/documentation/napkin/
         # resolve. Best-effort: if an old tag fails to build against the
@@ -150,6 +173,7 @@ jobs:
                 --target napkin \
                 --disable-indexing \
                 --transform-for-static-hosting \
+                ${DOCC_CONTENT_FLAG} \
                 --hosting-base-path "${ref}" \
                 --output-path "docs/${ref}" \
                 --experimental-enable-custom-templates \
@@ -203,13 +227,12 @@ jobs:
               cat "$article"
             done
           } > docs/llms-full.txt
-          cp Tools/site/sitemap.xml docs/sitemap.xml
-          cp Tools/site/robots.txt docs/robots.txt
           # Custom 404 page. GitHub Pages serves /404.html on any 404.
           cp Tools/site/404.html docs/404.html
           # FAQ page (FAQPage JSON-LD) + recipes cookbook (named patterns).
-          mkdir -p docs/faq docs/recipes docs/changelog
+          mkdir -p docs/faq docs/recipes docs/changelog docs/about
           cp Tools/site/faq/index.html docs/faq/index.html
+          cp Tools/site/about/index.html docs/about/index.html
           cp Tools/site/recipes/index.html docs/recipes/index.html
           # Changelog: generated fresh from CHANGELOG.md so the styled
           # /changelog/ page always mirrors the GitHub source of truth.
@@ -220,11 +243,17 @@ jobs:
           # (and dot-paths aren't served under workflow deploys regardless).
           # /security.txt is the widely-accepted RFC 9116 fallback location.
           cp Tools/site/security.txt docs/security.txt
+          # IndexNow key — must be publicly fetchable for the ping step below.
+          cp Tools/site/indexnow-key.txt docs/indexnow-key.txt
           # Blog: 5 SEO-targeted long-form articles + listing page + Atom feed.
           # Hand-rolled HTML (no static-site-generator). Each post lives in
           # its own folder so the URL is `/blog/<slug>/`.
           mkdir -p docs/blog
           cp -R Tools/site/blog/. docs/blog/
+          # Comparison pages + decision guide (Stage 2 content).
+          mkdir -p docs/compare docs/when-to-use-napkin
+          cp -R Tools/site/compare/. docs/compare/
+          cp Tools/site/when-to-use-napkin/index.html docs/when-to-use-napkin/index.html
 
           VERSION="${{ steps.versions.outputs.version }}"
           REFS="${{ steps.versions.outputs.refs }}"
@@ -246,6 +275,18 @@ jobs:
             -e "s#<!-- __VERSION_LINKS__ -->#${VERSION_LINKS}#g" \
             Tools/site/index.html > docs/index.html
 
+          # sitemap.xml — generated from the assembled site so it can never
+          # go stale. Must run after every page above has been copied in.
+          python3 Tools/site/gen_sitemap.py docs > docs/sitemap.xml
+          echo "sitemap: $(grep -c '<loc>' docs/sitemap.xml) URLs"
+          # robots.txt — welcome AI crawlers, block the versioned doc copies
+          # that actually built this run (same refs as the version dropdown).
+          EXISTING_REFS=""
+          for ref in $REFS; do
+            if [ -d "docs/${ref}" ]; then EXISTING_REFS="${EXISTING_REFS} ${ref}"; fi
+          done
+          python3 Tools/site/gen_robots.py --disallow ${EXISTING_REFS} > docs/robots.txt
+
       - name: Write CNAME
         # GitHub Pages reads docs/CNAME to determine the custom domain.
         # Putting it in the deploy artifact (rather than setting it via the
@@ -261,3 +302,25 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+
+      - name: Ping IndexNow
+        # Tells Bing (and other IndexNow engines) which URLs exist, right
+        # after deploy — indexing in days instead of weeks. Google doesn't
+        # support IndexNow; it discovers us via sitemap.xml. Best-effort:
+        # a failed ping must never fail the deploy.
+        run: |
+          python3 - <<'PY' > /tmp/indexnow.json
+          import json, re
+          urls = re.findall(r"<loc>([^<]+)</loc>", open("docs/sitemap.xml").read())
+          key = open("Tools/site/indexnow-key.txt").read().strip()
+          print(json.dumps({
+              "host": "getnapkin.to",
+              "key": key,
+              "keyLocation": "https://getnapkin.to/indexnow-key.txt",
+              "urlList": urls,
+          }))
+          PY
+          curl -sS -X POST "https://api.indexnow.org/indexnow" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            --data @/tmp/indexnow.json \
+            -w "\nIndexNow HTTP %{http_code}\n" || echo "IndexNow ping failed (non-fatal)"
