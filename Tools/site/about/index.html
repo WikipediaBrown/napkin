@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About — napkin</title>
+    <meta name="description" content="Who maintains napkin, the Swift 6 framework for Clean Architecture iOS / macOS apps, and how to get in touch.">
+    <meta name="theme-color" content="#f6f1e3" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0e1410" media="(prefers-color-scheme: dark)">
+
+    <meta property="og:title" content="About — napkin">
+    <meta property="og:description" content="Who maintains napkin and how to get in touch.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://getnapkin.to/about/">
+    <meta property="og:image" content="https://getnapkin.to/social-preview.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://getnapkin.to/about/">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="/napkin-icon.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/napkin-icon@2x.png">
+    <link rel="apple-touch-icon" href="/napkin-icon@2x.png">
+    <link rel="stylesheet" href="/styles.css">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "AboutPage",
+        "url": "https://getnapkin.to/about/",
+        "mainEntity": {
+            "@type": "Person",
+            "name": "WikipediaBrown",
+            "url": "https://wikipediabrown.dev",
+            "sameAs": ["https://github.com/WikipediaBrown", "https://spookylabs.ai"]
+        }
+    }
+    </script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="masthead" role="banner">
+    <div class="masthead__inner">
+        <a class="masthead__brand" href="/" aria-label="napkin — home">
+            <span class="masthead__mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4 H20 V20 L4 20 L4 4 Z" />
+                    <path d="M4 14 L14 14 L14 20" />
+                </svg>
+            </span>
+            <span class="masthead__wordmark">napkin</span>
+        </a>
+    </div>
+</header>
+
+<main id="main" class="prose">
+    <h1>About</h1>
+    <p>napkin is built and maintained by
+        <a href="https://wikipediabrown.dev">WikipediaBrown</a>
+        (<a href="https://github.com/WikipediaBrown">GitHub</a>), under
+        <a href="https://spookylabs.ai">Spooky Labs</a>.</p>
+    <p>napkin is an open-source Swift 6 framework for building iOS and macOS apps as a
+        tree of small, isolated, composable units — the Router-Interactor-Builder pattern,
+        rebuilt around Swift Concurrency. It is modeled on Uber's
+        <a href="https://github.com/uber/ribs-ios">RIBs</a> (which is alive and well);
+        napkin's differences are native Swift Concurrency, no RxSwift dependency, and no
+        runtime leak detector.</p>
+    <p>Found a bug, or want to contribute? Open an issue or pull request on
+        <a href="https://github.com/WikipediaBrown/napkin">GitHub</a>. Security reports:
+        see <a href="/security.txt">security.txt</a>.</p>
+</main>
+
+<footer class="colophon" role="contentinfo">
+    <div class="colophon__inner">
+        <p class="colophon__line">
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin">napkin</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/LICENSE.md">Apache&#8209;2.0</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/changelog/">CHANGELOG</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/">Blog</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/faq/">FAQ</a>
+        </p>
+        <p class="colophon__line colophon__line--right">
+            Made with 🌲🌲🌲 in Cascadia
+        </p>
+    </div>
+</footer>
+
+</body>
+</html>
