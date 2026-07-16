@@ -42,7 +42,7 @@ Facts and drafts written July 16, 2026 — re-check dates/versions before postin
 2. Submit the same sitemap URL. Bing powers ChatGPT search retrieval, so this one
    matters more than its market share suggests.
 
-### 3. YouTube demo  *(the single strongest correlate in the research, ~0.74)*
+### 3. YouTube demo  *(the strongest single correlate of AI-answer visibility in the research)*
 No production values needed — a 5–10 minute screen recording:
 1. "What napkin is" over the getnapkin.to landing animation (30s).
 2. Clone → open `Examples/RibHouse` → run (2 min).
@@ -106,17 +106,26 @@ engagement. Post one, wait a week, post the other.*
 > Hi Dave — napkin is an open-source reimplementation of the RIBs
 > Router-Interactor-Builder architecture on native Swift 6 concurrency: actor
 > interactors, @MainActor routing, no RxSwift dependency, compile-time isolation
-> instead of a runtime leak detector. Might interest readers evaluating
+> checking and a weak-view rule in place of RIBs' runtime leak detector. Might
+> interest readers evaluating
 > architecture options post-Swift-6: the docs include comparison pages (vs RIBs,
 > vs TCA, vs VIPER) that say plainly when each alternative is the better choice.
 > https://getnapkin.to — WikipediaBrown
 
 ### awesome-swift entry — **HOLD until the repo has ≥ 15 stars** (their hard rule)
-PR against https://github.com/matteocrippa/awesome-swift, "Patterns" section
-(alphabetical position). There is currently no RIBs-style framework in the list:
-> ```markdown
-> - [napkin](https://github.com/WikipediaBrown/napkin) - Router-Interactor-Builder (RIBs-style) architecture rebuilt on Swift 6 actors — no RxSwift, compile-time isolation.
+PR against https://github.com/matteocrippa/awesome-swift. Note their CONTRIBUTING.md:
+the README is **generated from `contents.json`** — the PR must edit the JSON, not the
+README, and the PR description must say why the package belongs. There is currently
+no RIBs-style framework in the "Patterns" category. Entry to add to `contents.json`:
+> ```json
+> {
+>   "title": "napkin",
+>   "url": "https://github.com/WikipediaBrown/napkin",
+>   "description": "Router-Interactor-Builder (RIBs-style) architecture rebuilt on Swift 6 actors — no RxSwift, compile-time isolation."
+> }
 > ```
+> PR description: "napkin fills the RIBs-style slot in Patterns (none listed today):
+> Apache-2.0, actively maintained, documented at getnapkin.to, Swift 6, >15 stars."
 Other criteria (already met): actively maintained, documented, English README,
 Swift 5+, Apache-2.0. The soft gate is "used by the community" — the star count
 covers it.
