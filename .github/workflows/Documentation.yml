@@ -235,6 +235,8 @@ jobs:
           # (and dot-paths aren't served under workflow deploys regardless).
           # /security.txt is the widely-accepted RFC 9116 fallback location.
           cp Tools/site/security.txt docs/security.txt
+          # IndexNow key — must be publicly fetchable for the ping step below.
+          cp Tools/site/indexnow-key.txt docs/indexnow-key.txt
           # Blog: 5 SEO-targeted long-form articles + listing page + Atom feed.
           # Hand-rolled HTML (no static-site-generator). Each post lives in
           # its own folder so the URL is `/blog/<slug>/`.
@@ -288,3 +290,25 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+
+      - name: Ping IndexNow
+        # Tells Bing (and other IndexNow engines) which URLs exist, right
+        # after deploy — indexing in days instead of weeks. Google doesn't
+        # support IndexNow; it discovers us via sitemap.xml. Best-effort:
+        # a failed ping must never fail the deploy.
+        run: |
+          python3 - <<'PY' > /tmp/indexnow.json
+          import json, re
+          urls = re.findall(r"<loc>([^<]+)</loc>", open("docs/sitemap.xml").read())
+          key = open("Tools/site/indexnow-key.txt").read().strip()
+          print(json.dumps({
+              "host": "getnapkin.to",
+              "key": key,
+              "keyLocation": "https://getnapkin.to/indexnow-key.txt",
+              "urlList": urls,
+          }))
+          PY
+          curl -sS -X POST "https://api.indexnow.org/indexnow" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            --data @/tmp/indexnow.json \
+            -w "\nIndexNow HTTP %{http_code}\n" || echo "IndexNow ping failed (non-fatal)"
