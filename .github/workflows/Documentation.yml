@@ -208,8 +208,9 @@ jobs:
           # Custom 404 page. GitHub Pages serves /404.html on any 404.
           cp Tools/site/404.html docs/404.html
           # FAQ page (FAQPage JSON-LD) + recipes cookbook (named patterns).
-          mkdir -p docs/faq docs/recipes docs/changelog
+          mkdir -p docs/faq docs/recipes docs/changelog docs/about
           cp Tools/site/faq/index.html docs/faq/index.html
+          cp Tools/site/about/index.html docs/about/index.html
           cp Tools/site/recipes/index.html docs/recipes/index.html
           # Changelog: generated fresh from CHANGELOG.md so the styled
           # /changelog/ page always mirrors the GitHub source of truth.

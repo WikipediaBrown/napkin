@@ -44,6 +44,7 @@
 - [Changelog](https://getnapkin.to/changelog/): styled release-notes page, mirrors the GitHub CHANGELOG (Keep a Changelog / SemVer).
 - [CHANGELOG (raw)](https://github.com/WikipediaBrown/napkin/blob/main/CHANGELOG.md)
 - [AGENTS.md (conventions for AI agents)](https://github.com/WikipediaBrown/napkin/blob/main/AGENTS.md)
+- [About the maintainer](https://getnapkin.to/about/)
 
 ## Optional
 
