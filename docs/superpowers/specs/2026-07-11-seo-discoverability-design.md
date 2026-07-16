@@ -1,266 +1,178 @@
-# napkin discoverability (SEO + GEO) — design
+# Making napkin findable — by search engines and by AI assistants
 
-**Date:** 2026-07-11
+**Date:** 2026-07-11 (revised 2026-07-12)
 **Branch:** `seo/discoverability`
-**Author/maintainer identity:** WikipediaBrown (github.com/WikipediaBrown, https://wikipediabrown.dev)
+**Maintainer:** WikipediaBrown (github.com/WikipediaBrown, https://wikipediabrown.dev)
 
 ## Goal
 
-Make napkin — the framework, its site, its docs, and its GitHub repo — as findable as
-possible by **both** traditional search engines **and** AI systems (ChatGPT, Claude,
-Perplexity, Google AI Overviews/AI Mode, and coding assistants). Do everything we
-credibly can in-repo, do the external actions that don't require the maintainer's
-personal accounts, and hand off a written checklist for the account-gated rest.
+When a developer searches Google for things like "RIBs alternative" or "Swift clean
+architecture framework," napkin should show up. When they ask ChatGPT, Claude, or
+Perplexity the same question, napkin should be part of the answer. This project makes
+every change we can inside this repository toward that goal, and produces a written
+checklist for the steps that need the maintainer's personal accounts (Google, Reddit,
+etc.).
 
-## What the research established (evidence base)
+## What we learned from research
 
-Two adversarially-verified deep-research passes (2026-07-11; 24 of 25 claims survived
-3-vote verification). The findings that shape this design:
+Three research passes were run (2026-07-11 and 07-12), each claim checked against
+multiple sources. The short version:
 
-1. **Classic search ranking is the dominant AI-citation gate.** ChatGPT cites pages it
-   retrieved via general web search **88.5%** of the time, vs Reddit 1.9%, YouTube 0.5%
-   (Ahrefs, 1.4M prompts). Ranking on Google/Bing for queries like "RIBs alternative
-   Swift" and "Clean Architecture iOS framework" *is* the AI-visibility strategy.
-2. **DocC's default output is nearly invisible to AI crawlers, but there is now an official
-   fix.** DocC renders as a client-side JS SPA; GPTBot / ClaudeBot / PerplexityBot fetch but
-   do **not** execute JavaScript (Vercel/MERJ, 500M+ fetches). Only Gemini (via Googlebot)
-   and AppleBot render it. By default DocC emits ~102 byte-identical 4,205-byte shells titled
-   "Documentation". **However**, Swift 6.3+ ships an official flag,
-   `--experimental-transform-for-static-hosting-with-content`, that makes DocC write a real
-   `<title>` and the full page content (in `<noscript>`) into each `index.html` — verified
-   locally on the Xcode 27 toolchain. This is the official replacement for hand-injected
-   content and is the approach this design uses. DocC still ships **no sitemap generator**
-   (swift-docc#779, open) and the flag does not emit description/canonical/Open Graph (those
-   await the unshipped "absolute hosting URL" feature, #779/#964) — so the sitemap and
-   versioned-docs deduplication remain this project's responsibility (§1a-bis, §1b).
-3. **GEO content shape that measurably wins citations:** direct quotations, statistics,
-   cited sources (+30–40% in the GEO/KDD-2024 paper); titles/URLs semantically matched to
-   the user's question. Keyword-stuffing performs ~10% *worse* than baseline.
-4. **Earned third-party mentions ≫ backlinks** (YouTube ~0.74, branded mentions ~0.7,
-   backlinks ~0.2 — Ahrefs, 75k brands). `awesome-swift`'s "Patterns" list has **no**
-   RIBs-style framework (open niche), but its gate is **≥15 GitHub stars** (napkin ~2).
-5. **Structured data still consumed by Google in 2026**, but pick honest types
-   (SoftwareSourceCode / TechArticle / BlogPosting / BreadcrumbList). Do **not** fake a
-   `SoftwareApplication` aggregateRating/review to chase a rich result — it violates
-   Google's self-serving-review policy. FAQ rich results were retired May 2026, but
-   `FAQPage` JSON-LD still aids AI parsing.
-6. **llms.txt: keep, don't over-invest** — 97% of llms.txt files get zero requests;
-   no major AI system is confirmed to consume it. napkin already has one.
-7. **Crawler policy:** for a project that *wants* AI visibility, robots.txt should
-   explicitly allow the AI crawlers. GitHub Pages has no server headers/redirects, so
-   robots.txt + injected `<meta>` are the only levers. Not behind Cloudflare, so
-   Cloudflare's Sept 15 2026 default AI-block does not apply.
-8. **Swift Package Index:** already listed; add `.spi.yml` to control the docs link.
+1. **Ranking in normal Google/Bing search is also how you get into AI answers.**
+   When ChatGPT looks things up, it overwhelmingly cites pages that rank in ordinary
+   web search (88% of the time, per a study of 1.4 million prompts). There is no
+   separate "AI trick" — winning normal search is the strategy.
 
-## Non-goals / things that could backfire (explicitly avoided)
+2. **Our API docs are invisible to most crawlers — but Apple shipped a fix.**
+   The docs at getnapkin.to/documentation/ are generated by Apple's DocC tool. By
+   default, the text on those pages only appears after a browser runs JavaScript.
+   Google can run JavaScript; the crawlers behind ChatGPT, Claude, and Perplexity
+   don't. To them, our ~100 documentation pages are blank and all share the same
+   title, "Documentation."
+   The fix: newer DocC (Swift 6.3 and later) has an official option,
+   `--experimental-transform-for-static-hosting-with-content`, that writes each
+   page's real title and full text into the page file itself, readable without
+   JavaScript. We tested it on this machine (Xcode 27): it works. We will turn that
+   option on rather than build anything custom.
+   What DocC still *doesn't* do: it can't produce a sitemap (the file that tells
+   search engines what pages exist), and it can't mark old versioned copies of the
+   docs as "don't index this." We handle those two things ourselves, below.
 
-- **No fabricated `SoftwareApplication` rating/review** (policy violation).
-- **No keyword stuffing** (measurably counterproductive).
-- **No cloaking** — the `<noscript>`/injected metadata must faithfully describe the same
-  content the JS renders (it's derived from DocC's own JSON, so it matches by construction).
-- **No over-investment in llms.txt / llms-full.txt** beyond keeping them in sync cheaply.
-- **No auto-hosting a second DocC copy on SPI** (cross-domain duplicate content).
+3. **The content that gets a library recommended is comparison content.**
+   Pages like "X vs Y" and "when should I use X" are what both searchers and AI
+   assistants pull answers from. Concrete numbers, quotes, and cited sources
+   measurably increase how often a page is used in an AI answer. Keyword-stuffing
+   measurably *hurts*.
 
-## Architecture constraint (critical)
+4. **Being talked about matters more than being linked to.** Mentions on YouTube,
+   Reddit, Hacker News, and community lists correlate with showing up in AI answers
+   far more than raw link counts do. One concrete gap: the popular `awesome-swift`
+   list has no RIBs-style framework at all — an open slot — but it requires 15+
+   GitHub stars and napkin currently has ~2. So that's a "later" item.
 
-`.github/workflows/Documentation.yml` **regenerates the entire `docs/` tree on every
-deploy** from `Tools/site/` + the DocC catalog + the workflow. Therefore:
-- The source of truth is `Tools/site/` and the workflow — **never hand-edit `docs/`**.
-- Any per-page DocC transformation must be a **build step** that runs after
-  `generate-documentation`, operating on the freshly-built `docs/` output.
+5. **Small housekeeping facts.** Google still reads structured-data labels but we
+   must not fake a star-rating to get a fancy search result (that violates their
+   rules; we currently have a harmless-but-useless block of that type to remove).
+   The `llms.txt` file we already publish is fine to keep but almost no AI system
+   reads it today, so we won't invest more in it. Our site isn't behind Cloudflare,
+   so Cloudflare's upcoming AI-blocking defaults don't affect us.
+
+## One rule about how this site is built
+
+The public site is assembled from scratch on every deploy by
+`.github/workflows/Documentation.yml`: it builds the DocC docs, then copies in the
+landing page, blog, and other pages from `Tools/site/`. So every change below is a
+change to `Tools/site/` or to that workflow — never to the generated `docs/` folder,
+which gets overwritten.
 
 ---
 
-## Stage 1 — Technical foundation (PR #1)
+## Stage 1 — Technical fixes (first pull request)
 
-High-evidence, low-risk. No prose judgment calls; safe to ship first.
+Safe, mechanical changes; no writing-voice decisions involved.
 
-### 1a. DocC crawler-readability — the OFFICIAL flag (revised 2026-07-12)
+1. **Turn on DocC's content option.** Add
+   `--experimental-transform-for-static-hosting-with-content` to both
+   `generate-documentation` calls in the workflow. Because the option is marked
+   experimental and only exists in Swift 6.3+, the workflow first checks whether the
+   installed DocC supports it and only adds it if so — an older build machine then
+   just produces today's output instead of failing.
 
-**Corrected after primary-source verification + an empirical test on the Xcode 27 / Swift
-6.4 toolchain.** The original plan here was a hand-rolled Python post-processor. That is
-superseded: DocC now ships a first-party flag that does the core job, matching the
-"prefer the official mechanism" preference.
+2. **Generate a real sitemap.** Today `sitemap.xml` is a hand-maintained list of 12
+   URLs and misses every documentation page. Replace it with a small script that
+   runs at deploy time and lists everything: landing page, blog posts, FAQ, recipes,
+   changelog, the new about page, and every current documentation page. Old
+   versioned doc copies (like `/2.0.8/...`) are left out on purpose.
 
-**Add `--experimental-transform-for-static-hosting-with-content`** to **both**
-`swift package generate-documentation` invocations in `Documentation.yml` (the latest build
-and the versioned-docs loop). Shipped in Swift 6.3 (swift-docc PRs #1383/#1402/#1409),
-expanded on `main` for 6.4. With it, DocC itself writes into every per-page `index.html`:
-- a **real `<title>`** (e.g. `Presenter`) in place of the generic `Documentation`, and
-- the **full page content** (title, declaration, abstract, Overview, "Mentioned In") as
-  semantic HTML inside the page's `<noscript>` — readable by JS-less crawlers
-  (GPTBot/ClaudeBot/PerplexityBot).
+3. **Update robots.txt** (the file that tells crawlers what they may visit).
+   Two changes: explicitly welcome the AI crawlers by name (GPTBot, ClaudeBot,
+   PerplexityBot, and friends — we *want* them), and block the old versioned doc
+   copies so search engines only index the latest docs instead of five near-identical
+   copies competing with each other. The block-list is generated from the same
+   version list the workflow already builds, so it never goes stale.
 
-Verified locally on napkin's `Presenter` page: the shell grows from a byte-identical
-4,205 B "Documentation" placeholder to a 5,109 B page with a real title and real
-`<noscript>` content. Not cloaking (the content is DocC's own render of the same page).
+4. **Add `.spi.yml`.** One small file that tells the Swift Package Index (where
+   napkin is already listed) to link its "Documentation" button to getnapkin.to.
 
-Toolchain gate: the flag is `--experimental-` and only exists in Swift 6.3+. napkin's docs
-build currently `xcode-select`s the highest non-beta Xcode 26.x; confirm that runner's
-`docc` accepts the flag (Swift 6.3 shipped in Xcode 26.4+), and **pass it conditionally** —
-detect support (`docc convert --help | grep static-hosting-with-content`) and only append
-the flag if present — so an older runner image degrades to today's behavior instead of
-failing the build. (This dovetails with the separate Xcode-27 CI transition work.)
+5. **Put a real person behind the site.** Search engines weigh author identity.
+   Add "WikipediaBrown" with a link to wikipediabrown.dev as the author in the
+   structured-data labels on the landing page and blog posts, add a small `/about/`
+   page, and remove the useless rating-type block mentioned above. Also set the
+   docs' site title so browser tabs read "Page | napkin" instead of "Documentation".
 
-### 1a-bis. Residual DocC metadata — minimal, official-adjacent (NOT hand-injected content)
+6. **Ping search engines on deploy.** Add a small step that notifies Bing (via the
+   IndexNow standard) whenever the site deploys, so new pages get picked up in days
+   rather than weeks. Google doesn't support IndexNow; it finds us via the sitemap.
 
-The official flag does **not** emit `<meta name=description>`, `<link rel=canonical>`, or
-Open Graph (verified absent; upstream ties these to the unshipped "absolute hosting URL"
-feature, swift-docc #779/#964). Handle the residue with the **smallest** step, no content
-injection (so nothing can diverge from what DocC renders → no cloaking risk):
+**Done when:** fetching a docs page with JavaScript off shows its real title and
+text; the sitemap lists docs pages and no versioned copies; robots.txt welcomes the
+AI crawlers and blocks old versions; the docs build passes with and without the new
+DocC option; `/about/` renders; the Swift Package Index docs link points at our site.
 
-- **Versioned-docs duplication** (`/main/…`, `/2.0.8/…` vs the latest at
-  `/documentation/napkin/…`): since we cannot set a canonical officially, use the
-  Google-recommended *single-signal* alternative — **`robots.txt` `Disallow:` the versioned
-  path prefixes** (`/main/`, `/<version>/`) and **exclude them from the sitemap**. This
-  removes the duplicates from indexing without mixing contradictory canonical+noindex
-  signals. The latest (unversioned) copy stays fully crawlable. Old versions remain
-  reachable by humans via the version picker; they're just not indexed.
-- **`<meta name=description>`**: deferred. The full page text now lives in `<noscript>`, so
-  crawlers can derive a snippet; a separate description tag is a minor gain with no official
-  emitter. Revisit if/when the absolute-hosting-URL feature lands (it would add description +
-  canonical + OG natively — at which point drop this residue entirely).
-- **Author/Organization JSON-LD** site-wide default: set officially via DocC's
-  `theme-settings.json` `meta.title` (already-shipped catalog file) so rendered titles read
-  `{Page} | napkin`; richer per-page JSON-LD is deferred to the native feature rather than
-  hand-injected.
+## Stage 2 — Comparison content (second pull request)
 
-### 1b. Sitemap generator
-New script `Tools/site/gen_sitemap.py` replacing the static `Tools/site/sitemap.xml` copy.
-Emits `<url>` entries for: landing `/`, `/about/`, `/faq/`, `/recipes/`, `/changelog/`,
-`/blog/` + each `/blog/<slug>/`, the Stage-2 compare pages, and **every** latest DocC page
-(`documentation/napkin/**` and `tutorials/**`). Versioned copies (`/<ref>/…`) are
-**excluded** (they're `Disallow`ed in robots.txt per §1a-bis). `lastmod` from git commit date
-where practical, else file mtime. Wired into the workflow's "Copy homepage" step in place of
-`cp Tools/site/sitemap.xml`.
+The pages people actually search for, written in napkin's existing honest voice
+(RIBs is alive and maintained — napkin's real differences are Swift Concurrency, no
+RxSwift dependency, no runtime leak detector):
 
-### 1c. robots.txt
-Keep `User-agent: * / Allow: /` and the `Sitemap:` line. Add explicit allow blocks (intent
-signal) for: `GPTBot`, `OAI-SearchBot`, `ChatGPT-User`, `ClaudeBot`, `Claude-SearchBot`,
-`PerplexityBot`, `Google-Extended`, `AppleBot-Extended`. Also add `Disallow:` rules for the
-versioned-docs path prefixes (`/main/`, and each built `/<version>/`) per §1a-bis so only the
-latest DocC copy is indexed. The `Disallow` list is generated in the workflow from the same
-ref list the versioned-docs loop uses, so it stays in sync automatically.
+- `/compare/napkin-vs-ribs/`
+- `/compare/napkin-vs-tca/` (The Composable Architecture)
+- `/compare/napkin-vs-viper/`
+- `/when-to-use-napkin/` — an honest "is this for you" decision guide, linked from
+  all three comparisons
+- Expand the FAQ with more of the questions people actually ask
+- Add a short comparison table to the README linking to these pages
 
-### 1d. `.spi.yml`
-Add at repo root:
-```yaml
-version: 1
-external_links:
-  documentation: "https://getnapkin.to/documentation/napkin/"
-```
-(Points SPI's Documentation link at the existing site; avoids a duplicate DocC copy.)
+Each new page gets the same treatment existing pages have (social-preview tags,
+structured-data labels, entry in the sitemap and llms.txt, nav links). Concrete
+numbers and honest trade-offs, no keyword-stuffing.
 
-### 1e. Author identity + schema cleanup
-- Add a reusable `Person` author object — `{ name: "WikipediaBrown",
-  url: "https://wikipediabrown.dev", sameAs: [github repo/owner, spookylabs.ai] }` — to the
-  JSON-LD on the landing page and every blog post. (DocC pages get their metadata from the
-  official flag in §1a, not injected JSON-LD; richer DocC JSON-LD waits for the native
-  absolute-hosting-URL feature.)
-- **Remove** the rating-less `SoftwareApplication` JSON-LD block from `Tools/site/index.html`;
-  keep and enrich the `SoftwareSourceCode` block (add `author`, `sameAs`).
-- New `Tools/site/about/index.html` → `/about/`: a short maintainer/E-E-A-T page
-  (`Person` + `Organization` Spooky Labs, links to wikipediabrown.dev + GitHub), copied in
-  the workflow and added to nav + sitemap + llms.txt.
-- Add `BreadcrumbList` JSON-LD to blog posts.
+**Done when:** all five pages render and validate, are reachable from nav/README,
+and appear in the sitemap.
 
-### 1f. IndexNow
-Generate a one-time IndexNow key (a UUID), store it as `Tools/site/<key>.txt` (file content =
-the key), copy it to the site root in the workflow, and add a post-deploy workflow step that
-POSTs the sitemap's URLs to the IndexNow endpoint (Bing/Yandex) with that key. Cheap,
-static-host-compatible.
+## Stage 3 — The outside world (third pull request)
 
-### Stage 1 acceptance
-- A sampled DocC page's static HTML (curl, no JS) shows a **unique real `<title>`** and
-  **real page content in `<noscript>`** — emitted by the official flag, not injected.
-- The docs workflow passes `--experimental-transform-for-static-hosting-with-content`
-  conditionally (present only when the runner's `docc` supports it) and builds green either
-  way.
-- `sitemap.xml` contains the landing/blog/faq/recipes/changelog/about pages **and** the
-  latest DocC routes; contains no `/<version>/…` URLs.
-- `robots.txt` names the AI crawlers, and `Disallow`s the versioned-docs prefixes so only the
-  latest DocC copy is indexed.
-- `.spi.yml` present; landing page has no rating-less `SoftwareApplication`; `/about/` renders.
-- `Documentation.yml` builds green on a manual `workflow_dispatch`.
+A `MARKETING.md` checklist in the repo, split into:
+
+- **Already automated:** the IndexNow ping from Stage 1.
+- **Drafted and waiting:** an `awesome-swift` submission (parked until 15 stars);
+  ready-to-post text for Hacker News, r/swift, r/iOSProgramming, and an iOS Dev
+  Weekly pitch — all signed as WikipediaBrown, posted by you when you choose.
+- **Needs your accounts (step-by-step instructions):** verify the site with Google
+  Search Console and Bing Webmaster Tools and submit the sitemap there; optionally
+  record a short demo video (the single strongest correlate of AI-answer visibility
+  in the research).
+- **Measurement:** what you can see in Search Console/Bing for free. We decided
+  **against** adding any visitor analytics for now; MARKETING.md notes the
+  privacy-friendly options (Cloudflare Web Analytics, GoatCounter) if you change
+  your mind.
+
+**Done when:** MARKETING.md is committed with every item either done, drafted, or
+written up as instructions.
 
 ---
 
-## Stage 2 — Content (PR #2)
+## Decisions already made
 
-Highest ceiling; maintainer voice matters, reviewed separately. New server-rendered pages
-reuse the existing hand-rolled blog template (full OG/Twitter + `TechArticle` JSON-LD),
-written in GEO-optimal shape (concrete quotations, stats, cited sources; titles matched to
-real queries) and in napkin's established **honest** positioning (RIBs is alive and
-maintained; the real differences are no RxSwift, no runtime leak detector).
-
-- `/compare/napkin-vs-ribs/` — the unoccupied `awesome-swift` niche.
-- `/compare/napkin-vs-tca/` — vs The Composable Architecture.
-- `/compare/napkin-vs-viper/` — vs VIPER.
-- `/when-to-use-napkin/` — a standalone decision guide (when napkin fits vs when it doesn't),
-  cross-linked from the three compare pages.
-- Expand `/faq/` with more Q&A-shaped, citable entries (keep `FAQPage` JSON-LD).
-- README: add a concise "napkin vs alternatives" table + links to the compare pages
-  (GitHub renders tables/links; strips OG/JS).
-- Wire all new pages into sitemap, llms.txt (+ llms-full.txt bodies), and nav.
-
-### Stage 2 acceptance
-- Three compare pages + when-to-use render with valid TechArticle JSON-LD (Rich Results
-  test passes) and appear in sitemap + llms.txt + nav.
-- FAQ expanded; README comparison table links resolve.
-- No keyword stuffing; positioning matches the project's honest stance.
-
----
-
-## Stage 3 — External actions + playbook (PR #3)
-
-A new `MARKETING.md` (repo root) plus the actions that don't need the maintainer's accounts.
-
-- **Automated / agent-doable:** IndexNow submission (from 1f); a **drafted** `awesome-swift`
-  PR held until napkin clears the 15-star gate; draft HN / Reddit (r/swift, r/iOSProgramming)
-  / Stack Overflow / iOS Dev Weekly copy signed as WikipediaBrown.
-- **Account-gated (documented step-by-step in MARKETING.md):** Google Search Console + Bing
-  Webmaster verification (agent drops the HTML verification file once given the token) and
-  sitemap submission; posting the community content; a short YouTube demo (highest-correlated
-  signal, ~0.74).
-- **Measurement:** MARKETING.md documents how to track AI referrers (`chatgpt.com` /
-  `perplexity.ai` / `bing.com` referrers, Search Console). **No analytics is being added now**
-  (maintainer's choice); MARKETING.md records Cloudflare Web Analytics and GoatCounter as
-  cookieless options to add later if desired.
-- **GitHub repo:** confirm description/topics/social-preview (already strong); optionally add
-  topics (`viper`, `tca`, `ios-architecture`, `dependency-injection`).
-
-### Stage 3 acceptance
-- `MARKETING.md` committed with a clear checklist splitting agent-done vs maintainer-todo.
-- IndexNow ping verified firing on deploy.
-- Draft community/awesome-swift copy present in the repo (e.g. under `Tools/site/` or
-  `MARKETING.md`) ready to post.
-
----
-
-## Decisions locked
-- Delivery: **Option A** — three staged, independently-shippable PRs.
-- Content: **all three** compare pages + when-to-use guide.
-- Analytics: **none now**; documented for later.
+- Three separate pull requests, in the order above.
+- All three comparison pages, plus the when-to-use guide.
+- No visitor analytics for now.
 - Author identity: WikipediaBrown / wikipediabrown.dev.
-- SPI: external-link the docs (no second DocC copy).
-- DocC crawler-readability: the **official** `--experimental-transform-for-static-hosting-with-content`
-  flag (verified on Xcode 27), not a hand-rolled content injector. Versioned-docs dedup via
-  `robots.txt Disallow` + sitemap exclusion, since no official canonical emitter exists yet.
+- Swift Package Index links to our docs site (we don't host a second copy there).
+- DocC discoverability uses Apple's official option, not a custom rewriter. The two
+  gaps DocC can't cover (sitemap, hiding old versions) are handled with the two
+  standard web mechanisms for exactly those jobs.
 
-## Risks / open items
-- **The DocC content flag is `--experimental-`.** Its spelling/behavior could change across
-  toolchains, and it only exists in Swift 6.3+. Mitigation: pass it *conditionally* (detect
-  via `docc convert --help`) so the build degrades to today's behavior rather than failing;
-  re-verify after the Xcode-27 CI transition. If/when the native "absolute hosting URL"
-  feature ships (adding description + canonical + Open Graph + native sitemap), revisit and
-  drop the §1a-bis / §1b residue in favor of the native path.
-- **No official canonical for versioned docs.** Using `robots.txt Disallow` (single-signal)
-  instead of a canonical is deliberate — mixing canonical+noindex sends contradictory signals
-  (per Google/Mueller). Trade-off: `Disallow`ed old-version pages won't be indexed at all
-  (acceptable — we only want the latest indexed).
-- **`awesome-swift` inclusion is star-gated (≥15)** — cannot be completed now; the PR is
-  drafted and parked.
-- **Absolute measurement will undercount** (privacy-conscious audience blocks trackers); the
-  referrer *signal* still comes through.
-- Sitemap `lastmod` accuracy depends on git dates being available in the shallow CI checkout;
-  fall back to file mtime.
+## Known risks
+
+- **The DocC option is experimental.** Its name or behavior could change in a future
+  Swift release. That's why the workflow detects support at build time and why the
+  fallback is simply today's behavior. If DocC later ships the fuller feature its
+  maintainers are working on (proper page descriptions, social tags, its own
+  sitemap), we delete our sitemap script and use theirs.
+- **Old-version docs pages won't appear in search at all** once blocked. That's
+  intentional — we only want the latest docs indexed — and the version picker on the
+  site still works for humans.
+- **Numbers will be fuzzy.** With no analytics, we judge success by Search Console
+  impressions and by whether AI assistants start mentioning napkin. Both are
+  slow-moving signals; expect months, not days.
