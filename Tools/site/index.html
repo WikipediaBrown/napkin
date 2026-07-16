@@ -79,13 +79,16 @@
                 <li><a href="https://github.com/WikipediaBrown/napkin">GitHub</a></li>
             </ul>
 
-            <label class="masthead__versions" aria-label="Documentation version">
+            <!-- span, not label: a <label> wrapping a <select> re-dispatches the
+                 click to the select, so the native dropdown opens and instantly
+                 closes (double-activation; worst in Safari). -->
+            <span class="masthead__versions">
                 <span aria-hidden="true">§</span>
-                <select onchange="if(this.value)location.href=this.value">
+                <select aria-label="Documentation version" onchange="if(this.value)location.href=this.value">
                     <option value="">version</option>
                     <!-- __VERSION_LINKS__ -->
                 </select>
-            </label>
+            </span>
         </nav>
     </div>
 </header>
