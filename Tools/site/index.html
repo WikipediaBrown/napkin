@@ -85,7 +85,9 @@
             <span class="masthead__versions">
                 <span aria-hidden="true">§</span>
                 <select aria-label="Documentation version" onchange="if(this.value)location.href=this.value">
-                    <option value="">version</option>
+                    <!-- Default = the root docs, which the workflow builds from
+                         main and stamps with the current release number. -->
+                    <option value="">__NAPKIN_VERSION__</option>
                     <!-- __VERSION_LINKS__ -->
                 </select>
             </span>
