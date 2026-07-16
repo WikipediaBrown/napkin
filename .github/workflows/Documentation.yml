@@ -203,7 +203,6 @@ jobs:
               cat "$article"
             done
           } > docs/llms-full.txt
-          cp Tools/site/sitemap.xml docs/sitemap.xml
           cp Tools/site/robots.txt docs/robots.txt
           # Custom 404 page. GitHub Pages serves /404.html on any 404.
           cp Tools/site/404.html docs/404.html
@@ -246,6 +245,11 @@ jobs:
             -e "s/__NAPKIN_VERSION__/${VERSION}/g" \
             -e "s#<!-- __VERSION_LINKS__ -->#${VERSION_LINKS}#g" \
             Tools/site/index.html > docs/index.html
+
+          # sitemap.xml — generated from the assembled site so it can never
+          # go stale. Must run after every page above has been copied in.
+          python3 Tools/site/gen_sitemap.py docs > docs/sitemap.xml
+          echo "sitemap: $(grep -c '<loc>' docs/sitemap.xml) URLs"
 
       - name: Write CNAME
         # GitHub Pages reads docs/CNAME to determine the custom domain.
