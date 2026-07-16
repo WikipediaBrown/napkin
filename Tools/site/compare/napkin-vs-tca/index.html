@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>napkin vs The Composable Architecture (2026): tree of actors vs reducer graph</title>
+    <meta name="description" content="An honest, cited comparison of napkin and TCA as of July 2026: TCA structures apps as State/Action/Reducer/Store with exhaustive TestStore testing; napkin structures them as a tree of screen units with actor interactors. Different shapes for different apps.">
+    <meta name="theme-color" content="#f6f1e3" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0e1410" media="(prefers-color-scheme: dark)">
+
+    <meta property="og:title" content="napkin vs The Composable Architecture (2026)">
+    <meta property="og:description" content="TCA is a state-management architecture; napkin is a screen-tree architecture. Honest, cited comparison — including where TCA is the better choice.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://getnapkin.to/compare/napkin-vs-tca/">
+    <meta property="og:image" content="https://getnapkin.to/social-preview.png">
+    <meta property="article:published_time" content="2026-07-16">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://getnapkin.to/compare/napkin-vs-tca/">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="/napkin-icon.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/napkin-icon@2x.png">
+    <link rel="apple-touch-icon" href="/napkin-icon@2x.png">
+    <link rel="stylesheet" href="/styles.css">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "napkin vs The Composable Architecture (2026): tree of actors vs reducer graph",
+        "description": "An honest, cited comparison of napkin and TCA: a screen-tree architecture on Swift 6 actors versus a State/Action/Reducer/Store architecture.",
+        "datePublished": "2026-07-16",
+        "dateModified": "2026-07-16",
+        "author": { "@type": "Person", "name": "WikipediaBrown", "url": "https://wikipediabrown.dev", "sameAs": ["https://github.com/WikipediaBrown"] },
+        "publisher": { "@type": "Organization", "name": "napkin", "url": "https://getnapkin.to/" },
+        "image": "https://getnapkin.to/social-preview.png",
+        "mainEntityOfPage": "https://getnapkin.to/compare/napkin-vs-tca/"
+    }
+    </script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="masthead" role="banner">
+    <div class="masthead__inner">
+        <a class="masthead__brand" href="/" aria-label="napkin — home">
+            <span class="masthead__mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4 H20 V20 L4 20 L4 4 Z" />
+                    <path d="M4 14 L14 14 L14 20" />
+                </svg>
+            </span>
+            <span class="masthead__wordmark">napkin</span>
+        </a>
+        <nav class="masthead__nav" aria-label="Primary">
+            <ul>
+                <li><a href="/documentation/napkin/">Docs</a></li>
+                <li><a href="/#example">Example</a></li>
+                <li><a href="/blog/">Blog</a></li>
+                <li><a href="/changelog/">Changelog</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin">GitHub</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main id="main">
+<article class="post">
+    <p class="post__kicker"><span>Comparison</span> <span class="sep">·</span> <span>2026 · 07 · 16</span> <span class="sep">·</span> <span>Architecture</span></p>
+    <h1 class="post__title">napkin vs The Composable Architecture: tree of actors vs reducer graph</h1>
+    <p class="post__lede">The <a href="https://github.com/pointfreeco/swift-composable-architecture">Composable Architecture</a> (TCA) and napkin aren't two answers to the same question. TCA is a state-management architecture: value-type State, Actions, Reducers, a Store. napkin is a screen-tree architecture: actor Interactors, <code>@MainActor</code> Routers and Presenters, composed per feature. This page compares them honestly — including where TCA is simply the better choice.</p>
+
+    <div class="post__body">
+        <h2>Two different shapes of app</h2>
+        <p>TCA, by its own README, is a library for building applications <em>"with composition, testing, and ergonomics in mind"</em> — you model each feature as a <code>State</code> type, an <code>Action</code> enum, and a <code>@Reducer</code> that evolves state and returns effects, all driven by a <code>Store</code>. It's actively maintained by <a href="https://www.pointfree.co">Point-Free</a>: version 1.26.0 shipped June 9, 2026 (with Xcode 27 beta fixes), the seventh release of 2026, and the repo sits at roughly 14.8k stars under an MIT license.</p>
+        <p>napkin models an app as a <strong>tree of screen and flow units</strong> — the Router-Interactor-Builder pattern from Uber's RIBs, rebuilt on Swift 6 concurrency. Business logic runs in <code>final actor</code> interactors off the main thread; routing and presentation are <code>@MainActor</code>; parents hear from children through listener protocols. State isn't one composed value graph — it lives in each unit and streams down the tree.</p>
+        <p>Neither shape is "right." Reducer composition gives TCA a single, inspectable source of truth per feature. The unit tree gives napkin hard isolation boundaries and per-screen ownership. Which one fits depends on whether your app's complexity lives in its <em>state transitions</em> or in its <em>flows between screens</em>.</p>
+
+        <h2>Observation: not a differentiator — but different mechanics</h2>
+        <p>Both frameworks use Swift's observation model, so don't choose on that axis. TCA has shipped Observation-based state since v1.7 (January 2024 — <em>"100% backwards compatible,"</em> per Point-Free), with its own <code>@ObservableState</code> macro because native <code>@Observable</code> is class-only and TCA state is value types; Point-Free even back-ported observation to iOS 13 via their Perception library. napkin uses the native <code>@Observable</code> macro directly on its class-based presenters — no macro layer of its own, no back-port, because its floor is new OSes anyway.</p>
+
+        <h2>Testing</h2>
+        <p>Testing is TCA's crown jewel. Its <code>TestStore</code> is <em>exhaustive by default</em>: per the maintainers' FAQ, <em>"you must also assert on how effects feed their data back into the system by asserting on actions received"</em> — every state change and every effect is accounted for, with a non-exhaustive opt-out (<code>exhaustivity = .off</code>) when you want it. If you want your tests to fail the moment any state transition changes, nothing else in the Swift ecosystem does this as thoroughly.</p>
+        <p>napkin's testing story is deliberately plainer: interactors are actors, so you unit-test them with ordinary XCTest — inject mock presenter/router/listener rings, drive the lifecycle, assert on recorded calls. No test runtime, no assertion DSL; also no exhaustiveness guarantee. You get Swift's own tools, not a framework's.</p>
+
+        <h2>Cost of adoption</h2>
+        <p>TCA's maintainers are unusually honest about fit, and their <a href="https://github.com/pointfreeco/swift-composable-architecture/blob/main/Sources/ComposableArchitecture/Documentation.docc/Articles/FAQ.md">FAQ</a> is worth quoting: <em>"We do not recommend people use TCA when they are first learning Swift or SwiftUI,"</em> and <em>"We also don't think TCA really shines when building simple 'reader' apps that mostly load JSON from the network and display it."</em> They acknowledge that <em>"often people complain of boilerplate in TCA,"</em> attributing much of it to the legacy view-store era, and argue a modern TCA feature needs few more lines than vanilla SwiftUI — a maintainer claim you should test on your own code.</p>
+        <p>Two adoption facts to weigh. First, platform floors cut <strong>against napkin</strong> here: TCA supports iOS 16+ (Swift 6.1+, after its 1.24.0 deprecation wave); napkin requires iOS 26/macOS 26. Second, churn: TCA is openly preparing a 2.0 — release 1.25.0 shipped <em>"a significant batch of deprecations that pave the way for Composable Architecture 2.0"</em> (ViewStore, TaskResult, and @BindingState are hard-deprecated) — so 1.x adopters should budget for a migration. napkin is young enough that its churn risk is the opposite kind: a small, new API surface with a tiny community around it.</p>
+        <p>On learning resources: TCA's canonical deep-dive is Point-Free's subscription episode collection (16 sections, 58½ hours), alongside free DocC docs and an interactive tutorial. Their maintenance pace is real — Xcode 27 beta support landed in days — and, in their own words, <em>"this kind of support and turnaround for our open source projects is only thanks to the support of our subscribers."</em> napkin has free DocC docs, a runnable example app, and no commercial arm.</p>
+
+        <h2>Comparison table</h2>
+        <div class="compare-scroll">
+        <table class="compare-table">
+            <caption>Facts as of July 15, 2026 — versions and stars are point-in-time.</caption>
+            <thead>
+                <tr><th scope="col"></th><th scope="col">TCA</th><th scope="col">napkin</th></tr>
+            </thead>
+            <tbody>
+                <tr><th scope="row">Shape</th><td>State/Action/Reducer/Store</td><td>Tree of screen units (Router-Interactor-Builder)</td></tr>
+                <tr><th scope="row">Latest release</th><td>1.26.0 (June 9, 2026); 2.0 in preparation</td><td>2.1.5</td></tr>
+                <tr><th scope="row">State observation</th><td><code>@ObservableState</code> macro (value types; iOS 13 back-port via Perception)</td><td>Native <code>@Observable</code> on class presenters</td></tr>
+                <tr><th scope="row">Concurrency</th><td>Effects system; Swift Concurrency integration</td><td><code>final actor</code> interactors, <code>@MainActor</code> UI ring</td></tr>
+                <tr><th scope="row">Testing</th><td><code>TestStore</code>, exhaustive by default</td><td>Plain XCTest + mock rings</td></tr>
+                <tr><th scope="row">Min platform</th><td>iOS 16, Swift tools 6.1</td><td>iOS 26 / macOS 26, Swift tools 6.2</td></tr>
+                <tr><th scope="row">Dependencies</th><td>Point-Free ecosystem libraries</td><td>swift-docc-plugin only (docs)</td></tr>
+                <tr><th scope="row">License</th><td>MIT</td><td>Apache-2.0</td></tr>
+                <tr><th scope="row">GitHub stars</th><td>~14.8k</td><td>2</td></tr>
+                <tr><th scope="row">Learning resources</th><td>Free DocC + tutorial; 58.5-hour subscription collection</td><td>Free DocC + example app</td></tr>
+            </tbody>
+        </table>
+        </div>
+
+        <h2>When to choose TCA</h2>
+        <ul>
+            <li>Your app's complexity is in state: many sources of truth to compose, undo, persist, or share across features.</li>
+            <li>Exhaustive, deterministic tests of every state transition are a requirement, not a nice-to-have.</li>
+            <li>You need iOS 16 (or older via back-ports) — napkin's iOS 26 floor is a hard stop.</li>
+            <li>You value a large ecosystem, deep documentation, and a funded team shipping fixes within days.</li>
+        </ul>
+
+        <h2>When to choose napkin</h2>
+        <ul>
+            <li>Your app's complexity is in flows: login trees, tab hierarchies, multi-step features owned by teams.</li>
+            <li>You want business logic <em>structurally off the main actor</em> — actors as the unit of design, not a convention.</li>
+            <li>You prefer the platform's own vocabulary — <code>@Observable</code>, <code>AsyncStream</code>, XCTest — over a framework's DSL.</li>
+            <li>You're on iOS 26/macOS 26 and comfortable betting on a young, small project.</li>
+        </ul>
+
+        <p>And a genuinely fine third answer, borrowed from TCA's own FAQ: start with vanilla SwiftUI and adopt an architecture when the pain shows up. Both frameworks will still be here.</p>
+
+        <p><strong>Related:</strong> <a href="/compare/napkin-vs-ribs/">napkin vs RIBs</a> · <a href="/when-to-use-napkin/">When to use napkin</a> · <a href="/faq/">FAQ</a></p>
+    </div>
+</article>
+</main>
+
+<footer class="colophon" role="contentinfo">
+    <div class="colophon__inner">
+        <p class="colophon__line">
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin">napkin</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/LICENSE.md">Apache&#8209;2.0</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/changelog/">CHANGELOG</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/">Blog</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/faq/">FAQ</a>
+        </p>
+        <p class="colophon__line colophon__line--right">
+            Made with 🌲🌲🌲 in Cascadia
+        </p>
+    </div>
+</footer>
+
+</body>
+</html>
