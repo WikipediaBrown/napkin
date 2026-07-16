@@ -35,6 +35,13 @@
 
 - [Napkin's Rib House](https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse): Runnable iOS app — a headless `LaunchNapkin` holds an `AuthService`, swaps between a `LoggedOutNapkin` and a `LoggedInNapkin` on tap. Tracked `.xcodeproj` (no XcodeGen step required to open).
 
+## Compare
+
+- [napkin vs RIBs](https://getnapkin.to/compare/napkin-vs-ribs/): Same Router-Interactor-Builder pattern; RIBs keeps an RxSwift backbone + runtime leak detector, napkin uses Swift 6 actors + compile-time isolation. RIBs is alive (1.1.0, July 2026).
+- [napkin vs The Composable Architecture](https://getnapkin.to/compare/napkin-vs-tca/): TCA = State/Action/Reducer/Store for state-shaped complexity; napkin = tree of screen units for flow-shaped complexity. Honest table, cited.
+- [napkin vs VIPER](https://getnapkin.to/compare/napkin-vs-viper/): VIPER is a 2014 five-role pattern; napkin descends from it via Uber's RIBs. Component-by-component mapping; the compiler now enforces what VIPER kept by discipline.
+- [When to use napkin — and when not to](https://getnapkin.to/when-to-use-napkin/): the decision guide, including the branches that end at RIBs, TCA, or plain SwiftUI.
+
 ## Project
 
 - [GitHub repository](https://github.com/WikipediaBrown/napkin)

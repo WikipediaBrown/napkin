@@ -250,6 +250,10 @@ jobs:
           # its own folder so the URL is `/blog/<slug>/`.
           mkdir -p docs/blog
           cp -R Tools/site/blog/. docs/blog/
+          # Comparison pages + decision guide (Stage 2 content).
+          mkdir -p docs/compare docs/when-to-use-napkin
+          cp -R Tools/site/compare/. docs/compare/
+          cp Tools/site/when-to-use-napkin/index.html docs/when-to-use-napkin/index.html
 
           VERSION="${{ steps.versions.outputs.version }}"
           REFS="${{ steps.versions.outputs.refs }}"

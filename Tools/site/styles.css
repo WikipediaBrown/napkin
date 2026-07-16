@@ -1561,3 +1561,16 @@ strong {
     .step .line:last-child::after { display: none; }
     .post { max-width: 100%; padding: 0; }
 }
+
+/* ---- Comparison tables (compare pages, when-to-use) ---- */
+.compare-scroll { overflow-x: auto; margin: 2rem 0; }
+.compare-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+.compare-table caption {
+    text-align: left; font-size: 0.8rem; opacity: 0.7; padding-bottom: 0.5rem;
+}
+.compare-table th, .compare-table td {
+    text-align: left; vertical-align: top; padding: 0.55rem 0.9rem;
+    border-bottom: 1px solid var(--rule, rgba(127,127,127,0.25));
+}
+.compare-table thead th { border-bottom-width: 2px; }
+.compare-table th[scope="row"] { font-weight: 600; white-space: nowrap; }

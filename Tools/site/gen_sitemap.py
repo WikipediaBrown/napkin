@@ -13,21 +13,22 @@ import re
 import sys
 
 HOST = "https://getnapkin.to"
-STATIC_PAGES = ["", "about/", "faq/", "recipes/", "changelog/", "blog/"]
+STATIC_PAGES = ["", "about/", "faq/", "recipes/", "changelog/", "blog/",
+                "when-to-use-napkin/"]
 PUBLISHED_RE = re.compile(
     r'property="article:published_time"\s+content="(\d{4}-\d{2}-\d{2})"')
 
 
-def blog_posts(root):
-    blog = os.path.join(root, "blog")
-    if not os.path.isdir(blog):
+def dated_pages(root, section):
+    base = os.path.join(root, section)
+    if not os.path.isdir(base):
         return
-    for name in sorted(os.listdir(blog)):
-        page = os.path.join(blog, name, "index.html")
+    for name in sorted(os.listdir(base)):
+        page = os.path.join(base, name, "index.html")
         if os.path.isfile(page):
             with open(page, encoding="utf-8") as f:
                 m = PUBLISHED_RE.search(f.read())
-            yield f"blog/{name}/", (m.group(1) if m else None)
+            yield f"{section}/{name}/", (m.group(1) if m else None)
 
 
 def docc_pages(root):
@@ -41,7 +42,8 @@ def docc_pages(root):
 
 def main(root):
     entries = [(p, None) for p in STATIC_PAGES]
-    entries += list(blog_posts(root))
+    entries += list(dated_pages(root, "blog"))
+    entries += list(dated_pages(root, "compare"))
     entries += sorted(docc_pages(root))
     lines = ['<?xml version="1.0" encoding="UTF-8"?>',
              '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']

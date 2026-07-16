@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>napkin vs VIPER (2026): from pattern to framework</title>
+    <meta name="description" content="VIPER is a pattern; napkin is a framework from the same Clean Architecture family tree, via Uber's RIBs. Component-by-component mapping, honestly cited.">
+    <meta name="theme-color" content="#f6f1e3" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0e1410" media="(prefers-color-scheme: dark)">
+
+    <meta property="og:title" content="napkin vs VIPER (2026): from pattern to framework">
+    <meta property="og:description" content="VIPER is a pattern; napkin is a framework from the same Clean Architecture family tree, via Uber's RIBs. Component-by-component mapping, honestly cited.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://getnapkin.to/compare/napkin-vs-viper/">
+    <meta property="og:image" content="https://getnapkin.to/social-preview.png">
+    <meta property="article:published_time" content="2026-07-16">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://getnapkin.to/compare/napkin-vs-viper/">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="/napkin-icon.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/napkin-icon@2x.png">
+    <link rel="apple-touch-icon" href="/napkin-icon@2x.png">
+    <link rel="stylesheet" href="/styles.css">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "napkin vs VIPER (2026): from pattern to framework",
+        "description": "A cited comparison of napkin and VIPER: a 2014 five-role pattern versus a Swift 6 framework from the same Clean Architecture lineage.",
+        "datePublished": "2026-07-16",
+        "dateModified": "2026-07-16",
+        "author": { "@type": "Person", "name": "WikipediaBrown", "url": "https://wikipediabrown.dev", "sameAs": ["https://github.com/WikipediaBrown"] },
+        "publisher": { "@type": "Organization", "name": "napkin", "url": "https://getnapkin.to/" },
+        "image": "https://getnapkin.to/social-preview.png",
+        "mainEntityOfPage": "https://getnapkin.to/compare/napkin-vs-viper/"
+    }
+    </script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="masthead" role="banner">
+    <div class="masthead__inner">
+        <a class="masthead__brand" href="/" aria-label="napkin — home">
+            <span class="masthead__mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4 H20 V20 L4 20 L4 4 Z" />
+                    <path d="M4 14 L14 14 L14 20" />
+                </svg>
+            </span>
+            <span class="masthead__wordmark">napkin</span>
+        </a>
+        <nav class="masthead__nav" aria-label="Primary">
+            <ul>
+                <li><a href="/documentation/napkin/">Docs</a></li>
+                <li><a href="/#example">Example</a></li>
+                <li><a href="/blog/">Blog</a></li>
+                <li><a href="/changelog/">Changelog</a></li>
+                <li><a href="https://github.com/WikipediaBrown/napkin">GitHub</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main id="main">
+<article class="post">
+    <p class="post__kicker"><span>Comparison</span> <span class="sep">·</span> <span>2026 · 07 · 16</span> <span class="sep">·</span> <span>Architecture</span></p>
+    <h1 class="post__title">napkin vs VIPER: from pattern to framework</h1>
+    <p class="post__lede">VIPER and napkin are relatives, not rivals. VIPER is a five-role architecture <em>pattern</em> from 2014; Uber's RIBs was, in Uber's own words, inspired by it; napkin is a Swift 6 rebuild of the RIBs shape. This page maps the components nearly one-to-one and says plainly where each generation of the idea fits in 2026.</p>
+
+    <div class="post__body">
+        <h2>What VIPER actually is</h2>
+        <p>The canonical source is <a href="https://www.objc.io/issues/13-architecture/viper/">"Architecting iOS Apps with VIPER"</a> by Jeff Gilbert and Conrad Stoll (objc.io, Issue 13, June 2014). VIPER came out of Mutual Mobile's push to improve testing, and the article says exactly what it is: <em>"VIPER is an application of Clean Architecture to iOS apps."</em> The word is a backronym — <strong>V</strong>iew, <strong>I</strong>nteractor, <strong>P</strong>resenter, <strong>E</strong>ntity, <strong>R</strong>outing — five roles per screen module, each with a strict job: the Interactor <em>"contains the business logic as specified by a use case"</em>; the View <em>"displays what it is told to by the Presenter"</em>; Entities are <em>"never passed from the Interactor to the Presenter"</em>; and navigation is done by a wireframe that owns the window and view controllers — <em>"together, they describe a route from one screen to the next."</em></p>
+        <p>Note what VIPER is <em>not</em>: a library. You adopt it by writing (or generating) the five roles yourself. The dedicated tooling has gone quiet — <a href="https://github.com/ferranabello/Viperit/releases">Viperit</a>, the best-known VIPER library, hasn't shipped a release since September 2021, and <a href="https://github.com/infinum/iOS-VIPER-Xcode-Templates/releases">Infinum's Xcode templates</a> last cut a release in 2023 (with some branch activity since). The pattern still works; the ecosystem around it is mostly historical.</p>
+
+        <h2>The family tree: VIPER → RIBs → napkin</h2>
+        <p>Uber's engineers wrote in their <a href="https://www.uber.com/blog/new-rider-app-architecture/">2016 rider-app architecture post</a>: <em>"When considering alternatives to MVC, we were inspired by the way VIPER could be used as an application of Clean Architecture to iOS apps."</em> RIBs kept VIPER's Clean-Architecture instincts and changed the unit of composition — and today's <a href="https://github.com/uber/RIBs-iOS">RIBs-iOS README</a> states the classification plainly: <em>"MVC, MVP, MVI, MVVM and VIPER are architecture patterns. RIBs is a framework."</em></p>
+        <p>napkin sits one generation further along the same branch: the RIBs shape (Router-Interactor-Builder tree), with the reactive layer replaced by Swift 6 concurrency. (RIBs-iOS itself runs on iOS 15+, if you want the tree shape below napkin's floor.) If you know VIPER, napkin will feel familiar — the concepts below map almost one-to-one.</p>
+
+        <h2>Component mapping</h2>
+        <div class="compare-scroll">
+        <table class="compare-table">
+            <caption>VIPER roles (objc.io, 2014) mapped onto napkin. Sources linked in the text above; facts as of July 16, 2026.</caption>
+            <thead>
+                <tr><th scope="col">VIPER</th><th scope="col">napkin</th><th scope="col">What changed</th></tr>
+            </thead>
+            <tbody>
+                <tr><th scope="row">View</th><td><code>ViewControllable</code> / SwiftUI view</td><td>Same job. In napkin the view is optional — headless units exist; in VIPER, V is a mandatory letter.</td></tr>
+                <tr><th scope="row">Interactor</th><td><code>Interactor</code> (a <code>final actor</code>)</td><td>Same job — the use-case brain. napkin makes its isolation physical: it runs off the main thread by construction.</td></tr>
+                <tr><th scope="row">Presenter</th><td><code>Presenter</code> (<code>@MainActor</code>, <code>@Observable</code>)</td><td>Same job, also optional in napkin. View state becomes observable properties instead of hand-wired callbacks.</td></tr>
+                <tr><th scope="row">Entity</th><td>Your service layer's models</td><td>napkin has no Entity role — model types belong to the services you inject, and the same "don't leak them into the UI" discipline applies at the actor boundary, which at least makes the hand-off explicit.</td></tr>
+                <tr><th scope="row">Routing (wireframe)</th><td><code>Router</code> + <code>Builder</code></td><td>VIPER's wireframe both navigates and assembles the module. napkin splits that: the Router owns attach/detach of children; the Builder owns construction and dependency injection.</td></tr>
+            </tbody>
+        </table>
+        </div>
+
+        <h2>The two real structural differences</h2>
+        <p><strong>1. Screen modules vs a unit tree.</strong> In VIPER, the presenter and wireframe together describe <em>"a route from one screen to the next"</em> — the unit of composition is the screen, and wireframes chain them. napkin (like RIBs) composes a <em>tree</em>: parents attach child units, children report back through listener protocols, and — as Uber's README puts it — <em>"business logic drives the app, not the view tree."</em> A unit doesn't need a view at all, which is how flows like authentication or session management get modeled as first-class units instead of living awkwardly inside some screen's Interactor.</p>
+        <p><strong>2. Who enforces the rules.</strong> VIPER's separations — Entities never reach the Presenter, Views stay passive — are discipline: five roles per screen that you (or your code review) keep honest, which in practice means a lot of files and protocol plumbing per screen. That structural verbosity is the price of the pattern. To be fair, napkin doesn't shrink the file count much — a unit is still a Builder, Router, Interactor, and optional Presenter, and napkin ships Xcode templates to stamp them out. What changes is who enforces the seams: in napkin the isolation boundary is compiler-checked — business logic lives in an actor, UI in <code>@MainActor</code> types, and crossing between them without <code>await</code> is a build error, not a review comment. (The compiler checks the crossing, not the cargo: keeping entities out of the UI is still your discipline to keep.)</p>
+
+        <h2>When to choose VIPER</h2>
+        <ul>
+            <li>You maintain an existing VIPER codebase that works — the pattern didn't stop working; don't churn for fashion.</li>
+            <li>You need to support OS versions below iOS 26, where napkin can't follow you.</li>
+            <li>Your team wants a pattern with zero framework dependency at all — VIPER is just files you own.</li>
+            <li>You value a decade of accumulated writing, answers, and engineers who already know the pattern — napkin is young (v2.1.x, a tiny community) and can't offer that yet.</li>
+        </ul>
+
+        <h2>When to choose napkin</h2>
+        <ul>
+            <li>You liked VIPER's separation of concerns but not maintaining it by hand — napkin keeps the separation and hands enforcement to the Swift 6 compiler.</li>
+            <li>Your app has flow-shaped complexity that screen-to-screen wireframes model poorly — the unit tree, with headless units, is built for it.</li>
+            <li>You're starting fresh on iOS 26/macOS 26 with Swift Concurrency as the house style.</li>
+        </ul>
+
+        <p><strong>Related:</strong> <a href="/compare/napkin-vs-ribs/">napkin vs RIBs</a> · <a href="/compare/napkin-vs-tca/">napkin vs TCA</a> · <a href="/when-to-use-napkin/">When to use napkin</a> · <a href="/faq/">FAQ</a></p>
+    </div>
+</article>
+</main>
+
+<footer class="colophon" role="contentinfo">
+    <div class="colophon__inner">
+        <p class="colophon__line">
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin">napkin</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="https://github.com/WikipediaBrown/napkin/blob/main/LICENSE.md">Apache&#8209;2.0</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/changelog/">CHANGELOG</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/blog/">Blog</a>
+            <span aria-hidden="true" class="colophon__sep">·</span>
+            <a class="link link--mono" href="/faq/">FAQ</a>
+        </p>
+        <p class="colophon__line colophon__line--right">
+            Made with 🌲🌲🌲 in Cascadia
+        </p>
+    </div>
+</footer>
+
+</body>
+</html>
