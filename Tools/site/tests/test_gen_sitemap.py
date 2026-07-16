@@ -22,6 +22,10 @@ def make_fixture(root):
          "</head></html>")
     page("documentation/napkin"); page("documentation/napkin/presenter")
     page("tutorials/napkin")
+    page("when-to-use-napkin")
+    page("compare/napkin-vs-ribs",
+         '<html><head><meta property="article:published_time" content="2026-07-16">'
+         "</head></html>")
     page("main/documentation/napkin")      # versioned copy: must be excluded
     page("2.0.8/documentation/napkin")     # versioned copy: must be excluded
     page("css")                            # asset dir: must be excluded
@@ -49,7 +53,9 @@ class TestGenSitemap(unittest.TestCase):
                     "https://getnapkin.to/about/",
                     "https://getnapkin.to/blog/some-post/",
                     "https://getnapkin.to/documentation/napkin/presenter/",
-                    "https://getnapkin.to/tutorials/napkin/"]:
+                    "https://getnapkin.to/tutorials/napkin/",
+                    "https://getnapkin.to/when-to-use-napkin/",
+                    "https://getnapkin.to/compare/napkin-vs-ribs/"]:
             self.assertIn(f"<loc>{url}</loc>", self.xml, url)
 
     def test_versioned_and_assets_excluded(self):
@@ -59,6 +65,7 @@ class TestGenSitemap(unittest.TestCase):
 
     def test_blog_lastmod_from_published_time(self):
         self.assertIn("<lastmod>2026-05-15</lastmod>", self.xml)
+        self.assertIn("<lastmod>2026-07-16</lastmod>", self.xml)
 
 
 if __name__ == "__main__":
