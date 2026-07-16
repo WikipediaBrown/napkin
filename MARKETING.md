@@ -53,19 +53,25 @@ Link getnapkin.to and the repo in the description.
 
 ## Drafted — post when you're ready (all signed as you)
 
+*Before posting anything below: confirm the pages each draft links to are live
+(the compare pages and /when-to-use-napkin/ ship with the Stage 2 PR and deploy
+on the next release), and re-check the dated facts.*
+
 ### Hacker News (Show HN)
 > **Title:** Show HN: napkin – Uber's RIBs pattern rebuilt on Swift 6 actors, no RxSwift
 >
 > **Text:** I maintain napkin, an open-source Swift framework that keeps the
 > Router-Interactor-Builder architecture from Uber's RIBs but rebuilds it on Swift 6
 > concurrency: business logic lives in `final actor` interactors, routing/presentation
-> are `@MainActor`, and every isolation crossing is an explicit `await`. No RxSwift,
-> no runtime leak detector — the compiler enforces what RIBs checks at runtime.
+> are `@MainActor`, and every isolation crossing is an explicit `await`. No RxSwift
+> and no runtime leak detector — actor isolation is checked by the compiler, and a
+> weak-view ownership rule stands in for the leak detector.
 >
-> To be clear: RIBs is alive (1.1.0 shipped this month) — napkin is for teams that
-> want the pattern without the Rx backbone. It targets iOS 26/macOS 26, it's young,
-> and the community is tiny; the docs are honest about when you should use RIBs, TCA,
-> or plain SwiftUI instead: https://getnapkin.to/when-to-use-napkin/
+> To be clear: RIBs is alive (RIBs-iOS 1.1.0 shipped July 12, 2026 — re-check for
+> newer releases before posting) — napkin is for teams that want the pattern without
+> the Rx backbone. It targets iOS 26/macOS 26, it's young, and the community is tiny;
+> the docs say plainly when you should use RIBs, TCA, or plain SwiftUI instead:
+> https://getnapkin.to/when-to-use-napkin/
 >
 > Docs: https://getnapkin.to · Repo: https://github.com/WikipediaBrown/napkin
 > Happy to answer questions about the actor-isolation design decisions.
@@ -74,15 +80,15 @@ Link getnapkin.to and the repo in the description.
 technical questions, don't ask for upvotes.*
 
 ### r/swift / r/iOSProgramming
-> **Title:** I rebuilt the RIBs architecture on Swift 6 actors (no RxSwift) — honest comparison pages included
+> **Title:** I rebuilt the RIBs architecture on Swift 6 actors (no RxSwift) — with comparison pages vs RIBs, TCA, and VIPER
 >
 > **Body:** RIBs' Router-Interactor-Builder tree is a great shape for flow-heavy
-> apps, but the framework is built on RxSwift and a runtime leak detector. I wanted
+> apps, but the framework is built on RxSwift and ships a runtime leak detector. I wanted
 > the shape with Swift 6's own machinery, so I built napkin: interactors are
 > `final actor`s, the UI ring is `@MainActor`, streaming is `AsyncStream`/`Observations`,
 > and isolation mistakes are compile errors.
 >
-> Before anyone says it: RIBs is *not* dead — uber/RIBs-iOS shipped 1.1.0 in July.
+> Before anyone says it: RIBs is *not* dead — uber/RIBs-iOS shipped 1.1.0 on July 12, 2026.
 > I wrote cited comparison pages (vs RIBs, vs TCA, vs VIPER) that try hard to be
 > honest about when napkin is the wrong choice — e.g. it needs iOS 26+, and if your
 > complexity is state rather than flows, TCA is better at that:
@@ -101,9 +107,9 @@ engagement. Post one, wait a week, post the other.*
 > Router-Interactor-Builder architecture on native Swift 6 concurrency: actor
 > interactors, @MainActor routing, no RxSwift dependency, compile-time isolation
 > instead of a runtime leak detector. Might interest readers evaluating
-> architecture options post-Swift-6: the docs include unusually honest comparison
-> pages (vs RIBs, vs TCA, vs VIPER) that say plainly when each alternative is the
-> better choice. https://getnapkin.to — WikipediaBrown
+> architecture options post-Swift-6: the docs include comparison pages (vs RIBs,
+> vs TCA, vs VIPER) that say plainly when each alternative is the better choice.
+> https://getnapkin.to — WikipediaBrown
 
 ### awesome-swift entry — **HOLD until the repo has ≥ 15 stars** (their hard rule)
 PR against https://github.com/matteocrippa/awesome-swift, "Patterns" section
@@ -131,8 +137,8 @@ We deliberately run no visitor analytics. What you *can* watch:
 ## Refresh cadence
 
 - Comparison tables are stamped "as of July 15, 2026". Re-verify when: TCA 2.0
-  ships (their 1.24–1.26 releases openly prepare it), RIBs-iOS releases, or ~every
-  6 months, whichever comes first.
+  ships (their 1.24 and 1.25 releases openly prepare it), RIBs-iOS releases, or
+  ~every 6 months, whichever comes first.
 - The two research-refuted claims that must stay out of napkin copy: "TCA 2.0 is in
   beta" (it isn't; it's *in preparation*) and "v0.16.4 removed iOS from uber/RIBs"
   (the split happened October 2024).
