@@ -27,7 +27,7 @@
         "@context": "https://schema.org",
         "@type": "TechArticle",
         "headline": "napkin vs VIPER (2026): from pattern to framework",
-        "description": "An honest, cited comparison of napkin and VIPER: a 2014 five-role pattern versus a Swift 6 framework from the same Clean Architecture lineage.",
+        "description": "A cited comparison of napkin and VIPER: a 2014 five-role pattern versus a Swift 6 framework from the same Clean Architecture lineage.",
         "datePublished": "2026-07-16",
         "dateModified": "2026-07-16",
         "author": { "@type": "Person", "name": "WikipediaBrown", "url": "https://wikipediabrown.dev", "sameAs": ["https://github.com/WikipediaBrown"] },
@@ -68,12 +68,12 @@
 <article class="post">
     <p class="post__kicker"><span>Comparison</span> <span class="sep">·</span> <span>2026 · 07 · 16</span> <span class="sep">·</span> <span>Architecture</span></p>
     <h1 class="post__title">napkin vs VIPER: from pattern to framework</h1>
-    <p class="post__lede">VIPER and napkin are relatives, not rivals. VIPER is a five-role architecture <em>pattern</em> from 2014; Uber's RIBs was, in Uber's own words, inspired by it; napkin is a Swift 6 rebuild of the RIBs shape. This page maps the components one-to-one and is honest about where each generation of the idea fits in 2026.</p>
+    <p class="post__lede">VIPER and napkin are relatives, not rivals. VIPER is a five-role architecture <em>pattern</em> from 2014; Uber's RIBs was, in Uber's own words, inspired by it; napkin is a Swift 6 rebuild of the RIBs shape. This page maps the components nearly one-to-one and says plainly where each generation of the idea fits in 2026.</p>
 
     <div class="post__body">
         <h2>What VIPER actually is</h2>
         <p>The canonical source is <a href="https://www.objc.io/issues/13-architecture/viper/">"Architecting iOS Apps with VIPER"</a> by Jeff Gilbert and Conrad Stoll (objc.io, Issue 13, June 2014). VIPER came out of Mutual Mobile's push to improve testing, and the article says exactly what it is: <em>"VIPER is an application of Clean Architecture to iOS apps."</em> The word is a backronym — <strong>V</strong>iew, <strong>I</strong>nteractor, <strong>P</strong>resenter, <strong>E</strong>ntity, <strong>R</strong>outing — five roles per screen module, each with a strict job: the Interactor <em>"contains the business logic as specified by a use case"</em>; the View <em>"displays what it is told to by the Presenter"</em>; Entities are <em>"never passed from the Interactor to the Presenter"</em>; and navigation is done by a wireframe that owns the window and view controllers — <em>"together, they describe a route from one screen to the next."</em></p>
-        <p>Note what VIPER is <em>not</em>: a library. You adopt it by writing (or generating) the five roles yourself. The dedicated tooling has gone quiet — <a href="https://github.com/ferranabello/Viperit">Viperit</a>, the best-known VIPER library, hasn't shipped a release since September 2021, and <a href="https://github.com/infinum/iOS-VIPER-Xcode-Templates">Infinum's Xcode templates</a> last cut a release in 2023 (with some branch activity since). The pattern still works; the ecosystem around it is mostly historical.</p>
+        <p>Note what VIPER is <em>not</em>: a library. You adopt it by writing (or generating) the five roles yourself. The dedicated tooling has gone quiet — <a href="https://github.com/ferranabello/Viperit/releases">Viperit</a>, the best-known VIPER library, hasn't shipped a release since September 2021, and <a href="https://github.com/infinum/iOS-VIPER-Xcode-Templates/releases">Infinum's Xcode templates</a> last cut a release in 2023 (with some branch activity since). The pattern still works; the ecosystem around it is mostly historical.</p>
 
         <h2>The family tree: VIPER → RIBs → napkin</h2>
         <p>Uber's engineers wrote in their <a href="https://www.uber.com/blog/new-rider-app-architecture/">2016 rider-app architecture post</a>: <em>"When considering alternatives to MVC, we were inspired by the way VIPER could be used as an application of Clean Architecture to iOS apps."</em> RIBs kept VIPER's Clean-Architecture instincts and changed the unit of composition — and today's <a href="https://github.com/uber/RIBs-iOS">RIBs-iOS README</a> states the classification plainly: <em>"MVC, MVP, MVI, MVVM and VIPER are architecture patterns. RIBs is a framework."</em></p>
@@ -82,7 +82,7 @@
         <h2>Component mapping</h2>
         <div class="compare-scroll">
         <table class="compare-table">
-            <caption>VIPER roles (objc.io, 2014) mapped onto napkin. Sources linked in the text above; facts as of July 15, 2026.</caption>
+            <caption>VIPER roles (objc.io, 2014) mapped onto napkin. Sources linked in the text above; facts as of July 16, 2026.</caption>
             <thead>
                 <tr><th scope="col">VIPER</th><th scope="col">napkin</th><th scope="col">What changed</th></tr>
             </thead>
@@ -90,17 +90,17 @@
                 <tr><th scope="row">View</th><td><code>ViewControllable</code> / SwiftUI view</td><td>Same job. In napkin the view is optional — headless units exist; in VIPER, V is a mandatory letter.</td></tr>
                 <tr><th scope="row">Interactor</th><td><code>Interactor</code> (a <code>final actor</code>)</td><td>Same job — the use-case brain. napkin makes its isolation physical: it runs off the main thread by construction.</td></tr>
                 <tr><th scope="row">Presenter</th><td><code>Presenter</code> (<code>@MainActor</code>, <code>@Observable</code>)</td><td>Same job, also optional in napkin. View state becomes observable properties instead of hand-wired callbacks.</td></tr>
-                <tr><th scope="row">Entity</th><td>Your service layer's models</td><td>napkin has no Entity role — model types belong to the services you inject, and the same "don't leak them into the UI ring" discipline applies at the actor boundary, where the compiler enforces it.</td></tr>
+                <tr><th scope="row">Entity</th><td>Your service layer's models</td><td>napkin has no Entity role — model types belong to the services you inject, and the same "don't leak them into the UI" discipline applies at the actor boundary, which at least makes the hand-off explicit.</td></tr>
                 <tr><th scope="row">Routing (wireframe)</th><td><code>Router</code> + <code>Builder</code></td><td>VIPER's wireframe both navigates and assembles the module. napkin splits that: the Router owns attach/detach of children; the Builder owns construction and dependency injection.</td></tr>
             </tbody>
         </table>
         </div>
 
         <h2>The two real structural differences</h2>
-        <p><strong>1. Screen modules vs a unit tree.</strong> VIPER modules describe <em>"a route from one screen to the next"</em> — the unit of composition is the screen, and wireframes chain them. napkin (like RIBs) composes a <em>tree</em>: parents attach child units, children report back through listener protocols, and — as Uber's README puts it — <em>"business logic drives the app, not the view tree."</em> A unit doesn't need a view at all, which is how flows like authentication or session management get modeled as first-class units instead of living awkwardly inside some screen's Interactor.</p>
-        <p><strong>2. Who enforces the rules.</strong> VIPER's separations — Entities never reach the Presenter, Views stay passive — are discipline: five roles per screen that you (or your code review) keep honest, which in practice means a lot of files and protocol plumbing per screen. That structural verbosity is the price of the pattern, and it's the complaint you'll hear most often about it. In napkin the equivalent boundaries are compiler-enforced: business logic lives in an actor, UI in <code>@MainActor</code> types, and crossing between them without <code>await</code> is a build error, not a review comment.</p>
+        <p><strong>1. Screen modules vs a unit tree.</strong> In VIPER, the presenter and wireframe together describe <em>"a route from one screen to the next"</em> — the unit of composition is the screen, and wireframes chain them. napkin (like RIBs) composes a <em>tree</em>: parents attach child units, children report back through listener protocols, and — as Uber's README puts it — <em>"business logic drives the app, not the view tree."</em> A unit doesn't need a view at all, which is how flows like authentication or session management get modeled as first-class units instead of living awkwardly inside some screen's Interactor.</p>
+        <p><strong>2. Who enforces the rules.</strong> VIPER's separations — Entities never reach the Presenter, Views stay passive — are discipline: five roles per screen that you (or your code review) keep honest, which in practice means a lot of files and protocol plumbing per screen. That structural verbosity is the price of the pattern. To be fair, napkin doesn't shrink the file count much — a unit is still a Builder, Router, Interactor, and optional Presenter, and napkin ships Xcode templates to stamp them out. What changes is who enforces the seams: in napkin the isolation boundary is compiler-checked — business logic lives in an actor, UI in <code>@MainActor</code> types, and crossing between them without <code>await</code> is a build error, not a review comment. (The compiler checks the crossing, not the cargo: keeping entities out of the UI is still your discipline to keep.)</p>
 
-        <h2>When VIPER still makes sense</h2>
+        <h2>When to choose VIPER</h2>
         <ul>
             <li>You maintain an existing VIPER codebase that works — the pattern didn't stop working; don't churn for fashion.</li>
             <li>You need to support OS versions below iOS 26, where napkin can't follow you.</li>
@@ -108,7 +108,7 @@
             <li>You value a decade of accumulated writing, answers, and engineers who already know the pattern — napkin is young (v2.1.x, a tiny community) and can't offer that yet.</li>
         </ul>
 
-        <h2>When napkin is the better answer</h2>
+        <h2>When to choose napkin</h2>
         <ul>
             <li>You liked VIPER's separation of concerns but not maintaining it by hand — napkin keeps the separation and hands enforcement to the Swift 6 compiler.</li>
             <li>Your app has flow-shaped complexity that screen-to-screen wireframes model poorly — the unit tree, with headless units, is built for it.</li>

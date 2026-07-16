@@ -85,7 +85,7 @@
             <li><strong>You must support anything below iOS 26.</strong> Hard stop, no back-port. RIBs-iOS runs on iOS 15+, TCA on iOS 16+.</li>
             <li><strong>You have a working RIBs or TCA codebase.</strong> Both are actively maintained (<a href="https://github.com/uber/RIBs-iOS/releases/tag/1.1.0">RIBs-iOS shipped 1.1.0 on July 12, 2026</a>; <a href="https://github.com/pointfreeco/swift-composable-architecture/releases">TCA has cut seven releases in 2026</a>). Migration for its own sake buys you nothing.</li>
             <li><strong>Your complexity is state, not flows.</strong> If the hard part of your app is composing, persisting, and exhaustively testing state transitions, <a href="/compare/napkin-vs-tca/">TCA is built for exactly that</a>.</li>
-            <li><strong>You need a big ecosystem or a full tooling suite.</strong> napkin ships Xcode file templates and an install script, but not RIBs' broader IDE tooling — static analysis, runtime integrations — and TCA has ~14.8k GitHub stars and deep learning material.</li>
+            <li><strong>You need a big ecosystem or a full tooling suite.</strong> napkin ships Xcode file templates and an install script, but not RIBs' broader IDE tooling — static analysis, runtime integrations — and TCA has ~14.8k GitHub stars and a deep library of learning material.</li>
             <li><strong>You're building a simple app.</strong> TCA's maintainers <a href="https://github.com/pointfreeco/swift-composable-architecture/blob/main/Sources/ComposableArchitecture/Documentation.docc/Articles/FAQ.md">admit their framework doesn't really shine</a> for simple "reader" apps, and the same goes for napkin: a mostly-display app doesn't need an architecture framework. Plain SwiftUI is a great answer, and you can adopt structure later when the pain is real.</li>
             <li><strong>Betting on a young project is unacceptable.</strong> napkin is at v2.1.5 with two GitHub stars (as of July 2026). The API is small and hasn't churned since 2.0, but nobody should call it battle-tested.</li>
         </ul>
@@ -93,14 +93,14 @@
         <h2>The short version</h2>
         <div class="compare-scroll">
         <table class="compare-table">
-            <caption>One-line routing. Facts as of July 15, 2026.</caption>
+            <caption>One-line routing. Facts as of July 16, 2026.</caption>
             <thead>
                 <tr><th scope="col">Your situation</th><th scope="col">Honest answer</th></tr>
             </thead>
             <tbody>
                 <tr><th scope="row">New Swift 6 app, flow-shaped, iOS 26+</th><td><strong>napkin</strong></td></tr>
                 <tr><th scope="row">State-shaped complexity, exhaustive tests</th><td><a href="/compare/napkin-vs-tca/">TCA</a></td></tr>
-                <tr><th scope="row">Existing RIBs codebase, RxSwift-fluent team</th><td><a href="/compare/napkin-vs-ribs/">Stay on RIBs</a></td></tr>
+                <tr><th scope="row">Existing RIBs or TCA codebase that works</th><td>Stay put (<a href="/compare/napkin-vs-ribs/">why</a>)</td></tr>
                 <tr><th scope="row">Needs iOS 15–25</th><td>RIBs (15+) or TCA (16+)</td></tr>
                 <tr><th scope="row">Simple reader/display app</th><td>Plain SwiftUI</td></tr>
             </tbody>
