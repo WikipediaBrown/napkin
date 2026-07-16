@@ -67,6 +67,20 @@ jobs:
           sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app 2>/dev/null | grep -v -i beta | sort -V | tail -1)"
           xcodebuild -version
 
+      - name: Detect DocC content flag
+        # Swift 6.3+ DocC can write each page's real title and full text into
+        # its index.html (readable without JavaScript — which the crawlers
+        # behind ChatGPT/Claude/Perplexity never run). The flag is marked
+        # experimental, so detect support instead of assuming it: on an older
+        # toolchain we simply build today's output.
+        run: |
+          if xcrun docc convert --help 2>/dev/null | grep -q -- '--experimental-transform-for-static-hosting-with-content'; then
+            echo "DOCC_CONTENT_FLAG=--experimental-transform-for-static-hosting-with-content" >> "$GITHUB_ENV"
+            echo "docc supports static-hosting-with-content: passing it"
+          else
+            echo "docc does not support static-hosting-with-content: building without it"
+          fi
+
       - name: Configure Pages
         uses: actions/configure-pages@v6
 
@@ -110,6 +124,7 @@ jobs:
             --target napkin \
             --disable-indexing \
             --transform-for-static-hosting \
+            ${DOCC_CONTENT_FLAG} \
             --output-path ./docs \
             --experimental-enable-custom-templates \
             --source-service github \
@@ -150,6 +165,7 @@ jobs:
                 --target napkin \
                 --disable-indexing \
                 --transform-for-static-hosting \
+                ${DOCC_CONTENT_FLAG} \
                 --hosting-base-path "${ref}" \
                 --output-path "docs/${ref}" \
                 --experimental-enable-custom-templates \
