@@ -203,7 +203,6 @@ jobs:
               cat "$article"
             done
           } > docs/llms-full.txt
-          cp Tools/site/robots.txt docs/robots.txt
           # Custom 404 page. GitHub Pages serves /404.html on any 404.
           cp Tools/site/404.html docs/404.html
           # FAQ page (FAQPage JSON-LD) + recipes cookbook (named patterns).
@@ -250,6 +249,13 @@ jobs:
           # go stale. Must run after every page above has been copied in.
           python3 Tools/site/gen_sitemap.py docs > docs/sitemap.xml
           echo "sitemap: $(grep -c '<loc>' docs/sitemap.xml) URLs"
+          # robots.txt — welcome AI crawlers, block the versioned doc copies
+          # that actually built this run (same refs as the version dropdown).
+          EXISTING_REFS=""
+          for ref in $REFS; do
+            if [ -d "docs/${ref}" ]; then EXISTING_REFS="${EXISTING_REFS} ${ref}"; fi
+          done
+          python3 Tools/site/gen_robots.py --disallow ${EXISTING_REFS} > docs/robots.txt
 
       - name: Write CNAME
         # GitHub Pages reads docs/CNAME to determine the custom domain.
