@@ -30,6 +30,7 @@ comparisons with the alternatives (facts as of July 2026):
 
 Longer, cited write-ups: [napkin vs RIBs](https://getnapkin.to/compare/napkin-vs-ribs/) ·
 [napkin vs TCA](https://getnapkin.to/compare/napkin-vs-tca/) ·
+[napkin vs VIPER](https://getnapkin.to/compare/napkin-vs-viper/) ·
 [when to use napkin](https://getnapkin.to/when-to-use-napkin/)
 
 ## Table of Contents
