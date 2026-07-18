@@ -28,7 +28,7 @@ jobs:
       BUMP: ${{ inputs.bump || 'patch' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Narrow remote refspec
         # Override `remote.origin.fetch` so subsequent `git fetch --tags`
         # calls (run by fastlane's `git_pull(only_tags: true)` inside

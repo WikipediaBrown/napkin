@@ -37,7 +37,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Select Xcode
         # Match Tests.yml: pick the highest non-beta Xcode 26.x available.
         run: |
