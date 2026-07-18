@@ -83,13 +83,13 @@ to satisfy nonisolated protocol requirement
 </code></pre>
         </figure>
 
-        <p>That's the diagnostic exactly as filed in Uber's actively-maintained <a href="https://github.com/uber/ribs-ios/issues/43">RIBs-iOS issue #43</a> (Swift 6.0). Later Swift versions reworded it — 6.3 reports it as a <code>#ConformanceIsolation</code> error, "conformance … crosses into main actor-isolated code" with a "cannot satisfy nonisolated requirement" note — but it is the same conformance problem, and it shows up in nearly every codebase that adopts a RIB-shaped listener seam and then turns on the Swift 6 language mode. It is not a niche edge case.</p>
+        <p>That's the diagnostic exactly as filed in Uber's actively-maintained <a href="https://github.com/uber/ribs-ios/issues/43">RIBs-iOS issue #43</a> (Swift 6.0). Swift 6.2 (SE-0470) reworded it — 6.2 and later report it as a <a href="https://github.com/swiftlang/swift/blob/main/userdocs/diagnostics/conformance-isolation.md"><code>#ConformanceIsolation</code></a> error, "conformance … crosses into main actor-isolated code" with a "cannot satisfy nonisolated requirement" note — but it is the same conformance problem, and it shows up in nearly every codebase that adopts a RIB-shaped listener seam and then turns on the Swift 6 language mode. It is not a niche edge case.</p>
 
         <h2>Why the seam triggers it</h2>
 
         <p>The error is the compiler asking a question the original design never answered: <em>which isolation domain does the listener live in?</em></p>
 
-        <p>The view layer is <code>@MainActor</code> — that part was never in doubt; UIKit and SwiftUI require it. So when a view controller conforms to a presentable protocol, the view controller's members are main-actor-isolated. But the <em>protocol requirement</em> it's satisfying — <code>var listener: PresentableListener? { get set }</code>, declared on a protocol with no isolation annotation — is <code>nonisolated</code>. Swift 6 will not let a main-actor-isolated property be the witness for a nonisolated requirement, because a caller holding only the protocol type could touch <code>listener</code> from any executor.</p>
+        <p>The view layer is <code>@MainActor</code> — that part was never in doubt; <a href="https://developer.apple.com/documentation/uikit/uiviewcontroller">UIKit</a> and SwiftUI require it. So when a view controller conforms to a presentable protocol, the view controller's members are main-actor-isolated. But the <em>protocol requirement</em> it's satisfying — <code>var listener: PresentableListener? { get set }</code>, declared on a protocol with no isolation annotation — is <code>nonisolated</code>. Swift 6 <a href="https://www.swift.org/migration/documentation/swift-6-concurrency-migration-guide/commonproblems/">will not let a main-actor-isolated property be the witness for a nonisolated requirement</a>, because a caller holding only the protocol type could touch <code>listener</code> from any executor.</p>
 
         <figure class="code-card" aria-label="The shape that fails under Swift 6">
             <figcaption class="code-card__cap">
@@ -116,7 +116,7 @@ final class HomeViewController: UIViewController, HomePresentable {
 
         <p>The view-facing seam should be <code>@MainActor</code>. That's not a workaround — it's the truth. The presenter, the view controller, and the listener handle that the view holds all live where the view lives. RIBs-iOS is landing exactly this conclusion: <a href="https://github.com/uber/ribs-ios/issues/43">issue #43</a>'s research and the follow-on PR move the framework's view-side types onto <code>@MainActor</code>. It's the right call, and it's a non-trivial one to retrofit into a framework whose API has to stay source-compatible for everyone already shipping on it.</p>
 
-        <p>napkin had the advantage of starting after Swift 6, so it could make that decision once, at the bottom, and never special-case it again.</p>
+        <p>napkin's current architecture had the advantage of being a clean-slate rearchitecture after Swift 6 — a breaking v2 with no source compatibility to preserve — so it could make that decision once, at the bottom, and never special-case it again.</p>
 
         <h2>napkin's version: annotate the base protocol, once</h2>
 
@@ -133,7 +133,7 @@ public protocol Presentable: AnyObject {}
 </code></pre>
         </figure>
 
-        <p>Every feature's presentable seam refines that protocol — so it inherits the isolation. There is no per-feature, per-property annotation to remember and no place to forget one:</p>
+        <p>Every feature's presentable seam refines that protocol — so it inherits the isolation. In practice, napkin's own example code still writes <code>@MainActor</code> on each listener requirement, so the isolation is visible right at the seam — but that annotation is belt and suspenders, not load-bearing. Leave it off and the requirement is main-actor-isolated by inheritance anyway:</p>
 
         <figure class="code-card" aria-label="A feature presentable inherits @MainActor">
             <figcaption class="code-card__cap">
@@ -192,17 +192,17 @@ final actor ProfileInteractor: PresentableInteractable {
 
         <h2>Where napkin agrees with RIBs-iOS, and where it doesn't</h2>
 
-        <p>napkin and RIBs-iOS reach the same conclusion about the <em>view</em> seam: it belongs on the main actor. The deliberate divergence is one ring deeper. RIBs-iOS's modernization unifies the framework on <code>@MainActor</code> including the interactor; napkin keeps the interactor as a <code>final actor</code> <em>off</em> the main actor, so business logic is never scheduled behind UIKit's executor.</p>
+        <p>napkin and RIBs-iOS reach the same conclusion about the <em>view</em> seam: it belongs on the main actor. The deliberate divergence is one ring deeper. RIBs-iOS's <a href="https://github.com/uber/RIBs-iOS/pull/49">modernization</a> unifies the framework on <code>@MainActor</code> including the interactor; napkin keeps the interactor as a <code>final actor</code> <em>off</em> the main actor, so business logic is never scheduled behind UIKit's executor.</p>
 
         <p>That's the Clean Architecture dependency rule expressed in Swift's isolation system: UI (outer) may depend on business rules (inner), never the reverse. Putting the interactor on <code>@MainActor</code> would compile, but it would structurally bind every decision your app makes to the UI thread — the inversion the architecture exists to prevent. The cost of keeping them separate is an <code>await</code> at each crossing; the benefit is that the boundary is real and the compiler enforces it. <a href="/documentation/napkin/protocolcompositionoverinheritance">The reasoning is laid out in full here.</a></p>
 
-        <p>Both frameworks ship the same pattern. RIBs is alive, well, and actively working through Swift 6 adoption on a public API it has to keep stable. napkin is the same Router-Interactor-Builder shape with the isolation decisions made up front — Clean Architecture on a napkin.</p>
+        <p>Both frameworks ship the same pattern. <a href="https://github.com/uber/RIBs-iOS">RIBs</a> is alive, well, and actively working through Swift 6 adoption on a public API it has to keep stable. napkin is the same Router-Interactor-Builder shape with the isolation decisions made up front — Clean Architecture on a napkin.</p>
 
         <h2>The takeaway</h2>
 
         <p>If you're hitting <em>"cannot be used to satisfy nonisolated protocol requirement"</em> on your own listener seam, the durable fix isn't a <code>nonisolated</code> annotation on the witness — it's deciding, once, that the view-facing protocol is <code>@MainActor</code>, and annotating it at the lowest point so every refinement inherits it. Suppress the error and the seam still has no home; annotate the protocol and the question is answered everywhere at once.</p>
 
-        <p>Want to see it end to end? The <a href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse">Rib House example</a> is a few hundred lines, and the <a href="/documentation/napkin/tutorialbuildingaloginflow">tutorial walks the seam</a>.</p>
+        <p>Want to see it end to end? The <a href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse">Rib House example</a> is about 1,700 lines of Swift, and the <a href="/documentation/napkin/tutorialbuildingaloginflow">tutorial walks the seam</a>.</p>
     </div>
 
     <footer class="post__footer">

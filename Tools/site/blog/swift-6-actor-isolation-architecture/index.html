@@ -73,9 +73,9 @@
     <div class="post__body">
         <p>When the Swift 6 strict-concurrency warnings first lit up your codebase, the most common reaction was to silence them: scatter <code>@MainActor</code> annotations, wrap suspect blocks in <code>Task { @MainActor in ... }</code>, mark a few types <code>@unchecked Sendable</code>. The errors go away. The architecture quietly shifts.</p>
 
-        <p>That shift matters. Once <code>@MainActor</code> appears on a type, every method on that type runs on UIKit's main scheduler. If the type is a "view model" with networking code, your networking code now blocks the UI thread until the next <code>await</code>. Tap a button, get a frame drop.</p>
+        <p>That shift matters. Once <a href="https://developer.apple.com/documentation/swift/mainactor"><code>@MainActor</code></a> appears on a type, every isolated method on that type runs on UIKit's main scheduler. If the type is a "view model" with networking code, your networking code now blocks the UI thread until the next <code>await</code>. Tap a button, get a frame drop.</p>
 
-        <p>Most production iOS architectures (MVVM, MVC, VIPER) predate actors. They were designed when threading was an implementation detail. Swift 6 promotes it to an interface concern: the compiler refuses to compile code unless you've decided where each method runs. The right response isn't to silence the warnings — it's to design with isolation as a first-class layer.</p>
+        <p>Most production iOS architectures (MVVM, MVC, <a href="https://www.objc.io/issues/13-architecture/viper/">VIPER</a>) predate actors. They were designed when threading was an implementation detail. Swift 6 promotes it to an interface concern: in the <a href="https://www.swift.org/blog/announcing-swift-6/">Swift 6 language mode</a>, the compiler refuses to compile code unless you've decided where each method runs. The right response isn't to silence the warnings — it's to design with isolation as a first-class layer.</p>
 
         <h2>The four rings</h2>
 
@@ -88,13 +88,13 @@
             <li><strong>Presenter / ViewController</strong> — <code>@MainActor</code> class. The view. A <code>UIHostingController</code> wrapping a SwiftUI <code>View</code>, or a <code>UIViewController</code>.</li>
         </ul>
 
-        <p>Three of these are <code>@MainActor</code>. One — the interactor — isn't. That's the architectural lever.</p>
+        <p>Two of these rings are <code>@MainActor</code> — the router and the view layer. The interactor isn't, and builders and components are nonisolated <code>Sendable</code> values that travel anywhere. That's the architectural lever.</p>
 
         <h2>Why business logic goes off the main actor</h2>
 
         <p>The interactor holds the unit's state and runs its decisions: "did the user complete onboarding," "is the cart valid," "what should happen when the network call returns." None of that needs to run on the UI thread. Putting it there is a category error.</p>
 
-        <p>An actor is the cheapest way to get state that's safe to access concurrently. The actor's executor serializes calls automatically; you don't write locks. Reading <code>self.user</code> from inside an actor is a normal property read. Reading it from outside requires <code>await</code>, which the compiler enforces.</p>
+        <p>An actor is the cheapest way to get state that's safe to access concurrently. The <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0306-actors.md">actor's executor</a> serializes calls automatically; you don't write locks. Reading <code>self.user</code> from inside an actor is a normal property read. Reading it from outside requires <code>await</code>, which the compiler enforces.</p>
 
         <figure class="code-card" aria-label="Final actor interactor declaration">
             <figcaption class="code-card__cap">
@@ -127,16 +127,16 @@
             <li><strong>Interactor → Presenter</strong> (<code>actor → @MainActor</code>): <code>await presenter.update(...)</code></li>
             <li><strong>Interactor → Router</strong> (<code>actor → @MainActor</code>): <code>await router?.routeToProfile()</code></li>
             <li><strong>View → Interactor</strong> (<code>@MainActor sync → actor</code>): <code>dispatch { await listener?.didTap() }</code></li>
-            <li><strong>Interactor → Listener (parent)</strong> (stays in the parent actor): <code>await listener?.fooDidFinish()</code></li>
+            <li><strong>Interactor → Listener (parent)</strong> (<code>actor → parent's actor</code>): <code>await listener?.fooDidFinish()</code></li>
         </ol>
 
-        <p>The first three are real isolation crossings. The fourth is a same-actor call — the parent's interactor is also an actor, but the boundary is procedural (child telling parent) not isolation-based.</p>
+        <p>All four are real isolation crossings — child and parent interactors are distinct actor instances. What distinguishes the fourth is direction: the child reporting up through its listener contract rather than driving the UI.</p>
 
         <p><a href="/documentation/napkin/crossisolationpatterns">The full pattern reference is in the docs.</a> The point is that there's a fixed, small number of these, and you can name them. It's easier to reason about an architecture where every cross-actor call falls into one of four shapes than one where each is invented per type.</p>
 
         <h2>Where SwiftUI fits</h2>
 
-        <p>SwiftUI views are implicitly <code>@MainActor</code>. Button action closures are <code>@MainActor</code> synchronous. The interactor is <code>actor</code>. To call from one to the other you need a <code>Task</code> — and a way to handle cancellation if the view goes away mid-call.</p>
+        <p><a href="https://developer.apple.com/documentation/swiftui/view">SwiftUI views</a> are implicitly <code>@MainActor</code>. <a href="https://developer.apple.com/documentation/swiftui/button/init(action:label:)">Button action closures</a> are <code>@MainActor</code> synchronous. The interactor is <code>actor</code>. To call from one to the other you need a <code>Task</code> — and a way to make the call a harmless no-op if the interactor is gone by the time it runs.</p>
 
         <figure class="code-card" aria-label="dispatch helper in SwiftUI">
             <figcaption class="code-card__cap">
@@ -150,7 +150,7 @@
 </code></pre>
         </figure>
 
-        <p>napkin's <code>dispatch { }</code> helper is a thin wrapper around <code>Task { }</code> that captures the listener weakly and bails if the view is gone before the closure runs. <a href="/documentation/napkin/swiftuiintegration">More on it here.</a> Use it instead of inline <code>Task { }</code> in SwiftUI button actions and you avoid a whole class of "method called on deallocated interactor" bugs.</p>
+        <p>napkin's <code>dispatch { }</code> helper is a thin <code>@MainActor</code> wrapper around <code>Task { }</code> — nothing more. The safety is in the <code>[listener]</code> capture: the view's <code>listener</code> is weak, so if the interactor is gone before the closure runs, the call is a no-op. <a href="/documentation/napkin/swiftuiintegration">More on it here.</a> <code>dispatch</code> doesn't do the catching itself; it just makes that capture pattern the standard shape at every call site, which is how you avoid a whole class of "method called on deallocated interactor" bugs.</p>
 
         <h2>What changes for you</h2>
 
@@ -158,7 +158,7 @@
 
         <p>For new code, napkin offers a default answer: business logic in <code>final actor</code> interactors, view/routing in <code>@MainActor</code>, DI in <code>Sendable</code> classes. You can disagree with the specifics, but you do have to decide. Swift 6 doesn't let you not decide.</p>
 
-        <p>Want to see the rings in a working app? The <a href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse">Rib House example</a> is end-to-end (a few hundred lines) and the <a href="/documentation/napkin/tutorialbuildingaloginflow">tutorial walks it</a>.</p>
+        <p>Want to see the rings in a working app? The <a href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse">Rib House example</a> is end-to-end (about 1,700 lines) and the <a href="/documentation/napkin/tutorialbuildingaloginflow">tutorial walks it</a>.</p>
     </div>
 
     <footer class="post__footer">

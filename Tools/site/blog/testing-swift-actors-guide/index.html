@@ -93,7 +93,7 @@
     <p class="post__lede">Swift actors are easy to test, in the same way protocols are. The trick is to stop trying to mock the actor and start mocking what it talks to.</p>
 
     <div class="post__body">
-        <p>The first instinct most developers have when they hit a <code>final actor</code> they need to test is to look for a way to subclass it, swap a method, or override init. None of that works. Actors can't be subclassed. There's no <code>final actor</code> equivalent of the OCMock-era tricks.</p>
+        <p>The first instinct most developers have when they hit a <code>final actor</code> they need to test is to look for a way to subclass it, swap a method, or override init. None of that works. <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0306-actors.md">Actors can't be subclassed</a>. There's no <code>final actor</code> equivalent of the <a href="https://ocmock.org/">OCMock</a>-era tricks.</p>
 
         <p>That's fine. The actor is the thing under test; you don't <em>need</em> to mock it. What you need to mock are its collaborators — the presenter it talks to, the router it asks to route, the parent listener it sends intent up to, the service it calls. All of those are protocols. Replace the protocols with stub implementations that record calls. Done.</p>
 
@@ -133,7 +133,7 @@
 </code></pre>
         </figure>
 
-        <p>The <code>Result</code>-based stub lets one mock test the happy path and the failure path without rewriting. <code>@unchecked Sendable</code> because the counter is mutable; in a test the only thread touching it is the test method's, so the unchecked annotation is honest about the trade-off.</p>
+        <p>The <code>Result</code>-based stub lets one mock test the happy path and the failure path without rewriting. <a href="https://developer.apple.com/documentation/swift/sendable"><code>@unchecked Sendable</code></a> because the counters are mutable; in a test nothing touches the mock <em>concurrently</em> — the interactor's calls and the test's assertions are strictly ordered by the <code>await</code>s — so the unchecked annotation is honest about the trade-off.</p>
 
         <h2>Driving the actor</h2>
 
@@ -166,7 +166,7 @@ final class LaunchInteractorTests: XCTestCase {
 </code></pre>
         </figure>
 
-        <p>Three things to notice. The test class is <code>@MainActor</code> — XCTest lifecycle is main-actor anyway, so it's the simplest place to keep it. The actor's methods take <code>await</code> because they're <code>async</code>. And assertions are about <em>observable state</em>: what the mock service recorded, what the mock router was asked to do. Not about the internals of the actor.</p>
+        <p>Three things to notice. The test class is <code>@MainActor</code> — XCTest already runs its <a href="https://developer.apple.com/documentation/testing/migratingfromxctest">synchronous lifecycle on the main actor</a> (setUp, tearDown, sync tests); annotating the class keeps the async tests there too. The actor's methods take <code>await</code> because they're <code>async</code>. And assertions are about <em>observable state</em>: what the mock service recorded, what the mock router was asked to do. Not about the internals of the actor.</p>
 
         <h2>Lifecycle is just another method</h2>
 
@@ -193,9 +193,9 @@ final class LaunchInteractorTests: XCTestCase {
 
         <h2>Anti-patterns to skip</h2>
 
-        <p><strong>Don't make the actor <code>@MainActor</code> "for testability."</strong> It makes the test slightly simpler (no <code>await</code> on actor properties) and puts your business logic on the main thread in production. Bad trade.</p>
+        <p><strong>Don't make the actor <code>@MainActor</code> "for testability."</strong> It makes the test slightly simpler (no <code>await</code> on actor properties) and puts your business logic on <a href="https://developer.apple.com/documentation/swift/mainactor">the main thread</a> in production. Bad trade.</p>
 
-        <p><strong>Don't assert on order of <code>await</code>s.</strong> Two <code>await</code>s on the same actor are sequential by definition; the language guarantees it. Asserting "the service was called before the router was attached" is testing Swift, not your code. Assert on the end state.</p>
+        <p><strong>Don't assert on order of <code>await</code>s.</strong> Two <code>await</code>s in the same test method run sequentially — task program order guarantees it. Asserting "the service was called before the router was attached" is testing Swift, not your code. Assert on the end state.</p>
 
         <p><strong>Don't extract a "testable wrapper" around the actor.</strong> The protocols you already have are the seam. Adding another layer to "make testing easier" usually just moves the test to the wrong altitude.</p>
 
@@ -203,7 +203,7 @@ final class LaunchInteractorTests: XCTestCase {
 
         <p>If you're moving onto Swift actors and don't have tests for your interactors yet, the <a href="/documentation/napkin/testinganapkin">"Testing a napkin"</a> tutorial in the napkin docs walks the full pattern with example code. The example app's <a href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse">RibHouse</a> also ships snapshot tests for its SwiftUI views — a parallel pattern for the view side.</p>
 
-        <p>Most teams that adopt this pattern report that writing tests for their actors is faster than writing tests for the view-model classes they replaced. The reason is mundane: actor methods take typed arguments and return typed values. You don't have to set up Combine subscribers to capture output, and you don't have to <code>XCTestExpectation</code>-wait for async work — the <code>await</code> is the wait.</p>
+        <p>In our experience, writing tests for these actors is faster than writing tests for the view-model classes they replaced. The reason is mundane: actor methods take typed arguments and return typed values. You don't have to set up Combine subscribers to capture output, and you don't have to <a href="https://developer.apple.com/documentation/xctest/asynchronous-tests-and-expectations"><code>XCTestExpectation</code></a>-wait for async work — the <code>await</code> is the wait.</p>
     </div>
 
     <footer class="post__footer">

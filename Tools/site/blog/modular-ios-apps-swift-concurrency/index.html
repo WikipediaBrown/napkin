@@ -86,11 +86,11 @@
             <li><strong>Be removable.</strong> Deleting a feature should remove a self-contained chunk of code and exactly its references.</li>
         </ul>
 
-        <p>The pattern that gives you this — independent of build-system choices — is the dependency-tree architecture: every feature is a unit, units compose into a tree, dependencies flow down, intents flow up. Uber's RIBs made this concrete in 2017. napkin is the Swift 6 version: <code>final actor</code> for business logic, <code>@MainActor</code> for routing, protocol composition for "inheritance."</p>
+        <p>The pattern that gives you this — independent of build-system choices — is the dependency-tree architecture: every feature is a unit, units compose into a tree, dependencies flow down, intents flow up. <a href="https://github.com/uber/RIBs">Uber's RIBs</a> made this concrete in 2017. napkin is the Swift 6 version: <code>final actor</code> for business logic, <code>@MainActor</code> for routing, protocol composition for "inheritance."</p>
 
         <h2>What a feature looks like</h2>
 
-        <p>Every feature is a "napkin": one folder, 5–6 files. The shape is identical across the app:</p>
+        <p>Every feature is a "napkin": one folder, 5–6 files if it owns a view, 3 if it doesn't. The shape is identical across the app. Here's a view-owning one:</p>
 
         <figure class="code-card" aria-label="A napkin folder structure">
             <figcaption class="code-card__cap">
@@ -130,7 +130,7 @@ extension RootComponent: HomeDependency, ProfileDependency, CartDependency {}
 </code></pre>
         </figure>
 
-        <p>Adding a new feature is a four-line change to the parent: import the builder, add its <code>Dependency</code> protocol to the component's conformance list, instantiate it, attach it. The compiler enforces the dependency contract — if Cart's <code>CartDependency</code> requires a <code>PaymentService</code> and Root doesn't satisfy it, Root won't compile.</p>
+        <p>Adding a new feature is a <a href="https://github.com/WikipediaBrown/napkin/blob/main/Examples/RibHouse/Sources/LaunchNapkin/LaunchNapkinBuilder.swift">four-line change</a> to the parent: import the builder, add its <code>Dependency</code> protocol to the component's conformance list, instantiate it, attach it. The compiler enforces the dependency contract — if Cart's <code>CartDependency</code> requires a <code>PaymentService</code> and Root doesn't satisfy it, Root won't compile.</p>
 
         <h2>You don't need a binary framework per feature</h2>
 
@@ -148,7 +148,7 @@ extension RootComponent: HomeDependency, ProfileDependency, CartDependency {}
 
         <h2>Try it</h2>
 
-        <p>The <a href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse">RibHouse example</a> is a three-feature tree: a Launch parent, a LoggedOut child, a LoggedIn child. ~600 lines of Swift, every file in its own folder, every dependency declared. Delete a child, the build complains in one place, and the parent's <code>extension RootComponent: ...</code> tells you which conformance to remove. <a href="/documentation/napkin/tutorialbuildingaloginflow">The tutorial</a> walks through how each piece composes.</p>
+        <p>The <a href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse">RibHouse example</a> is a five-feature tree: a Launch parent, LoggedOut and LoggedIn children, and Announcements and PitBoard napkins under LoggedIn. ~1,700 lines of Swift, every feature in its own folder, every dependency declared. Delete a child, the build complains in one place, and the parent's <code>extension LaunchNapkinComponent: ...</code> tells you which conformance to remove. <a href="/documentation/napkin/tutorialbuildingaloginflow">The tutorial</a> walks through how each piece composes.</p>
 
         <p>You don't need napkin to do this. The pattern is older than napkin. But you do need <em>some</em> framework — or to roll your own — to get the protocol-composition pieces right under Swift 6 strict concurrency. napkin is one option, and it ships with the Xcode templates so the boilerplate stays cheap.</p>
     </div>

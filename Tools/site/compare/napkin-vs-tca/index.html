@@ -12,7 +12,7 @@
     <meta property="og:description" content="TCA is a state-management architecture; napkin is a screen-tree architecture. Honest, cited comparison — including where TCA is the better choice.">
     <meta property="og:type" content="article">
     <meta property="og:url" content="https://getnapkin.to/compare/napkin-vs-tca/">
-    <meta property="og:image" content="https://getnapkin.to/social-preview.png">
+    <meta property="og:image" content="https://getnapkin.to/compare/napkin-vs-tca/og.png">
     <meta property="article:published_time" content="2026-07-16">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="canonical" href="https://getnapkin.to/compare/napkin-vs-tca/">
@@ -32,7 +32,7 @@
         "dateModified": "2026-07-16",
         "author": { "@type": "Person", "name": "WikipediaBrown", "url": "https://wikipediabrown.dev", "sameAs": ["https://github.com/WikipediaBrown"] },
         "publisher": { "@type": "Organization", "name": "napkin", "url": "https://getnapkin.to/" },
-        "image": "https://getnapkin.to/social-preview.png",
+        "image": "https://getnapkin.to/compare/napkin-vs-tca/og.png",
         "mainEntityOfPage": "https://getnapkin.to/compare/napkin-vs-tca/"
     }
     </script>
@@ -72,21 +72,21 @@
 
     <div class="post__body">
         <h2>What's actually different: two shapes of app</h2>
-        <p>TCA, by its own README, is a library for building applications <em>"with composition, testing, and ergonomics in mind"</em> — you model each feature as a <code>State</code> type, an <code>Action</code> enum, and a <code>@Reducer</code> that evolves state and returns effects, all driven by a <code>Store</code>. It's actively maintained by <a href="https://www.pointfree.co">Point-Free</a>: version <a href="https://github.com/pointfreeco/swift-composable-architecture/releases/tag/1.26.0">1.26.0</a> shipped June 9, 2026 (with Xcode 27 Beta 1 fixes), the seventh release of 2026, and the repo sits at roughly 14.8k stars under an MIT license.</p>
-        <p>napkin models an app as a <strong>tree of screen and flow units</strong> — the Router-Interactor-Builder pattern from Uber's RIBs, rebuilt on Swift 6 concurrency. Business logic runs in <code>final actor</code> interactors off the main thread; routing and presentation are <code>@MainActor</code>; parents hear from children through listener protocols. State isn't one composed value graph — it lives in each unit and streams down the tree.</p>
+        <p>TCA, by its own README, is a library for building applications <em>"with composition, testing, and ergonomics in mind"</em> — you model each feature as a <code>State</code> type, an <code>Action</code> enum, and a <code>@Reducer</code> that evolves state and returns effects, all driven by a <code>Store</code>. It's actively maintained by <a href="https://www.pointfree.co">Point-Free</a>: version <a href="https://github.com/pointfreeco/swift-composable-architecture/releases/tag/1.26.0">1.26.0</a> shipped June 9, 2026 (with Xcode 27 Beta 1 fixes), the tenth release of 2026, and the repo sits at roughly 14.8k stars under an MIT license.</p>
+        <p>napkin models an app as a <strong>tree of screen and flow units</strong> — the Router-Interactor-Builder pattern from <a href="https://github.com/uber/RIBs-iOS">Uber's RIBs</a>, rebuilt on Swift 6 concurrency. Business logic runs in <code>final actor</code> interactors off the main thread; routing and presentation are <code>@MainActor</code>; parents hear from children through listener protocols. State isn't one composed value graph — it lives in each unit and streams down the tree.</p>
         <p>Neither shape is "right." Reducer composition gives TCA a single, inspectable source of truth per feature. The unit tree gives napkin hard isolation boundaries and per-screen ownership. Which one fits depends on whether your app's complexity lives in its <em>state transitions</em> or in its <em>flows between screens</em>.</p>
 
         <h2>Observation: not a differentiator — but different mechanics</h2>
         <p>Both frameworks use Swift's observation model, so don't choose on that axis. TCA has shipped Observation-based state since v1.7 (January 2024 — <em>"100% backwards compatible,"</em> per <a href="https://www.pointfree.co/blog/posts/130-observation-comes-to-the-composable-architecture">Point-Free's announcement</a>), with its own <code>@ObservableState</code> macro because native <code>@Observable</code> is class-only and TCA state is value types; Point-Free even back-ported observation to iOS 13 via their Perception library. napkin uses the native <code>@Observable</code> macro directly on its class-based presenters — no macro layer of its own, no back-port, because its floor is new OSes anyway.</p>
 
         <h2>Testing</h2>
-        <p>Testing is TCA's crown jewel. Its <code>TestStore</code> is <em>exhaustive by default</em>: per the maintainers' FAQ, <em>"you must also assert on how effects feed their data back into the system"</em> — every state change and every received action is accounted for, with a non-exhaustive opt-out (<code>exhaustivity = .off</code>) when you want it. If you want your tests to fail the moment any state transition changes, nothing else in the Swift ecosystem does this as thoroughly.</p>
+        <p>Testing is TCA's crown jewel. Its <code>TestStore</code> is <em><a href="https://swiftpackageindex.com/pointfreeco/swift-composable-architecture/main/documentation/composablearchitecture/testingtca">exhaustive by default</a></em>: per the maintainers' FAQ, <em>"you must also assert on how effects feed their data back into the system"</em> — every state change and every received action is accounted for, with a non-exhaustive opt-out (<code>exhaustivity = .off</code>) when you want it. If you want your tests to fail the moment any state transition changes, nothing else in the Swift ecosystem does this as thoroughly.</p>
         <p>napkin's testing story is deliberately plainer: interactors are actors, so you unit-test them with ordinary XCTest — inject a mock presenter, router, and listener, drive the lifecycle, assert on recorded calls. No test runtime, no assertion DSL; also no exhaustiveness guarantee. You get Swift's own tools, not a framework's.</p>
 
         <h2>What adopting each one costs</h2>
         <p>TCA's maintainers are unusually honest about fit, and their <a href="https://github.com/pointfreeco/swift-composable-architecture/blob/main/Sources/ComposableArchitecture/Documentation.docc/Articles/FAQ.md">FAQ</a> is worth quoting: <em>"We do not recommend people use TCA when they are first learning Swift or SwiftUI,"</em> and <em>"We also don't think TCA really shines when building simple 'reader' apps that mostly load JSON from the network and display it."</em> They acknowledge that <em>"often people complain of boilerplate in TCA,"</em> attributing much of it to the legacy view-store era, and argue a modern TCA feature needs few more lines than vanilla SwiftUI — a maintainer claim you should test on your own code.</p>
         <p>Two adoption facts to weigh. First, platform floors cut <strong>against napkin</strong> here: TCA supports iOS 16+ (Swift 6.1+, after its 1.24.0 deprecation wave); napkin requires iOS 26/macOS 26. Second, churn: TCA is openly preparing a 2.0 — <a href="https://github.com/pointfreeco/swift-composable-architecture/releases/tag/1.24.0">1.24.0</a> was a deprecations-only release (ViewStore, TaskResult, and @BindingState are now hard-deprecated), and <a href="https://github.com/pointfreeco/swift-composable-architecture/releases/tag/1.25.0">1.25.0</a> shipped <em>"a significant batch of deprecations that pave the way for Composable Architecture 2.0"</em> — so 1.x adopters should budget for a migration. napkin's risk is the opposite kind: not migrating off a large 1.x surface, but betting on a young API with a tiny community behind it.</p>
-        <p>On learning resources: TCA's canonical deep-dive is Point-Free's subscription episode collection (16 sections, 58½ hours), alongside free DocC docs and an interactive tutorial. Their maintenance pace is real — 1.26.0 shipped Xcode 27 Beta 1 fixes — and, in <a href="https://www.pointfree.co/blog/posts/218-xcode-27-support-in-the-point-free-ecosystem">their own words</a>, <em>"this kind of support and turnaround for our open source projects is only thanks to the support of our subscribers."</em> napkin has free DocC docs, a runnable example app, and no commercial arm.</p>
+        <p>On learning resources: TCA's canonical deep-dive is Point-Free's <a href="https://www.pointfree.co/collections/composable-architecture">subscription episode collection</a> (16 sections, 58½ hours), alongside free DocC docs and an interactive tutorial. Their maintenance pace is real — 1.26.0 shipped Xcode 27 Beta 1 fixes — and, in <a href="https://www.pointfree.co/blog/posts/218-xcode-27-support-in-the-point-free-ecosystem">their own words</a>, <em>"this kind of support and turnaround for our open source projects is only thanks to the support of our subscribers."</em> napkin has free DocC docs, a runnable example app, and no commercial arm.</p>
 
         <h2>Comparison table</h2>
         <div class="compare-scroll">
@@ -97,7 +97,7 @@
             </thead>
             <tbody>
                 <tr><th scope="row">Shape</th><td>State/Action/Reducer/Store</td><td>Tree of screen units (Router-Interactor-Builder)</td></tr>
-                <tr><th scope="row">Latest release</th><td>1.26.0 (June 9, 2026); 2.0 in preparation</td><td>2.1.5</td></tr>
+                <tr><th scope="row">Latest release</th><td>1.26.0 (June 9, 2026); 2.0 in preparation</td><td>2.1.6</td></tr>
                 <tr><th scope="row">State observation</th><td><code>@ObservableState</code> macro (value types; iOS 13 back-port via Perception)</td><td>Native <code>@Observable</code> on class presenters</td></tr>
                 <tr><th scope="row">Concurrency</th><td>Effects system; Swift Concurrency integration</td><td><code>final actor</code> interactors, <code>@MainActor</code> routers and presenters</td></tr>
                 <tr><th scope="row">Testing</th><td><code>TestStore</code>, exhaustive by default</td><td>Plain XCTest + mocks</td></tr>

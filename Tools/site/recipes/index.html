@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recipes — napkin</title>
-    <meta name="description" content="Named code recipes for common napkin patterns: add a child napkin, inject a service, swap napkins on tap, test an interactor, build a headless container, fetch data on activate.">
+    <meta name="description" content="Named code recipes for common napkin patterns: add a child napkin, inject a service, swap napkins on tap, test an interactor, build a hosting parent, fetch data on activate.">
     <meta name="theme-color" content="#f6f1e3" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0e1410" media="(prefers-color-scheme: dark)">
 
@@ -12,7 +12,7 @@
     <meta property="og:description" content="Named code recipes for common napkin patterns.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://getnapkin.to/recipes/">
-    <meta property="og:image" content="https://getnapkin.to/social-preview.png">
+    <meta property="og:image" content="https://getnapkin.to/recipes/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="canonical" href="https://getnapkin.to/recipes/">
 
@@ -120,9 +120,9 @@ private func detachBIfNeeded() async {
 </code></pre>
         </figure>
 
-        <h2 id="headless-parent">Headless parent (orchestrator with no view)</h2>
-        <p>For napkins that route between children without rendering their own UI. The view controller is a plain <code>UIViewController</code> with <code>embed</code>/<code>detach</code> for the active child.</p>
-        <figure class="code-card" aria-label="Headless parent view controller">
+        <h2 id="headless-parent">Hosting parent (orchestrator with no UI of its own)</h2>
+        <p>For napkins that route between children without rendering their own UI. The view controller is a plain <code>UIViewController</code> with <code>embed</code>/<code>detach</code> for the active child. Not quite <a href="/documentation/napkin/headlessnapkins">headless</a> in napkin's sense — a true headless napkin has no view controller at all; this one keeps a bare one around as a mounting point.</p>
+        <figure class="code-card" aria-label="Hosting parent view controller">
             <figcaption class="code-card__cap">
                 <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
                 <span class="code-card__name">ParentViewController.swift</span>
@@ -156,7 +156,7 @@ final class ParentViewController: UIViewController, ParentViewControllable {
         </figure>
 
         <h2 id="view-to-interactor">Forward a tap from SwiftUI to the interactor</h2>
-        <p>Use the <code>dispatch</code> helper, not inline <code>Task { }</code> — it captures the listener weakly and handles cancellation.</p>
+        <p>Use the <code>dispatch</code> helper, not inline <code>Task { }</code> — it forwards the tap from the synchronous <code>@MainActor</code> context into an unstructured task at the caller's priority. The view's <code>weak var listener</code> keeps the view from retaining the interactor; the dispatched task holds the listener only while it runs, and cancellation — if you need it — is yours.</p>
         <figure class="code-card" aria-label="SwiftUI button forwarding to actor">
             <figcaption class="code-card__cap">
                 <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
@@ -198,7 +198,7 @@ final actor CounterInteractor: ..., CounterPresentableListener {
         </figure>
 
         <h2 id="fetch-on-active">Fetch data when the napkin becomes active</h2>
-        <p>Lifecycle hooks are just async methods on the actor. Cancellation is automatic when the napkin deactivates.</p>
+        <p>Lifecycle hooks are just async methods on the actor. Spawn the fetch with <code>task { }</code> — work registered that way is cancelled automatically when the napkin deactivates. A bare <code>await</code> in the hook body is not, and it holds up <code>attachChild</code> besides.</p>
         <figure class="code-card" aria-label="Fetch in didBecomeActive">
             <figcaption class="code-card__cap">
                 <span class="code-card__dots" aria-hidden="true"><span></span><span></span><span></span></span>
@@ -206,13 +206,15 @@ final actor CounterInteractor: ..., CounterPresentableListener {
                 <button class="code-card__copy" type="button" data-copy>Copy</button>
             </figcaption>
 <pre><code>func didBecomeActive() async {
-    do {
-        let profile = try await profileService.fetchProfile()
-        await presenter.update(profile)
-    } catch is CancellationError {
-        // Napkin was deactivated mid-fetch — bail.
-    } catch {
-        await presenter.update(.error(error))
+    task {
+        do {
+            let profile = try await self.profileService.fetchProfile()
+            await self.presenter.update(profile)
+        } catch is CancellationError {
+            // Napkin was deactivated mid-fetch — bail.
+        } catch {
+            await self.presenter.update(.error(error))
+        }
     }
 }
 </code></pre>

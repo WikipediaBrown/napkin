@@ -13,7 +13,7 @@
     <meta property="og:type" content="article">
     <meta property="og:url" content="https://getnapkin.to/blog/swiftui-dependency-injection-without-libraries/">
     <meta property="og:image" content="https://getnapkin.to/blog/swiftui-dependency-injection-without-libraries/og.png">
-    <meta property="article:published_time" content="2026-05-08">
+    <meta property="article:published_time" content="2026-05-15">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="canonical" href="https://getnapkin.to/blog/swiftui-dependency-injection-without-libraries/">
 
@@ -29,7 +29,7 @@
         "@type": "Article",
         "headline": "Dependency injection in SwiftUI without third-party libraries",
         "description": "Swap @Environment / @EnvironmentObject for a typed dependency tree that doesn't crash at runtime and tests cleanly.",
-        "datePublished": "2026-05-08",
+        "datePublished": "2026-05-15",
         "author": { "@type": "Person", "name": "WikipediaBrown", "url": "https://wikipediabrown.dev", "sameAs": ["https://github.com/WikipediaBrown"] },
         "publisher": { "@type": "Organization", "name": "napkin", "url": "https://getnapkin.to/" },
         "image": "https://getnapkin.to/blog/swiftui-dependency-injection-without-libraries/og.png",
@@ -66,24 +66,26 @@
 
 <main id="main">
 <article class="post">
-    <p class="post__kicker"><span>§ 04</span> <span class="sep">·</span> <span>2026 · 05 · 08</span> <span class="sep">·</span> <span>DI</span></p>
+    <p class="post__kicker"><span>§ 04</span> <span class="sep">·</span> <span>2026 · 05 · 15</span> <span class="sep">·</span> <span>DI</span></p>
     <h1 class="post__title">Dependency injection in SwiftUI without third-party libraries</h1>
-    <p class="post__lede">SwiftUI's <code>@Environment</code> wasn't designed for services. <code>@EnvironmentObject</code> crashes at runtime when you forget. There's a third option that's been around since RIBs and works cleanly with Swift 6 actors.</p>
+    <p class="post__lede">SwiftUI's <code>@Environment</code> wasn't designed for services. <code>@EnvironmentObject</code> crashes at runtime when you forget. There's a third option that's been around since <a href="https://www.uber.com/blog/new-rider-app-architecture/">RIBs</a> and works cleanly with Swift 6 actors.</p>
 
     <div class="post__body">
         <p>SwiftUI ships two dependency-injection-ish mechanisms. Both have sharp edges.</p>
 
         <h2>The two SwiftUI mechanisms</h2>
 
-        <p><code>@Environment</code> works through a key path on <code>EnvironmentValues</code>. You define a key with a default, register it, then read with <code>@Environment(\.myKey)</code>. It's typed, compile-checked, and reasonable for small leaf values like a color scheme or a locale. It's awkward for anything stateful, and the default-value requirement makes it tedious for services that don't have one.</p>
+        <p><a href="https://developer.apple.com/documentation/swiftui/environmentkey"><code>@Environment</code></a> works through a key path on <code>EnvironmentValues</code>. You define a key with a default, register it, then read with <code>@Environment(\.myKey)</code>. It's typed, compile-checked, and reasonable for small leaf values like a color scheme or a locale. It's awkward for anything stateful, and the default-value requirement makes it tedious for services that don't have one.</p>
 
-        <p><code>@EnvironmentObject</code> threads a reference-type observable through the view tree by class. You write <code>.environmentObject(myService)</code> at some ancestor; descendants read <code>@EnvironmentObject var myService: MyService</code>. It's flexible, but the lookup is by type and the safety is runtime: forget the <code>.environmentObject(...)</code> call and the app crashes with "no ObservableObject of type MyService" the moment a descendant tries to read it. The crash isn't even at app launch — it's the first time the affected view tries to render.</p>
+        <p><a href="https://developer.apple.com/documentation/swiftui/environmentobject"><code>@EnvironmentObject</code></a> threads a reference-type observable through the view tree by class. You write <code>.environmentObject(myService)</code> at some ancestor; descendants read <code>@EnvironmentObject var myService: MyService</code>. It's flexible, but the lookup is by type and the safety is runtime: forget the <code>.environmentObject(...)</code> call and the app crashes with "No ObservableObject of type MyService found" the moment a descendant tries to read it. The crash isn't even at app launch — it's the first time the affected view tries to render.</p>
+
+        <p>One wrinkle since iOS 17: <code>@Environment</code> also accepts <code>@Observable</code> object types directly via <code>.environment(_:)</code> — no key, no default value — and it's where Apple now points observable model objects. It reads more nicely. It fails the same way: a missing object is still a runtime crash the first time a view reads it.</p>
 
         <p>Neither is what you want for the things you actually need to inject: networking, auth, persistence, analytics. Those are <em>services</em>, not values. They have one canonical instance per scope. They need to be testable. They shouldn't crash if a developer reorders the view tree.</p>
 
         <h2>The pattern: components own services, the tree threads them down</h2>
 
-        <p>The DI model napkin uses (inherited from Uber's RIBs) is older than SwiftUI by years. Every feature has a <strong>Dependency</strong> protocol that says what it needs from above. Every feature has a <strong>Component</strong> class that conforms to its <em>children's</em> dependency protocols. The root component holds the actual service instances; children read them from their parent's component.</p>
+        <p>The DI model napkin uses (inherited from <a href="https://github.com/uber/RIBs-iOS">Uber's RIBs</a>) is older than SwiftUI by years. Every feature has a <strong>Dependency</strong> protocol that says what it needs from above. Every feature has a <strong>Component</strong> class that conforms to its <em>children's</em> dependency protocols. The root component holds the actual service instances; children read them from their parent's component.</p>
 
         <figure class="code-card" aria-label="Dependency protocol and component">
             <figcaption class="code-card__cap">
@@ -150,7 +152,7 @@ await router.launch(from: window)
 
         <h2>Try it</h2>
 
-        <p>The <a href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse">RibHouse example app</a> uses this pattern end-to-end with a single service (<code>AuthService</code>). The <a href="/documentation/napkin/tutorialbuildingaloginflow">tutorial walkthrough</a> shows where each piece slots in. If you've worked with Swinject, Resolver, Factory, or any of the runtime containers, the difference is that the type system does the work — the container is just classes you write.</p>
+        <p>The <a href="https://github.com/WikipediaBrown/napkin/tree/main/Examples/RibHouse">RibHouse example app</a> uses this pattern end-to-end with three shared services (<code>AuthService</code>, <code>PitService</code>, <code>SpecialsService</code>). The <a href="/documentation/napkin/tutorialbuildingaloginflow">tutorial walkthrough</a> shows where each piece slots in. If you've worked with <a href="https://github.com/Swinject/Swinject">Swinject</a>, Resolver, Factory, or any of the runtime containers, the difference is that the type system does the work — the container is just classes you write.</p>
     </div>
 
     <footer class="post__footer">
