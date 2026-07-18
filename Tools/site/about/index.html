@@ -12,7 +12,7 @@
     <meta property="og:description" content="Who maintains napkin and how to get in touch.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://getnapkin.to/about/">
-    <meta property="og:image" content="https://getnapkin.to/social-preview.png">
+    <meta property="og:image" content="https://getnapkin.to/about/og.png">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="canonical" href="https://getnapkin.to/about/">
 
@@ -30,7 +30,12 @@
             "@type": "Person",
             "name": "WikipediaBrown",
             "url": "https://wikipediabrown.dev",
-            "sameAs": ["https://github.com/WikipediaBrown", "https://spookylabs.ai"]
+            "sameAs": ["https://github.com/WikipediaBrown"],
+            "worksFor": {
+                "@type": "Organization",
+                "name": "Spooky Labs",
+                "sameAs": ["https://github.com/Spooky-Labs"]
+            }
         }
     }
     </script>
@@ -58,13 +63,13 @@
     <p>napkin is built and maintained by
         <a href="https://wikipediabrown.dev">WikipediaBrown</a>
         (<a href="https://github.com/WikipediaBrown">GitHub</a>), under
-        <a href="https://spookylabs.ai">Spooky Labs</a>.</p>
+        <a href="https://github.com/Spooky-Labs">Spooky Labs</a>.</p>
     <p>napkin is an open-source Swift 6 framework for building iOS and macOS apps as a
         tree of small, isolated, composable units — the Router-Interactor-Builder pattern,
         rebuilt around Swift Concurrency. It is modeled on Uber's
-        <a href="https://github.com/uber/ribs-ios">RIBs</a> (which is alive and well);
+        <a href="https://github.com/uber/RIBs-iOS">RIBs</a> (which is alive and well).
         napkin's differences are native Swift Concurrency, no RxSwift dependency, and no
-        runtime leak detector.</p>
+        <a href="https://github.com/uber/RIBs-iOS/tree/main/RIBs/Classes/LeakDetector">runtime leak detector</a>.</p>
     <p>Found a bug, or want to contribute? Open an issue or pull request on
         <a href="https://github.com/WikipediaBrown/napkin">GitHub</a>. Security reports:
         see <a href="/security.txt">security.txt</a>.</p>

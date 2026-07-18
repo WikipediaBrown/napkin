@@ -70,7 +70,7 @@ def wrap(title: str):
     return 43, lines  # smallest size; accept whatever wrapping we got
 
 
-def svg_for(title: str, kicker: str) -> str:
+def svg_for(title: str, kicker: str, footer: str = "getnapkin.to/blog") -> str:
     size, lines = wrap(title)
     lh = round(size * 1.18, 1)
     block_h = lh * len(lines)
@@ -105,7 +105,7 @@ def svg_for(title: str, kicker: str) -> str:
   <text font-family="Georgia, serif" font-size="{size}" font-weight="bold"
         fill="{INK}">{tspans}</text>
   <text x="{MARGIN}" y="596" font-family="'Andale Mono', monospace"
-        font-size="22" letter-spacing="2" fill="{MOSS}">getnapkin.to/blog</text>
+        font-size="22" letter-spacing="2" fill="{MOSS}">{html.escape(footer)}</text>
 </svg>
 """
 
@@ -148,12 +148,88 @@ def render(slug: str) -> bool:
     return True
 
 
-def main() -> None:
-    slugs = sys.argv[1:] or sorted(
-        p.parent.name for p in BLOG.glob("*/index.html")
+_H1_RE = re.compile(r"<h1[^>]*>(.*?)</h1>", re.S)
+
+# Non-blog pages that get their own card: dir (relative to Tools/site),
+# kicker fallback when the page has no post__kicker, and the card footer.
+PAGES = [
+    ("about", "The maintainer", "getnapkin.to/about"),
+    ("faq", "Questions", "getnapkin.to/faq"),
+    ("recipes", "Cookbook", "getnapkin.to/recipes"),
+    ("blog", "The blog", "getnapkin.to/blog"),
+    ("when-to-use-napkin", "Decision guide", "getnapkin.to/when-to-use-napkin"),
+    ("compare/napkin-vs-ribs", "Comparison", "getnapkin.to/compare"),
+    ("compare/napkin-vs-tca", "Comparison", "getnapkin.to/compare"),
+    ("compare/napkin-vs-viper", "Comparison", "getnapkin.to/compare"),
+]
+
+# The /changelog/ page is generated at deploy time by changelog.py, so only
+# its card is produced here; the og:image URL lives in changelog.py's template.
+STATIC_CARDS = [
+    ("changelog", "Changelog.", "Release notes", "getnapkin.to/changelog"),
+]
+
+
+def render_page(rel: str, kicker_fallback: str, footer: str) -> bool:
+    """Card for a non-blog page: title from post__/blog__ h1 (else first h1),
+    kicker from post__kicker when present, else the fallback."""
+    d = ROOT / rel
+    idx = d / "index.html"
+    if not idx.is_file():
+        print(f"  skip {rel}: no index.html", file=sys.stderr)
+        return False
+    src = idx.read_text()
+    tm = _TITLE_RE.search(src) or _H1_RE.search(src)
+    km = _KICKER_RE.search(src)
+    if not tm:
+        print(f"  skip {rel}: no h1", file=sys.stderr)
+        return False
+    title = _text(tm.group(1))
+    kicker = _text(km.group(1)) if km else kicker_fallback
+    out = d / "og.png"
+    proc = subprocess.run(
+        ["rsvg-convert", "-w", str(W), "-h", str(H), "-o", str(out)],
+        input=svg_for(title, kicker, footer).encode(), capture_output=True,
     )
+    if proc.returncode != 0:
+        print(f"  FAIL {rel}: {proc.stderr.decode().strip()}", file=sys.stderr)
+        return False
+    url = f"https://getnapkin.to/{rel}/og.png"
+    new = re.sub(r'(<meta property="og:image" content=")[^"]*(">)',
+                 rf"\1{url}\2", src)
+    new = re.sub(r'("image":\s*")https://getnapkin\.to/social-preview\.png(")',
+                 rf"\1{url}\2", new)
+    if new != src:
+        idx.write_text(new)
+    print(f"  ok {rel}: og.png ({out.stat().st_size} B) title={title!r}")
+    return True
+
+
+def render_static(rel: str, title: str, kicker: str, footer: str) -> bool:
+    d = ROOT / rel
+    d.mkdir(exist_ok=True)
+    out = d / "og.png"
+    proc = subprocess.run(
+        ["rsvg-convert", "-w", str(W), "-h", str(H), "-o", str(out)],
+        input=svg_for(title, kicker, footer).encode(), capture_output=True,
+    )
+    ok = proc.returncode == 0
+    print(f"  {'ok' if ok else 'FAIL'} {rel}: og.png (static card)")
+    return ok
+
+
+def main() -> None:
+    if sys.argv[1:]:
+        slugs = sys.argv[1:]
+        ok = sum(render(s) for s in slugs)
+        print(f"generated {ok}/{len(slugs)} cards")
+        return
+    slugs = sorted(p.parent.name for p in BLOG.glob("*/index.html"))
     ok = sum(render(s) for s in slugs)
-    print(f"generated {ok}/{len(slugs)} cards")
+    ok += sum(render_page(rel, kick, foot) for rel, kick, foot in PAGES)
+    ok += sum(render_static(*args) for args in STATIC_CARDS)
+    total = len(slugs) + len(PAGES) + len(STATIC_CARDS)
+    print(f"generated {ok}/{total} cards")
 
 
 if __name__ == "__main__":

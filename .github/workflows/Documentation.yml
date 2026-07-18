@@ -231,12 +231,14 @@ jobs:
           cp Tools/site/404.html docs/404.html
           # FAQ page (FAQPage JSON-LD) + recipes cookbook (named patterns).
           mkdir -p docs/faq docs/recipes docs/changelog docs/about
-          cp Tools/site/faq/index.html docs/faq/index.html
-          cp Tools/site/about/index.html docs/about/index.html
-          cp Tools/site/recipes/index.html docs/recipes/index.html
+          # cp -R dir/. so each page's og.png card ships alongside its HTML.
+          cp -R Tools/site/faq/. docs/faq/
+          cp -R Tools/site/about/. docs/about/
+          cp -R Tools/site/recipes/. docs/recipes/
           # Changelog: generated fresh from CHANGELOG.md so the styled
           # /changelog/ page always mirrors the GitHub source of truth.
           python3 Tools/site/changelog.py CHANGELOG.md > docs/changelog/index.html
+          cp Tools/site/changelog/og.png docs/changelog/og.png
           # security.txt at the site ROOT (not /.well-known/). GitHub Pages
           # reserves the /.well-known/ namespace for its own ACME / domain
           # verification on custom domains and 404s anything else there
@@ -253,7 +255,7 @@ jobs:
           # Comparison pages + decision guide (Stage 2 content).
           mkdir -p docs/compare docs/when-to-use-napkin
           cp -R Tools/site/compare/. docs/compare/
-          cp Tools/site/when-to-use-napkin/index.html docs/when-to-use-napkin/index.html
+          cp -R Tools/site/when-to-use-napkin/. docs/when-to-use-napkin/
 
           VERSION="${{ steps.versions.outputs.version }}"
           REFS="${{ steps.versions.outputs.refs }}"
